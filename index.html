@@ -55,8 +55,9 @@ function showTree(traceNode, displayWhere) {
 
   upperTR = document.createElement('tr');
   upperTD = document.createElement('td');
-   upperTD.textContent = traceNode.formals + ' => ' + traceNode.result;
+  upperTD.textContent = traceNode.formals + ' => ' + traceNode.result;
   upperTD.setAttribute('class', 'expandedCall');
+  upperTD.colSpan = traceNode.children.length;
 
   delButton = document.createElement('td');
   delButton.setAttribute('class', 'delButton');
@@ -85,6 +86,7 @@ function showTree(traceNode, displayWhere) {
   actualsTD = document.createElement('td');
   actualsTD.textContent = traceNode.actuals;
   actualsTD.setAttribute('class', 'expandedCall');
+  actualsTD.colSpan = traceNode.children.length;
   actualsTR.appendChild(actualsTD);
   theTable.appendChild(actualsTR);
   
@@ -97,7 +99,6 @@ function showTree(traceNode, displayWhere) {
     newDisplay = document.createElement('td');
     newDisplay.setAttribute('class', 'shrunkenCall');
     newDisplay.textContent = 'Call! ' + traceNode.children[i].formals;
-    newDisplay.colSpan = 2;
     newDisplay.onclick = 
       (function(c, n) {
         return function () {

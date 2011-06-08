@@ -21,5 +21,12 @@
 (fib 10)
 (close-enough? 3 3)
 
+(define (all-close-enough? xs)
+  (andmap (lambda (x)
+            (close-enough? (first x) (second x)))
+          xs))
+
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+
 (trace->json)
 (send-url "index.html")
