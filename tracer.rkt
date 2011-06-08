@@ -1,6 +1,6 @@
 #lang racket
 
-(require [except-in lang/htdp-intermediate-lamba
+(require [except-in lang/htdp-intermediate-lambda
                     #%app define lambda require])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
