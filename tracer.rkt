@@ -1,13 +1,13 @@
 #lang racket
 
-(require [except-in lang/htdp-intermediate 
+(require [except-in lang/htdp-intermediate-lamba
                     #%app define lambda require])
 (require [prefix-in isl:
-                    [only-in lang/htdp-intermediate 
+                    [only-in lang/htdp-intermediate-lambda
                              define lambda require let]])
 
 (provide [rename-out (app-recorder #%app)])
-(provide [all-from-out lang/htdp-intermediate])
+(provide [all-from-out lang/htdp-intermediate-lambda])
 (provide [rename-out (isl:define define)
                      (isl:lambda lambda)
                      (isl:require require)
