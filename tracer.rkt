@@ -83,7 +83,7 @@
                             (string-append (first k)
                                            ","
                                            (loop (rest k))))])
-                (loop (map node->json #|(reverse|# (node-kids t)))))))#|)|#
+                (loop (map node->json (reverse (node-kids t))))))))
 
 ; Why is this a macro and not a function?  Because make it a function
 ; affects the call record!
