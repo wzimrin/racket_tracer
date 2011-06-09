@@ -11,9 +11,12 @@
 (define (squared x)
   (* x x))
 
+(define (add x y)
+  (+ x y))
+
 (define (dist x1 y1 x2 y2)
-  (sqrt (+ (squared (- x1 x2))
-           (squared (- y1 y2)))))
+  (sqrt (add (squared (- x1 x2))
+             (squared (- y1 y2)))))
 
 (define (close-enough? x y)
   (< (dist x y 0 0) 4))

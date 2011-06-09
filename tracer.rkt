@@ -44,9 +44,9 @@
                (begin
                  ;adds n to current-call's kids 
                  (add-kid (current-call) n)
-                 (parameterize ([current-call n])
-                   (let* ([fun fun-expr]
-                          [args (list arg-expr ...)])
+                 (let* ([fun fun-expr]
+                        [args (list arg-expr ...)])
+                   (parameterize ([current-call n])
                      (begin
                        (set-node-actual! n `(fun-expr ,@args))
                        (let ([v (#%app apply fun args)])
