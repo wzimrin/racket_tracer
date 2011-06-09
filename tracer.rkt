@@ -68,12 +68,19 @@
 
 (define (node->json t)
  (local [(define (format-list lst)
-           (string-join (map (curry format "~a") lst)
-                        ","))]
-   (format "{formals: \"~a\",
-            actuals: \"~a\",
+           (string-append "["
+                          (string-join (map (lambda (x)
+                                              (format "~S"
+                                                      (format "~a" x)))
+                                            lst)
+                                       ",")
+                          "]"))]
+   (format "{name: \"~a\",
+            formals: ~a,
+            actuals: ~a,
             result: \"~a\",
             children: [~a]}"
+           (node-name t)
            (format-list (node-formal t))
            (format-list (node-actual t))
            (node-result t)

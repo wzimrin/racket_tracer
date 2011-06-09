@@ -1,6 +1,10 @@
 
 function showTree(traceNode, displayWhere) {
+  var text = displayWhere.textContent;
+  var class = displayWhere.getAttribute("class");
+  var onclick = displayWhere.onclick;
   displayWhere.textContent = '';
+  displayWhere.onclick = null;
   theTable = document.createElement('table');
   bgColor = displayWhere.getAttribute('class');
   //console.log(theTable.getAttribute('class'));
@@ -14,7 +18,7 @@ function showTree(traceNode, displayWhere) {
   upperTD = document.createElement('td');
   upperTD.textContent = traceNode.formals + ' => ' + traceNode.result;
 
-  upperTD.setAttribute('class', 'expandedCall ' + bgColor);
+  upperTD.setAttribute('class', bgColor);
   upperTD.colSpan = traceNode.children.length;
 
   delButton = document.createElement('td');
@@ -23,17 +27,12 @@ function showTree(traceNode, displayWhere) {
   delButton.rowSpan = 2;
   delButton.onclick =
 	  (function(c, n) {
-	   return function(evt) {
-	    	n.setAttribute('class', 'shrunkenCall');
-		n.textContent = c.formals;
+	    return function(evt) {
+              n.setAttribute("class",class);
+              n.textContent = text;
+              n.onclick = onclick;
 		evt.stopPropagation();
-		n.onclick =
-		    (function(c2, n2) {
-		     	return function() {
-		       		n2.onclick = null;
-				showTree(c2, n2)
-				}})(c, n);	       
-		}})(traceNode, displayWhere);
+	    }})(traceNode, displayWhere);
   upperTR.appendChild(delButton);
 
   upperTR.appendChild(upperTD);
@@ -44,7 +43,7 @@ function showTree(traceNode, displayWhere) {
   actualsTD = document.createElement('td');
   actualsTD.textContent = traceNode.actuals;
   
-  actualsTD.setAttribute('class', 'expandedCall ' + bgColor);
+  actualsTD.setAttribute('class', bgColor);
   actualsTD.colSpan = traceNode.children.length;
   
   actualsTR.appendChild(actualsTD);
@@ -69,7 +68,6 @@ function showTree(traceNode, displayWhere) {
     newDisplay.onclick = 
       (function(c, n) {
         return function () {
-                 n.onclick = null;
                  showTree(c, n)}})(traceNode.children[i], newDisplay);
     lowerTR.appendChild(newDisplay);
   }
