@@ -16,7 +16,7 @@ function showTree(traceNode, displayWhere) {
 
   upperTR = document.createElement('tr');
   upperTD = document.createElement('td');
-  upperTD.textContent = traceNode.formals + ' => ' + traceNode.result;
+  upperTD.textContent = '(' + traceNode.name + ' ' + traceNode.formals + ') => ' + traceNode.result;
 
   upperTD.setAttribute('class', bgColor);
   upperTD.colSpan = traceNode.children.length;
@@ -41,7 +41,7 @@ function showTree(traceNode, displayWhere) {
   
   actualsTR = document.createElement('tr');
   actualsTD = document.createElement('td');
-  actualsTD.textContent = traceNode.actuals;
+  actualsTD.textContent = '(' + traceNode.name + ' ' + traceNode.actuals + ')';
   
   actualsTD.setAttribute('class', bgColor);
   actualsTD.colSpan = traceNode.children.length;
@@ -64,7 +64,7 @@ function showTree(traceNode, displayWhere) {
 
 
     //newDisplay.setAttribute(
-    newDisplay.textContent = traceNode.children[i].formals;
+    newDisplay.textContent = '(' + traceNode.children[i].name + ' ' + traceNode.children[i].actuals + ')';
     newDisplay.onclick = 
       (function(c, n) {
         return function () {
