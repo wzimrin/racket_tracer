@@ -15,14 +15,14 @@
 
 (provide show-trace trace->json)
 
-(struct node (formal result actual kids) #:mutable #:transparent)
-(define (create-node f a)
-  (node f 'no-result a empty))
+(struct node (name formal result actual kids) #:mutable #:transparent)
+(define (create-node n f a)
+  (node n f 'no-result a empty))
 
 (define (add-kid n k)
   (set-node-kids! n (cons k (node-kids n))))
 
-(define current-call (make-parameter (create-node 'top-level 'top-level)))
+(define current-call (make-parameter (create-node 'top-level empty empty)))
 
 (define blocked-fun-names 
   (namespace-mapped-symbols
@@ -39,7 +39,7 @@
              ;if not a function you want to trace, leave as is
              (#%app fun-expr arg-expr ...)
              ;otherwise trace
-             (let ([n (create-node '(fun-expr arg-expr ...)
+             (let ([n (create-node fun-expr '(arg-expr ...)
                                    "nothing here yet!")])
                (begin
                  ;adds n to current-call's kids 
@@ -48,7 +48,7 @@
                         [args (list arg-expr ...)])
                    (parameterize ([current-call n])
                      (begin
-                       (set-node-actual! n `(fun-expr ,@args))
+                       (set-node-actual! n args)
                        (let ([v (#%app apply fun args)])
                          (begin
                            (set-node-result! n v)
@@ -67,14 +67,16 @@
   (print-right (current-call)))
 
 (define (node->json t)
- 
-  (format "{formals: \"~a\",
+ (local [(define (format-list lst)
+           (string-join (map (curry format "~a") lst)
+                        ","))]
+   (format "{formals: \"~a\",
             actuals: \"~a\",
             result: \"~a\",
             children: [~a]}"
-          (node-formal t)
-          (node-actual t)
-          (node-result t)
+           (format-list (node-formal t))
+           (format-list (node-actual t))
+           (node-result t)
           (if (empty? (node-kids t))
               ""
               (local ([define (loop k)
@@ -83,7 +85,7 @@
                             (string-append (first k)
                                            ","
                                            (loop (rest k))))])
-                (loop (map node->json (reverse (node-kids t))))))))
+                (loop (map node->json (reverse (node-kids t)))))))))
 
 ; Why is this a macro and not a function?  Because make it a function
 ; affects the call record!

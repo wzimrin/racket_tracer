@@ -44,6 +44,8 @@
 
   <script type="text/javascript" src="tree-of-trace.js">
   </script>
+  <script type="text/javascript" src="jquery.js">
+  </script>
 
   <script type="text/javascript">
 
@@ -57,7 +59,6 @@ function showTree(traceNode, displayWhere) {
   upperTD = document.createElement('td');
   upperTD.textContent = traceNode.formals + ' => ' + traceNode.result;
   upperTD.setAttribute('class', 'expandedCall');
-  upperTD.colSpan = traceNode.children.length;
 
   delButton = document.createElement('td');
   delButton.setAttribute('class', 'delButton');
@@ -86,7 +87,6 @@ function showTree(traceNode, displayWhere) {
   actualsTD = document.createElement('td');
   actualsTD.textContent = traceNode.actuals;
   actualsTD.setAttribute('class', 'expandedCall');
-  actualsTD.colSpan = traceNode.children.length;
   actualsTR.appendChild(actualsTD);
   theTable.appendChild(actualsTR);
   
@@ -122,3 +122,5 @@ function showTree(traceNode, displayWhere) {
   </body>
 
 </html>
+
+//  LocalWords:  shrunkenCall textContent delButton actualsTR upperTR upperTD
