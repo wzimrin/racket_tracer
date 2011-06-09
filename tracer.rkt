@@ -39,7 +39,7 @@
              ;if not a function you want to trace, leave as is
              (#%app fun-expr arg-expr ...)
              ;otherwise trace
-             (let ([n (create-node fun-expr '(arg-expr ...)
+             (let ([n (create-node 'fun-expr '(arg-expr ...)
                                    "nothing here yet!")])
                (begin
                  ;adds n to current-call's kids 
