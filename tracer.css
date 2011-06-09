@@ -1,0 +1,44 @@
+  .expandedCall {
+    color: black;
+    /*background: #ADD8E6;*/
+    text-align: left;
+    vertical-align: top;
+    padding: 5px;
+    /*border-color: black;
+    border-style: solid;
+    border-radius: 5px;*/
+    font-family:"Arial";
+    font-size:0.80em; 
+  }
+  .background1 {
+    background: red;
+  }
+  .background2 {
+    background: blue;
+  }
+  .shrunkenCall {
+    color: black;
+    /*background: white;*/
+    text-align: center;
+    vertical-align: top;
+    padding: 2px;
+    /*
+    border-color: black;
+    border-style: solid;
+    border-radius: 5px;*/ 
+    font-family:"Arial";
+    font-size:0.80em;
+  }
+  .delButton {
+    color: white;
+    background: black;
+    text-align: center;
+    vertical-align: center;
+    padding: 2px;
+    border-color: white;
+    border-style: solid;
+    border-radius: 5px;
+    font-family:"Arial";
+    font-weight: bold;
+    font-size:0.80em;
+ }
