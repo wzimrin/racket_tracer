@@ -24,20 +24,18 @@
 
 (define current-call (make-parameter (create-node 'top-level 'top-level)))
 
-(define-for-syntax blocked-fun-names '(+ - * / 
-                                         zero? add1 sub1
-                                         cons first rest))
-
+(define blocked-fun-names 
+  (namespace-mapped-symbols
+   (module->namespace 'lang/htdp-intermediate-lambda)))
+  
 (define-syntax (app-recorder e)
   (syntax-case e ()
     
     [(_ fun-expr arg-expr ...) 
      ;ensure that fun-expr is a function
-     (identifier? #'fun-expr) 
+       (identifier? #'fun-expr)
      ;result-expr -- is [block blocked-fun-names] just for ease of reading the code?
-     
-     (with-syntax ([blocked blocked-fun-names])
-       #'(if (member 'fun-expr 'blocked)
+       #'(if (member 'fun-expr blocked-fun-names)
              ;if not a function you want to trace, leave as is
              (#%app fun-expr arg-expr ...)
              ;otherwise trace
@@ -50,15 +48,11 @@
                    (let* ([fun fun-expr]
                           [args (list arg-expr ...)])
                      (begin
-                       (set-node-actual! n `(fun-expr ,@args))#|(map (lambda(an-arg)
-                                                               (if (identifer? an-arg)
-                                                                   ...
-                                                                   ...)) 
-                                                             args)))|#
+                       (set-node-actual! n `(fun-expr ,@args))
                        (let ([v (#%app apply fun args)])
                          (begin
                            (set-node-result! n v)
-                           v)))))))))]))
+                           v))))))))]))
 
 (define (print-right t)
   (node (node-formal t)

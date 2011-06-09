@@ -5,7 +5,7 @@
   <style type="text/css">
   .expandedCall {
     color: black;
-    background: #cccccc;
+    background: #ADD8E6;
     text-align: left;
     vertical-align: top;
     padding: 5px;
@@ -67,7 +67,7 @@ function showTree(traceNode, displayWhere) {
 	  (function(c, n) {
 	   return function(evt) {
 	    	n.setAttribute('class', 'shrunkenCall');
-		n.textContent = 'Call! ' + c.formals;
+		n.textContent = c.formals;
 		evt.stopPropagation();
 		n.onclick =
 		    (function(c2, n2) {
@@ -93,12 +93,12 @@ function showTree(traceNode, displayWhere) {
   
 
   lowerTR = document.createElement('tr');
-  lowerTR.appendChild(document.createElement('td'));
+  //lowerTR.appendChild(document.createElement('td'));
   for (i = 0; i < traceNode.children.length; i++) {
     child = traceNode.children[i];
     newDisplay = document.createElement('td');
     newDisplay.setAttribute('class', 'shrunkenCall');
-    newDisplay.textContent = 'Call! ' + traceNode.children[i].formals;
+    newDisplay.textContent = traceNode.children[i].formals;
     newDisplay.onclick = 
       (function(c, n) {
         return function () {
