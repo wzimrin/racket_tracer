@@ -1,5 +1,5 @@
 $('.shrunkenCall').live('click',function (event) {
-  var target = $(event.target)
+  var target = $(this)
   target.data("oldClass",target.attr("class"))
   target.data("oldHTML",target.contents())
   showTree(target.data('node'),target)
@@ -27,12 +27,37 @@ function makeShrunkenCall(child,parent) {
     newDisplay.addClass('background2');
   else
     newDisplay.addClass("background1")
+  
+  table = element('table')
+ /* table.addClass('childTable')*/
+  var lowerRow = element('tr');
 
+  funcName = element('td')
+  //var funcName = element('div');
+  funcName.text(child.name + ' ' + child.actuals);
+  lowerRow.append(funcName);
+  /*cell.append(funcName);
+  lowerRow.append(cell);*/
 
+  /*var arrow = element('div');*/
+  arrow = element('td');
+  arrow.text(' => ');
+  /*cell.append(arrow);*/
+  lowerRow.append(arrow);
+
+  /*var result = element('div');*/
+  result = element('td');
+  result.text(child.result);
+  /*cell.append(result);*/
+  lowerRow.append(result);
+
+  table.append(lowerRow);
+  newDisplay.append(table);
+  /*
   //newDisplay.setAttribute(
   newDisplay.text('(' + child.name + ' '
                   + child.actuals + ') => '+ child.result);
-
+*/
   return newDisplay
 }
 
@@ -50,8 +75,8 @@ function showTree(traceNode, displayWhere) {
   displayWhere = $(displayWhere)
   displayWhere.empty()
   
-  theTable = element('table');
-  displayWhere.append(theTable);
+  upperTable = element('table');
+  displayWhere.append(upperTable);
 
   upperTR = element('tr');
   actualsTR = element('tr');
@@ -89,9 +114,9 @@ function showTree(traceNode, displayWhere) {
   resultTD.addClass("result")
   upperTR.append(resultTD)
 
-  theTable.append(upperTR);
-  theTable.append(actualsTR);
-  theTable.addClass("callTable")
+  upperTable.append(upperTR);
+  upperTable.append(actualsTR);
+  upperTable.addClass("callTable")
   
   lowerTable = element('table')
   lowerTable.addClass("childTable")

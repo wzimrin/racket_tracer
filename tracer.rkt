@@ -15,6 +15,8 @@
                      (isl:require require)
                      (isl:let let)])
 
+;(provide struct-accessor-procedure?)
+
 (provide show-trace trace->json)
 
 (struct node (name formal result actual kids) #:mutable #:transparent)
@@ -35,30 +37,27 @@
     
     [(_ fun-expr arg-expr ...) 
      ;ensure that fun-expr is a function
-     #;(identifier? #'fun-expr)
+     (identifier? #'fun-expr) 
      ;result-expr -- is [block blocked-fun-names] just for ease of reading the code?
-     (printf "I see function ~s\n" #'fun-expr)
-     #'(begin
-           (display 'fun-expr)
-           (display "\n")
-           (if (member 'fun-expr blocked-fun-names)
-             ;if not a function you want to trace, leave as is
-             (#%app fun-expr arg-expr ...)
-             ;otherwise trace
-             (let ([n (create-node 'fun-expr '(arg-expr ...)
-                                   "nothing here yet!")])
-               (begin
-                 ;adds n to current-call's kids 
-                 (add-kid (current-call) n)
-                 (let* ([fun fun-expr]
-                        [args (list arg-expr ...)])
-                   (parameterize ([current-call n])
-                     (begin
-                       (set-node-actual! n args)
-                       (let ([v (#%app apply fun args)])
-                         (begin
-                           (set-node-result! n v)
-                           v)))))))))]))
+     #'(if (or (member 'fun-expr blocked-fun-names)
+               (struct-accessor-procedure? fun-expr))
+           ;if not a function you want to trace, leave as is
+           (#%app fun-expr arg-expr ...)
+           ;otherwise trace
+           (let ([n (create-node 'fun-expr '(arg-expr ...)
+                                 "nothing here yet!")])
+             (begin
+               ;adds n to current-call's kids 
+               (add-kid (current-call) n)
+               (let* ([fun fun-expr]
+                      [args (list arg-expr ...)])
+                 (parameterize ([current-call n])
+                   (begin
+                     (set-node-actual! n args)
+                     (let ([v (#%app apply fun args)])
+                       (begin
+                         (set-node-result! n v)
+                         v))))))))]))
 
 (define (print-right t)
   (node (node-formal t)

@@ -13,7 +13,7 @@
     margin: 3px;
     vertical-align: top;
     font-family:"Arial";
-    font-size:15px;
+    font-size:12px;
     border-radius: 5px;
     border-style: solid;
 }
@@ -35,7 +35,7 @@
     border-color:black;
     font-family:"Arial";
     font-weight: bold;
-    font-size: 15px;
+    font-size: 12px;
     width: 15px;
     float: left;
 }
@@ -84,4 +84,9 @@
 
 td.delButton {
     vertical-align: top !important;
+}
+
+.shrunkenCall table tr td {
+	white-space: pre;
+	vertical-align: middle !important;
 }
