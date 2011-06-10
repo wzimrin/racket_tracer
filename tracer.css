@@ -35,15 +35,13 @@
     border-color:black;
     font-family:"Arial";
     font-weight: bold;
-    font-size: 15px;/*0.80em;*/
+    font-size: 15px;
     width: 15px;
     float: left;
 }
 
 .superparent {
-    /*background:white;*/
     overflow-x: auto;
-    /*white-space: nowrap;*/
 }
 
 .arg {
