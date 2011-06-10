@@ -1,42 +1,46 @@
-  .expandedCall {
-    color: black;
-    /*background: #ADD8E6;*/
+.expandedCall {
     text-align: left;
-    vertical-align: top;
     border-color: black;
-    border-style: solid;
-    border-radius: 5px;
-    font-family:"Arial";
-    font-size:0.80em; 
-  }
-  .background1 {
-      background: #dddddd;
-      border-color: #dddddd;
-  }
-  .background2 {
-      background: #aaaaaa;
-      border-color: #aaaaaa;
-  }
-  .shrunkenCall {
-    color: blue;
-    /*background: white;*/
+}
+.shrunkenCall {
+    color: black;
     text-align: center;
-    
+    padding: 2px;
+}
+.call {
+    color: black;
+    margin: 3px;
     vertical-align: top;
-   
-    border-style: solid;
-    border-color: blue;
-    border-radius: 5px;
     font-family:"Arial";
     font-size:0.80em;
-  }
-  .delButton {
+    float:left;
+    border-radius: 5px;
+    border-style: solid;
+}
+.background1 {
+    background: #dddddd;
+    border-color: #dddddd;
+}
+.background2 {
+    background: #aaaaaa;
+    border-color: #aaaaaa;
+}
+.delButton {
     color: white;
     background: black;
     text-align: center;
     vertical-align: center;
-    border-style: none;
+    border-style: solid;
+    border-radius: 3px;
+    border-color:black;
     font-family:"Arial";
     font-weight: bold;
     font-size:0.80em;
- }
+    width: 15px;
+}
+
+.superparent {
+    background:white;
+    overflow-x: scroll;
+    /*white-space: nowrap;*/
+}
