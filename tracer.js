@@ -25,7 +25,7 @@ function makeShrunkenCall(child,parent) {
   $(newDisplay).data("node",child)
   if (parent.hasClass("background1"))
     newDisplay.addClass('background2');
-  else if (parent.hasClass("background2"))
+  else
     newDisplay.addClass("background1")
 
 
@@ -39,17 +39,21 @@ function makeShrunkenCall(child,parent) {
 function showTree(traceNode, displayWhere) {
   displayWhere = $(displayWhere)
   displayWhere.empty()
+  
   theTable = element('table');
   displayWhere.append(theTable);
 
   upperTR = element('tr');
   actualsTR = element('tr');
 
-  delButton = element('td');
-  delButton.addClass('delButton');
+  delTD = element('td')
+  delTD.attr("rowspan",2)
+  delTD.addClass('delButton');
+  delButton = element('div');
   delButton.text(' X ');
   delButton.attr("rowspan",2);
-  upperTR.append(delButton);
+  delTD.append(delButton);
+  upperTR.append(delTD)
   
   nameTD = element('td')
   nameTD.attr("rowspan",2)
@@ -71,22 +75,25 @@ function showTree(traceNode, displayWhere) {
 
   closeTD = element('td')
   closeTD.attr("rowspan",2)
-  closeTD.text(")")
+  closeTD.text(") => "+traceNode.result)
   closeTD.addClass("close")
   upperTR.append(closeTD)
 
   theTable.append(upperTR);
   theTable.append(actualsTR);
+  theTable.addClass("callTable")
   
-  
-  
-
-  lowerTD = element('div');
+  lowerTable = element('table')
+  lowerTable.addClass("childTable")
+  lowerRow = element('tr');
+  lowerTable.append(lowerRow)
   for (i = 0; i < traceNode.children.length; i++) {
-    var shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
-    lowerTD.append(shrunkDiv);
+    shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
+    cell = element('td')
+    cell.append(shrunkDiv)
+    lowerRow.append(cell);
   }
-  displayWhere.append(lowerTD);
+  displayWhere.append(lowerTable);
   
   displayWhere.removeClass('shrunkenCall');
   displayWhere.addClass('expandedCall');
@@ -94,7 +101,7 @@ function showTree(traceNode, displayWhere) {
 
 $(document).ready(function () {
   var div = $("#tracer")
-  var child = makeShrunkenCall(theTrace,div)
+  var child = makeShrunkenCall(theTrace,$(document.body))
   div.append(child)
   child.trigger('click')
 })

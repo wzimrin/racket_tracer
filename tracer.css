@@ -6,6 +6,7 @@
     color: black;
     text-align: center;
     padding: 2px;
+    white-space: pre;
 }
 .call {
     color: black;
@@ -13,7 +14,6 @@
     vertical-align: top;
     font-family:"Arial";
     font-size:15px;
-    float:left;
     border-radius: 5px;
     border-style: solid;
 }
@@ -25,7 +25,7 @@
     background: #aaaaaa;
     border-color: #aaaaaa;
 }
-.delButton {
+.delButton div {
     color: white;
     background: black;
     text-align: center;
@@ -37,14 +37,42 @@
     font-weight: bold;
     font-size: 15px;/*0.80em;*/
     width: 15px;
+    float: left;
 }
 
 .superparent {
-    background:white;
-    overflow-x: scroll;
+    /*background:white;*/
+    overflow-x: auto;
     /*white-space: nowrap;*/
 }
 
 .arg {
     text-align: center;
+    white-space: pre;
+}
+
+.close {
+    white-space: pre;
+}
+
+.name {
+    white-space: pre;
+}
+
+.childTable tr td {
+    vertical-align: top;
+}
+
+.callTable tr td {
+    vertical-align: middle;
+}
+
+.callTable {
+    /*margin-left:auto;
+      margin-right:auto;*/
+    float: top left;
+}
+
+td.delButton {
+    vertical-align: top !important;
 }
