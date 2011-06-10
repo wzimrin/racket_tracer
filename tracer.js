@@ -43,40 +43,50 @@ function showTree(traceNode, displayWhere) {
   displayWhere.append(theTable);
 
   upperTR = element('tr');
-  upperTD = element('td');
-  upperTD.text('(' + traceNode.name + ' ' +
-               traceNode.formals + ') => ' + traceNode.result);
-
-  upperTD.addClass('bgColor');
+  actualsTR = element('tr');
 
   delButton = element('td');
   delButton.addClass('delButton');
   delButton.text(' X ');
   delButton.attr("rowspan",2);
   upperTR.append(delButton);
+  
+  nameTD = element('td')
+  nameTD.attr("rowspan",2)
+  nameTD.text("("+traceNode.name)
+  nameTD.addClass("name")
+  upperTR.append(nameTD)
 
-  upperTR.append(upperTD);
+  for (i = 0; i < traceNode.formals.length; i++) {
+    formalTD = element('td')
+    formalTD.text(traceNode.formals[i])
+    formalTD.addClass("arg")
+    upperTR.append(formalTD)
+
+    actualTD = element('td')
+    actualTD.text(traceNode.actuals[i])
+    actualTD.addClass("arg")
+    actualsTR.append(actualTD)
+  }
+
+  closeTD = element('td')
+  closeTD.attr("rowspan",2)
+  closeTD.text(")")
+  closeTD.addClass("close")
+  upperTR.append(closeTD)
 
   theTable.append(upperTR);
-  
-  actualsTR = element("tr")
-  actualsTD = element('td');
-  actualsTD.text('(' + traceNode.name + ' ' + traceNode.actuals + ')');
-  
-  actualsTR.append(actualsTD);
   theTable.append(actualsTR);
   
   
+  
 
-  lowerTR = element('tr');
-  lowerTD = element('td');
-  lowerTD.attr("colspan",2)
+  lowerTD = element('div');
   for (i = 0; i < traceNode.children.length; i++) {
     var shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
     lowerTD.append(shrunkDiv);
   }
-  lowerTR.append(lowerTD)
-  theTable.append(lowerTR);
+  displayWhere.append(lowerTD);
   
   displayWhere.removeClass('shrunkenCall');
   displayWhere.addClass('expandedCall');

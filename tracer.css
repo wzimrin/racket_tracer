@@ -44,3 +44,7 @@
     overflow-x: scroll;
     /*white-space: nowrap;*/
 }
+
+.arg {
+    text-align: center;
+}
