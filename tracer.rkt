@@ -35,9 +35,13 @@
     
     [(_ fun-expr arg-expr ...) 
      ;ensure that fun-expr is a function
-       (identifier? #'fun-expr)
+     #;(identifier? #'fun-expr)
      ;result-expr -- is [block blocked-fun-names] just for ease of reading the code?
-       #'(if (member 'fun-expr blocked-fun-names)
+     (printf "I see function ~s\n" #'fun-expr)
+     #'(begin
+           (display 'fun-expr)
+           (display "\n")
+           (if (member 'fun-expr blocked-fun-names)
              ;if not a function you want to trace, leave as is
              (#%app fun-expr arg-expr ...)
              ;otherwise trace
@@ -54,7 +58,7 @@
                        (let ([v (#%app apply fun args)])
                          (begin
                            (set-node-result! n v)
-                           v))))))))]))
+                           v)))))))))]))
 
 (define (print-right t)
   (node (node-formal t)
