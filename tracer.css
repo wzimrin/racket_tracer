@@ -10,10 +10,12 @@
     font-size:0.80em; 
   }
   .background1 {
-    background: #dddddd;
+      background: #dddddd;
+      border-color: #dddddd;
   }
   .background2 {
-    background: #aaaaaa;
+      background: #aaaaaa;
+      border-color: #aaaaaa;
   }
   .shrunkenCall {
     color: blue;
