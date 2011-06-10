@@ -1,4 +1,4 @@
-  .expandedCall {
+.expandedCall {
     color: black;
     /*background: #ADD8E6;*/
     text-align: left;
@@ -8,16 +8,16 @@
     border-radius: 5px;
     font-family:"Arial";
     font-size:0.80em; 
-  }
-  .background1 {
-      background: #dddddd;
-      border-color: #dddddd;
-  }
-  .background2 {
-      background: #aaaaaa;
-      border-color: #aaaaaa;
-  }
-  .shrunkenCall {
+}
+.background1 {
+    background: #dddddd;
+    border-color: #dddddd;
+}
+.background2 {
+    background: #aaaaaa;
+    border-color: #aaaaaa;
+}
+.shrunkenCall {
     color: black;
     /*background: white;*/
     text-align: center;
@@ -27,8 +27,8 @@
     border-radius: 5px;
     font-family:"Arial";
     font-size:0.80em;
-  }
-  .delButton {
+}
+.delButton {
     color: white;
     background: black;
     text-align: center;
@@ -37,4 +37,8 @@
     font-family:"Arial";
     font-weight: bold;
     font-size:0.80em;
- }
+}
+
+.superparent {
+    background:white;
+}

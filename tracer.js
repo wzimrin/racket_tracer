@@ -1,78 +1,89 @@
+$('.shrunkenCall').live('click',function (event) {
+  var target = $(event.target)
+  target.data("oldClass",target.attr("class"))
+  target.data("oldHTML",target.contents())
+  showTree(target.data('node'),target)
+})
 
-function showTree(traceNode, displayWhere) {
-  var text = displayWhere.textContent;
-  var class = displayWhere.getAttribute("class");
-  var onclick = displayWhere.onclick;
-  displayWhere.textContent = '';
-  displayWhere.onclick = null;
-  theTable = document.createElement('table');
-  bgColor = displayWhere.getAttribute('class');
-  //console.log(theTable.getAttribute('class'));
-  //theTable.setAttribute('class', 'background1'); 
-    //console.log(theTable.getAttribute('class'));
-  console.log(displayWhere.getAttribute('class'));
-  //theTable.border="1";
-  displayWhere.appendChild(theTable);
+$('.delButton').live('click',function (event) {
+  var target = $(event.target)
+  var parent = target.parents('.expandedCall').first()
+  parent.empty()
+  parent.attr("class",parent.data("oldClass"))
+  parent.append(parent.data("oldHTML"))
+  event.stopPropagation();
+})
 
-  upperTR = document.createElement('tr');
-  upperTD = document.createElement('td');
-  upperTD.textContent = '(' + traceNode.name + ' ' + traceNode.formals + ') => ' + traceNode.result;
-
-  upperTD.setAttribute('class', bgColor);
-  upperTD.colSpan = traceNode.children.length;
-
-  delButton = document.createElement('td');
-  delButton.setAttribute('class', 'delButton');
-  delButton.textContent = ' X ';
-  delButton.rowSpan = 2;
-  delButton.onclick =
-	  (function(c, n) {
-	    return function(evt) {
-              n.setAttribute("class",class);
-              n.textContent = text;
-              n.onclick = onclick;
-		evt.stopPropagation();
-	    }})(traceNode, displayWhere);
-  upperTR.appendChild(delButton);
-
-  upperTR.appendChild(upperTD);
-
-  theTable.appendChild(upperTR);
-  
-  actualsTR = document.createElement('tr');
-  actualsTD = document.createElement('td');
-  actualsTD.textContent = '(' + traceNode.name + ' ' + traceNode.actuals + ')';
-  
-  actualsTD.setAttribute('class', bgColor);
-  actualsTD.colSpan = traceNode.children.length;
-  
-  actualsTR.appendChild(actualsTD);
-  theTable.appendChild(actualsTR);
-  
-  
-
-  lowerTR = document.createElement('tr');
-  //lowerTR.appendChild(document.createElement('td'));
-  for (i = 0; i < traceNode.children.length; i++) {
-    child = traceNode.children[i];
-    newDisplay = document.createElement('td');
-    newDisplay.setAttribute('class', 'shrunkenCall');
-    if (displayWhere.getAttribute('class') == 'background1')
-	  newDisplay.setAttribute('class', 'background2');
-    else if (displayWhere.getAttribute('class') == 'background2')
-	  newDisplay.setAttribute('class', 'background1');
-
-
-    //newDisplay.setAttribute(
-    newDisplay.textContent = '(' + traceNode.children[i].name + ' ' + traceNode.children[i].actuals + ')';
-    newDisplay.onclick = 
-      (function(c, n) {
-        return function () {
-                 showTree(c, n)}})(traceNode.children[i], newDisplay);
-    lowerTR.appendChild(newDisplay);
-  }
-  theTable.appendChild(lowerTR);
-
-  displayWhere.setAttribute('class', 'expandedCall');
+function element(tag) {
+  return $("<"+tag+'/>')
 }
 
+function makeShrunkenCall(child,parent) {
+  var newDisplay = element('div');
+  newDisplay.addClass('shrunkenCall');
+  $(newDisplay).data("node",child)
+  if (parent.hasClass("background1"))
+    newDisplay.addClass('background2');
+  else if (parent.hasClass("background2"))
+    newDisplay.addClass("background1")
+
+
+  //newDisplay.setAttribute(
+  newDisplay.text('(' + child.name + ' '
+                  + child.actuals + ')');
+
+  return newDisplay
+}
+
+function showTree(traceNode, displayWhere) {
+  displayWhere = $(displayWhere)
+  displayWhere.empty()
+  theTable = element('table');
+  displayWhere.append(theTable);
+
+  upperTR = element('tr');
+  upperTD = element('td');
+  upperTD.text('(' + traceNode.name + ' ' +
+               traceNode.formals + ') => ' + traceNode.result);
+
+  upperTD.addClass('bgColor');
+
+  delButton = element('td');
+  delButton.addClass('delButton');
+  delButton.text(' X ');
+  delButton.attr("rowspan",2);
+  upperTR.append(delButton);
+
+  upperTR.append(upperTD);
+
+  theTable.append(upperTR);
+  
+  actualsTR = element("tr")
+  actualsTD = element('td');
+  actualsTD.text('(' + traceNode.name + ' ' + traceNode.actuals + ')');
+  
+  actualsTR.append(actualsTD);
+  theTable.append(actualsTR);
+  
+  
+
+  lowerTR = element('tr');
+  lowerTD = element('td');
+  lowerTD.attr("colspan",2)
+  for (i = 0; i < traceNode.children.length; i++) {
+    var shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
+    lowerTD.append(shrunkDiv);
+  }
+  lowerTR.append(lowerTD)
+  theTable.append(lowerTR);
+  
+  displayWhere.removeClass('shrunkenCall');
+  displayWhere.addClass('expandedCall');
+}
+
+$(document).ready(function () {
+  var div = $("#tracer")
+  var child = makeShrunkenCall(theTrace,div)
+  div.append(child)
+  child.trigger('click')
+})
