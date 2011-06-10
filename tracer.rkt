@@ -15,6 +15,8 @@
                      (isl:require require)
                      (isl:let let)])
 
+;(provide struct-accessor-procedure?)
+
 (provide show-trace trace->json)
 
 (struct node (name formal result actual kids) #:mutable #:transparent)
@@ -35,9 +37,10 @@
     
     [(_ fun-expr arg-expr ...) 
      ;ensure that fun-expr is a function
-       (identifier? #'fun-expr)
+       (identifier? #'fun-expr) 
      ;result-expr -- is [block blocked-fun-names] just for ease of reading the code?
-       #'(if (member 'fun-expr blocked-fun-names)
+       #'(if (or (member 'fun-expr blocked-fun-names)
+                 (struct-accessor-procedure? fun-expr))
              ;if not a function you want to trace, leave as is
              (#%app fun-expr arg-expr ...)
              ;otherwise trace
