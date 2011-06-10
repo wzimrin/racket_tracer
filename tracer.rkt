@@ -6,6 +6,8 @@
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let]])
 
+(require racket/pretty)
+
 (provide [rename-out (app-recorder #%app)])
 (provide [all-from-out lang/htdp-intermediate-lambda])
 (provide [rename-out (isl:define define)
@@ -71,19 +73,19 @@
            (string-append "["
                           (string-join (map (lambda (x)
                                               (format "~S"
-                                                      (format "~a" x)))
+                                                      (pretty-format x 40)))
                                             lst)
                                        ",")
                           "]"))]
    (format "{name: \"~a\",
             formals: ~a,
             actuals: ~a,
-            result: \"~a\",
+            result: ~S,
             children: [~a]}"
            (node-name t)
            (format-list (node-formal t))
            (format-list (node-actual t))
-           (node-result t)
+           (pretty-format (node-result t) 40)
           (if (empty? (node-kids t))
               ""
               (local ([define (loop k)
