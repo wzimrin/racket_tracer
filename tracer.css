@@ -12,7 +12,7 @@
     margin: 3px;
     vertical-align: top;
     font-family:"Arial";
-    font-size:0.80em;
+    font-size:15px;
     float:left;
     border-radius: 5px;
     border-style: solid;
@@ -35,7 +35,7 @@
     border-color:black;
     font-family:"Arial";
     font-weight: bold;
-    font-size:0.80em;
+    font-size: 15px;/*0.80em;*/
     width: 15px;
 }
 
