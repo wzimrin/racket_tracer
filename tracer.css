@@ -16,6 +16,7 @@
     float:left;
     border-radius: 5px;
     border-style: solid;
+    overflow: hidden;
 }
 .background1 {
     background: #dddddd;
@@ -41,7 +42,6 @@
 
 .superparent {
     background:white;
-    overflow-x: scroll;
     /*white-space: nowrap;*/
 }
 
