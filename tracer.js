@@ -36,6 +36,16 @@ function makeShrunkenCall(child,parent) {
   return newDisplay
 }
 
+function makeArg(arg) {
+  formalTD = element('td')
+  formalTD.addClass("arg")
+  
+  formalDiv = element("div")
+  formalDiv.text(arg)
+  formalTD.append(formalDiv)
+  return formalTD
+}
+
 function showTree(traceNode, displayWhere) {
   displayWhere = $(displayWhere)
   displayWhere.empty()
@@ -62,22 +72,22 @@ function showTree(traceNode, displayWhere) {
   upperTR.append(nameTD)
 
   for (i = 0; i < traceNode.formals.length; i++) {
-    formalTD = element('td')
-    formalTD.text(traceNode.formals[i])
-    formalTD.addClass("arg")
-    upperTR.append(formalTD)
+    upperTR.append(makeArg(traceNode.formals[i]))
 
-    actualTD = element('td')
-    actualTD.text(traceNode.actuals[i])
-    actualTD.addClass("arg")
-    actualsTR.append(actualTD)
+    actualsTR.append(makeArg(traceNode.actuals[i]))
   }
 
   closeTD = element('td')
   closeTD.attr("rowspan",2)
-  closeTD.text(") => "+traceNode.result)
+  closeTD.text(") =>")
   closeTD.addClass("close")
   upperTR.append(closeTD)
+
+  resultTD = element('td')
+  resultTD.attr("rowspan",2)
+  resultTD.text(traceNode.result)
+  resultTD.addClass("result")
+  upperTR.append(resultTD)
 
   theTable.append(upperTR);
   theTable.append(actualsTR);

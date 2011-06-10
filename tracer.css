@@ -49,11 +49,21 @@
     white-space: pre;
 }
 
+.arg div {
+    text-align:left;
+    margin-left:auto;
+    margin-right:auto;
+}
+
 .close {
     white-space: pre;
 }
 
 .name {
+    white-space: pre;
+}
+
+.result {
     white-space: pre;
 }
 
