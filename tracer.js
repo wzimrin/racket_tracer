@@ -6,12 +6,8 @@ function showTree(traceNode, displayWhere) {
   displayWhere.textContent = '';
   displayWhere.onclick = null;
   theTable = document.createElement('table');
-  bgColor = displayWhere.getAttribute('class');
-  //console.log(theTable.getAttribute('class'));
-  //theTable.setAttribute('class', 'background1'); 
-    //console.log(theTable.getAttribute('class'));
-  console.log(displayWhere.getAttribute('class'));
-  //theTable.border="1";
+  bgColor = displayWhere.style.background; //getAttribute('class');
+  theTable.border="0";
   displayWhere.appendChild(theTable);
 
   upperTR = document.createElement('tr');
@@ -44,6 +40,7 @@ function showTree(traceNode, displayWhere) {
   actualsTD.textContent = '(' + traceNode.name + ' ' + traceNode.actuals + ')';
   
   actualsTD.setAttribute('class', bgColor);
+  //actualsTD.style.background = bgColor;
   actualsTD.colSpan = traceNode.children.length;
   
   actualsTR.appendChild(actualsTD);
@@ -59,7 +56,7 @@ function showTree(traceNode, displayWhere) {
     newDisplay.setAttribute('class', 'shrunkenCall');
     if (displayWhere.getAttribute('class') == 'background1')
 	  newDisplay.setAttribute('class', 'background2');
-    else if (displayWhere.getAttribute('class') == 'background2')
+    else 
 	  newDisplay.setAttribute('class', 'background1');
 
 

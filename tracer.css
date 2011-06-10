@@ -16,12 +16,14 @@
     background: #aaaaaa;
   }
   .shrunkenCall {
-    color: black;
+    color: blue;
     /*background: white;*/
     text-align: center;
+    
     vertical-align: top;
-    border-color: blue;
+   
     border-style: solid;
+    border-color: blue;
     border-radius: 5px;
     font-family:"Arial";
     font-size:0.80em;
