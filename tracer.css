@@ -90,3 +90,23 @@ td.delButton {
 	white-space: pre;
 	vertical-align: middle !important;
 }
+
+ul.tabs {
+    list-style-type: none;
+}
+
+ul.tabs li {
+    display: inline;
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+    padding: 2px;
+}
+
+ul.tabs li.picked {
+    background:#ddd;
+}
+
+div#tabbar {
+    float:center;
+}

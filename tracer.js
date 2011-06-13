@@ -135,8 +135,29 @@ function showTree(traceNode, displayWhere) {
 }
 
 $(document).ready(function () {
+  var div = $("#tabbar")
+  var ul = element("ul")
+  ul.addClass("tabs")
+  div.append(ul)
+  var first = false
+  for (var i = 0; i < theTrace.children.length; i++) {
+    var li = element("li")
+    if (!first)
+      first = li
+    li.data("child",i)
+    li.text(theTrace.children[i].name)
+    ul.append(li)
+  }
+  first.trigger('click')
+})
+
+$('ul.tabs li').live('click', function (event) {
+  target = $(this)
   var div = $("#tracer")
-  var child = makeShrunkenCall(theTrace,$(document.body))
+  div.empty()
+  var child = makeShrunkenCall(theTrace.children[target.data("child")],$(document.body))
   div.append(child)
   child.trigger('click')
+  $("ul.tabs li.picked").removeClass("picked")
+  target.addClass("picked")
 })
