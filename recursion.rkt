@@ -1,6 +1,7 @@
 #lang s-exp "tracer.rkt"
 
 (require net/sendurl)
+;(require "print.rkt")
 
 (define-struct bhnode (value left right))
 
