@@ -1,7 +1,5 @@
 #lang s-exp "tracer.rkt"
 
-(require net/sendurl)
-
 (define-struct bhnode (value left right))
 
 (define (insert x h)
@@ -60,5 +58,3 @@
                   (bhnode-right new-h))])))
 
 (remove-min (make-heap (list 8 4 3 9 1 6 12 14)))
-(trace->json)
-(send-url "index.html")
