@@ -122,4 +122,4 @@
      #`(#%plain-module-begin
         body ...
         (trace->json)
-        (send-url "index.html?"))]))
+        (send-url "index.html"))]))
