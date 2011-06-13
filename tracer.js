@@ -2,12 +2,16 @@ $('.shrunkenCall').live('click',function (event) {
   var target = $(this)
   target.data("oldClass",target.attr("class"))
   target.data("oldHTML",target.contents())
+
+  target.data('node').expanded = true
   showTree(target.data('node'),target)
 })
 
 $('.delButton').live('click',function (event) {
   var target = $(event.target)
   var parent = target.parents('.expandedCall').first()
+  parent.data('node').expanded = false
+  //parent.data("delProf", parent.contents())
   parent.empty()
   parent.attr("class",parent.data("oldClass"))
   parent.append(parent.data("oldHTML"))
@@ -23,41 +27,31 @@ function makeShrunkenCall(child,parent) {
   newDisplay.addClass('shrunkenCall');
   newDisplay.addClass('call');
   $(newDisplay).data("node",child)
+
   if (parent.hasClass("background1"))
     newDisplay.addClass('background2');
   else
     newDisplay.addClass("background1")
   
   table = element('table')
- /* table.addClass('childTable')*/
   var lowerRow = element('tr');
 
   funcName = element('td')
-  //var funcName = element('div');
+
   funcName.text(child.name + ' ' + child.actuals);
   lowerRow.append(funcName);
-  /*cell.append(funcName);
-  lowerRow.append(cell);*/
 
-  /*var arrow = element('div');*/
   arrow = element('td');
   arrow.text(' => ');
-  /*cell.append(arrow);*/
   lowerRow.append(arrow);
 
-  /*var result = element('div');*/
   result = element('td');
   result.text(child.result);
-  /*cell.append(result);*/
   lowerRow.append(result);
 
   table.append(lowerRow);
   newDisplay.append(table);
-  /*
-  //newDisplay.setAttribute(
-  newDisplay.text('(' + child.name + ' '
-                  + child.actuals + ') => '+ child.result);
-*/
+  
   return newDisplay
 }
 
@@ -89,7 +83,6 @@ function showTree(traceNode, displayWhere) {
   delButton.attr("rowspan",2);
   delTD.append(delButton);
   upperTR.append(delTD)
-  
   nameTD = element('td')
   nameTD.attr("rowspan",2)
   nameTD.text("("+traceNode.name)
@@ -122,20 +115,32 @@ function showTree(traceNode, displayWhere) {
   lowerTable.addClass("childTable")
   lowerRow = element('tr');
   lowerTable.append(lowerRow)
+  
+  divArray = []	  
+	  
   for (i = 0; i < traceNode.children.length; i++) {
-    shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
     cell = element('td')
-    cell.append(shrunkDiv)
+	  shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
+              cell.append(shrunkDiv)
+    
     lowerRow.append(cell);
+	divArray[i] = shrunkDiv;
+
   }
   displayWhere.append(lowerTable);
   
   displayWhere.removeClass('shrunkenCall');
   displayWhere.addClass('expandedCall');
+
+  for (i = 0; i < traceNode.children.length; i++) {
+  if (traceNode.children[i].expanded == true)
+	divArray[i].trigger('click');
+  }
 }
 
 $(document).ready(function () {
   var div = $("#tracer")
+  //theTrace.put('expanded', false)
   var child = makeShrunkenCall(theTrace,$(document.body))
   div.append(child)
   child.trigger('click')

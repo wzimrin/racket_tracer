@@ -1,23 +1,27 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require])
+                    #%app define lambda require #%module-begin let local])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
-                             define lambda require let]])
+                             define lambda require let local]])
 
 (require racket/pretty)
+(require net/sendurl)
+
+(provide let local define)
 
 (provide [rename-out (app-recorder #%app)])
+;(provide app-recorder)
 (provide [all-from-out lang/htdp-intermediate-lambda])
-(provide [rename-out (isl:define define)
+(provide [rename-out #;(isl:define define)
                      (isl:lambda lambda)
                      (isl:require require)
-                     (isl:let let)])
+                     #;(isl:let let)])
 
 ;(provide struct-accessor-procedure?)
 
-(provide show-trace trace->json)
+(provide show-trace trace->json #%module-begin)
 
 (struct node (name formal result actual kids) #:mutable #:transparent)
 (define (create-node n f a)
@@ -102,11 +106,20 @@
 ; Why is this a macro and not a function?  Because make it a function
 ; affects the call record!
 
-
-
-
 (define-syntax-rule (trace->json)
     (with-output-to-file "tree-of-trace.js"
       (lambda ()
         (display (format "var theTrace = ~a" (node->json (current-call)))))
     #:exists 'replace))
+
+(define-for-syntax (print-expanded d)
+  (printf "~a\n"
+          (syntax->datum (local-expand d 'top-level (list)))))
+
+(define-syntax (#%module-begin stx)
+  (syntax-case stx ()
+    [(_ body ...)
+     #`(#%plain-module-begin
+        body ...
+        (trace->json)
+        (send-url "index.html"))]))
