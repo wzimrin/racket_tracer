@@ -47,5 +47,3 @@
 
 ;9
 (how-many A)
-(trace->json)
-(send-url "index.html")

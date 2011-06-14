@@ -33,9 +33,9 @@
 
 (define current-call (make-parameter (create-node 'top-level empty empty)))
 
-(define blocked-fun-names 
-  (namespace-mapped-symbols
-   (module->namespace 'lang/htdp-intermediate-lambda)))
+#;(define blocked-fun-names 
+    (namespace-mapped-symbols
+     (module->namespace 'lang/htdp-intermediate-lambda)))
 
 (define ds-fun-names (box empty))
 
@@ -66,26 +66,35 @@
      ;ensure that fun-expr is a function
      (identifier? #'fun-expr) 
      ;result-expr -- is [block blocked-fun-names] just for ease of reading the code?
-     #'(if (or (member 'fun-expr blocked-fun-names)
-               (member 'fun-expr (unbox ds-fun-names))
-               (struct-accessor-procedure? fun-expr))
-           ;if not a function you want to trace, leave as is
-           (#%app fun-expr arg-expr ...)
-           ;otherwise trace
-           (let ([n (create-node 'fun-expr '(arg-expr ...)
-                                 "nothing here yet!")])
-             (begin
-               ;adds n to current-call's kids 
-               (add-kid (current-call) n)
-               (let* ([fun fun-expr]
-                      [args (list arg-expr ...)])
-                 (parameterize ([current-call n])
+     (let* ([binding (identifier-binding #'fun-expr)]
+            [vals (if (list? binding)
+                      (call-with-values
+                       (lambda ()
+                         (module-path-index-split (car binding)))
+                       list)
+                      binding)])
+       (if (or (equal? vals 'lexical)
+               (equal? vals '(#f #f)))
+           #'(if (or (member 'fun-expr (unbox ds-fun-names))
+                     (struct-accessor-procedure? fun-expr))
+                 ;if not a function you want to trace, leave as is
+                 (#%app fun-expr arg-expr ...)
+                 ;otherwise trace
+                 (let ([n (create-node 'fun-expr '(arg-expr ...)
+                                       "nothing here yet!")])
                    (begin
-                     (set-node-actual! n args)
-                     (let ([v (#%app apply fun args)])
-                       (begin
-                         (set-node-result! n v)
-                         v))))))))]))
+                     ;adds n to current-call's kids 
+                     (add-kid (current-call) n)
+                     (let* ([fun fun-expr]
+                            [args (list arg-expr ...)])
+                       (parameterize ([current-call n])
+                         (begin
+                           (set-node-actual! n args)
+                           (let ([v (#%app apply fun args)])
+                             (begin
+                               (set-node-result! n v)
+                               v))))))))
+           #'(#%app fun-expr arg-expr ...)))]))
 
 (define (print-right t)
   (node (node-formal t)

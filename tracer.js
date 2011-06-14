@@ -40,7 +40,9 @@ function makeShrunkenCall(child,parent) {
 
   for (j = 0; j < child.actuals.length; j++) {
     var arg = element('td');
-    if (child.actualsExpanded == undefined || child.actualsExpanded[j] == false || child.actualsExpanded[j] == undefined)
+    if (child.actualsExpanded == undefined ||
+        child.actualsExpanded[j] == false ||
+        child.actualsExpanded[j] == undefined)
    	 arg.text(child.actualsShort[j]);
     else if(child.actualsExpanded[j] == true) 
 	    arg.text(child.actuals[j])
