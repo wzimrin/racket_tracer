@@ -41,8 +41,12 @@ function makeShrunkenCall(child,parent) {
 
   for (j = 0; j < child.actuals.length; j++) {
     var arg = element('td');
-    arg.text(child.actualsShort[j]);
-    row.append(arg);}
+    if (child.actualsExpanded == undefined || child.actualsExpanded[j] == false || child.actualsExpanded[j] == undefined)
+   	 arg.text(child.actualsShort[j]);
+    else if(child.actualsExpanded[j] == true) 
+	    arg.text(child.actuals[j])
+    arg.data("type", ["actualsExpanded", j])
+    row.append(arg)}
 
   arrow = element('td'); arrow.addClass('arrow'); 
   arrow.text(' => '); row.append(arrow);
@@ -57,18 +61,20 @@ function makeShrunkenCall(child,parent) {
   return newDisplay
 }
 
-function makeArg(arg,otherForm) {
-  formalTD = element('td')
-  formalTD.addClass("arg")
+function makeArg(arg,otherForm, type, node) {
+  var TD = element('td')
+  TD.addClass("arg")
   
-  formalDiv = element("div")
-  formalDiv.text(arg)
+  var div = element("div")
+  div.text(arg)
   if (arg != otherForm) {
-    formalDiv.addClass("expandable")
-    formalDiv.data("otherForm",otherForm)
+    div.addClass("expandable")
+    div.data("otherForm",otherForm)
+    div.data("type", type)
+    div.data("node", node)
   }
-  formalTD.append(formalDiv)
-  return formalTD
+  TD.append(div)
+  return TD
 }
 
 function showTree(traceNode, displayWhere) {
@@ -96,9 +102,20 @@ function showTree(traceNode, displayWhere) {
   upperTR.append(nameTD)
 
   for (var i = 0; i < traceNode.formals.length; i++) {
-    upperTR.append(makeArg(traceNode.formalsShort[i],traceNode.formals[i]))
-    actualsTR.append(makeArg(traceNode.actualsShort[i],traceNode.actuals[i]))
-  }
+    if(traceNode.formalsExpanded == undefined 
+		    || traceNode.formalsExpanded[i] == undefined 
+		    || traceNode.formalsExpanded[i] == false)
+	upperTR.append(makeArg(traceNode.formalsShort[i],traceNode.formals[i], ["formalsExpanded", i], traceNode))
+    else if(traceNode.formalsExpanded[i] == true)
+    	 upperTR.append(makeArg(traceNode.formals[i], traceNode.formsShort[i], ["formalsExpanded", i], traceNode))
+    
+    if(traceNode.actualsExpanded == undefined 
+		    || traceNode.actualsExpanded[i] == undefined 
+		    || traceNode.actualsExpanded[i] == false)
+	actualsTR.append(makeArg(traceNode.actualsShort[i],traceNode.actuals[i], ["actualsExpanded", i], traceNode))
+    else if(traceNode.actualsExpanded[i] == true)
+	actualsTR.append(makeArg(traceNode.actuals[i], traceNode.actualsShort[i], ["actualsExpanded", i], traceNode))
+       	  }
 
   var arrow = element('td')
   arrow.attr("rowspan",2)
@@ -108,12 +125,19 @@ function showTree(traceNode, displayWhere) {
 
   var resultTD = element('td')
   resultTD.attr("rowspan",2)
-  resultTD.text(traceNode.resultShort)
+  //resultTD.text(traceNode.resultShort)
   resultTD.addClass("result")
-  if (traceNode.result != traceNode.resultShort) {
-    resultTD.data("otherForm",traceNode.result)
-    resultTD.addClass("expandable")
-  }
+  if (traceNode.resultExpanded == undefined || traceNode.resultExpanded[0] == undefined || traceNode.resultExpanded[0] == false) {
+	  resultTD.text(traceNode.resultShort)
+	  resultTD.data("otherForm", traceNode.result)}
+  else if (traceNode.resultExpanded[0] == true) {
+	  resultTD.text(traceNode.result)
+ 	  resultTD.data("otherForm",traceNode.resultShort)}
+      
+  resultTD.data("type", ["resultExpanded", 0])
+  resultTD.data("node", traceNode)
+  resultTD.addClass("expandable")
+  
   upperTR.append(resultTD)
 
   upperTable.append(upperTR);
@@ -125,24 +149,24 @@ function showTree(traceNode, displayWhere) {
   var lowerRow = element('tr');
   lowerTable.append(lowerRow)
   
-  var divArray = []	  
+  var shrunkenCalls = []	  
   
-  for (i = 0; i < traceNode.children.length; i++) {
+  for (var i = 0; i < traceNode.children.length; i++) {
     cell = element('td')
     shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
     cell.append(shrunkDiv)
     
     lowerRow.append(cell);
-    divArray[i] = shrunkDiv;
+    shrunkenCalls[i] = shrunkDiv;
   }
   displayWhere.append(lowerTable);
   
   displayWhere.removeClass('shrunkenCall');
   displayWhere.addClass('expandedCall');
 
-  for (i = 0; i < traceNode.children.length; i++) {
+  for (var i = 0; i < traceNode.children.length; i++) {
     if (traceNode.children[i].expanded == true) {
-      divArray[i].trigger('click')
+      shrunkenCalls[i].trigger('click')
     }
   }
 }
@@ -179,5 +203,29 @@ $(".expandable").live("click", function (event) {
   target = $(this)
   var newText = target.data("otherForm")
   target.data("otherForm",target.text())
+  var node = target.data("node");
+  var path = target.data("type")
+  var field = path[0]
+  var index = path[1]
+  console.log(node)
+  //node.actuals = "3"
+
+  //If true, was expanded, want to make unexpanded
+  //Default is unexpanded, so if undefined and clicked, want to expand
+  if(node[field] == undefined) {
+  	console.log("top if")
+ 	node[field] = [];
+	node[field][index] = true }
+  else if (node[field][index] == undefined || node[field][index] == false) {
+  	console.log("middle elseif")
+  	node[field][index] = true}
+  else
+  	node[field][index] = false;
+
+  console.log(node)
+  /*if(node.path[0].path[1] == true)
+  	node.path[0].path[1] = false;
+  else //False or undefined, want to make expanded
+	node.path[0].path[1] = true;*/
   target.text(newText)
 })
