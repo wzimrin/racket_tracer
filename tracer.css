@@ -3,8 +3,8 @@
     text-align: left;
     border-color: black;
 }
-.shrunkenCall {
-    color: #23c;
+.collapsedCall {
+    color: #23c !important;
     text-align: left;
     padding: 2px;
     white-space: pre;
@@ -89,7 +89,7 @@ td.delButton {
     vertical-align: top !important;
 }
 
-.shrunkenCall table tr td {
+.collapsedCall table tr td {
     color: #23c;
     white-space: pre;
     vertical-align: middle !important;
