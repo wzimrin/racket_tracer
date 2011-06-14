@@ -34,10 +34,25 @@ function makeShrunkenCall(child,parent) {
     newDisplay.addClass("background1")
   
   table = element('table')
-  var lowerRow = element('tr');
+  var row = element('tr');
 
   funcName = element('td')
+  funcName.text(child.name);
+  row.append(funcName)
 
+  for (j = 0; j < child.actuals.length; j++) {
+	var arg = element('td');
+  	arg.text(child.actuals[j]);
+  	row.append(arg);}
+
+  arrow = element('td');
+  arrow.text(' => ');
+  row.append(arrow)
+
+ result = element('td'); result.text(child.result); row.append(result);
+
+  table.append(row);
+	  /*
   funcName.text(child.name + ' ' + child.actuals);
   lowerRow.append(funcName);
 
@@ -50,6 +65,7 @@ function makeShrunkenCall(child,parent) {
   lowerRow.append(result);
 
   table.append(lowerRow);
+*/
   newDisplay.append(table);
   
   return newDisplay

@@ -114,12 +114,13 @@
 
 (define-for-syntax (print-expanded d)
   (printf "~a\n"
-          (syntax->datum (local-expand d 'top-level (list)))))
+          (syntax->datum (local-expand d 'module (list)))))
 
 (define-syntax (#%module-begin stx)
   (syntax-case stx ()
     [(_ body ...)
      #`(#%plain-module-begin
+        #,(print-expanded #'(provide all-defined-out))
         body ...
         (trace->json)
         (send-url "index.html"))]))
