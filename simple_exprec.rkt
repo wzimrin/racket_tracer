@@ -3,7 +3,7 @@
 (let [(x (lambda (y) y))]
   (x 2))
 
-#|
+
 (define (add x y)
   (+ x y))
 
@@ -34,7 +34,7 @@
           xs))
 
 (all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-|#
+
 ;(trace->json)
 ;(send-url "index.html")
 

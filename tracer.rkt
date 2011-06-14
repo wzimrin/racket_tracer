@@ -75,24 +75,36 @@
 (define-syntax-rule (show-trace)
   (print-right (current-call)))
 
+(define (format-nicely x depth width)
+  (format "~S" (let [(p (open-output-string "out"))]
+    (parameterize [(pretty-print-columns width)
+                   (pretty-print-depth depth)]
+      (pretty-display x p))
+    (get-output-string p))))
+
 (define (node->json t)
- (local [(define (format-list lst)
+ (local [(define (format-list lst depth)
            (string-append "["
                           (string-join (map (lambda (x)
-                                              (format "~S"
-                                                      (pretty-format x 40)))
+                                              (format-nicely x depth 40))
                                             lst)
                                        ",")
                           "]"))]
    (format "{name: \"~a\",
             formals: ~a,
+            formalsShort: ~a,
             actuals: ~a,
-            result: ~S,
+            actualsShort: ~a,
+            result: ~a,
+            resultShort: ~a,
             children: [~a]}"
            (node-name t)
-           (format-list (node-formal t))
-           (format-list (node-actual t))
-           (pretty-format (node-result t) 40)
+           (format-list (node-formal t) #f)
+           (format-list (node-formal t) 4)
+           (format-list (node-actual t) #f)
+           (format-list (node-actual t) 4)
+           (format-nicely (node-result t) #f 40)
+           (format-nicely (node-result t) 4 40)
           (if (empty? (node-kids t))
               ""
               (local ([define (loop k)
