@@ -78,8 +78,6 @@
 }
 
 .callTable {
-    /*margin-left:auto;
-      margin-right:auto;*/
     float: top left;
 }
 
@@ -88,17 +86,21 @@ td.delButton {
 }
 
 .shrunkenCall table tr td {
-	white-space: pre;
-	vertical-align: middle !important;
+    white-space: pre;
+    vertical-align: middle !important;
 }
 
 .arrow {
-	white-space: pre;
-	font-weight: bold;
+    white-space: pre;
+    font-weight: bold;
 }
 
 ul.tabs {
     list-style-type: none;
+    margin:0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-left: 0px
 }
 
 ul.tabs li {
@@ -107,6 +109,7 @@ ul.tabs li {
     border-width: 2px;
     border-style: solid;
     padding: 2px;
+    white-space: nowrap;
 }
 
 ul.tabs li.picked {
@@ -114,5 +117,6 @@ ul.tabs li.picked {
 }
 
 div#tabbar {
-    float:center;
+    overflow: auto;
+    margin-bottom:10px;
 }
