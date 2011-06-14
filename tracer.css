@@ -110,10 +110,13 @@ ul.tabs li {
     border-style: solid;
     padding: 2px;
     white-space: nowrap;
+    font-family: "Arial";
 }
 
 ul.tabs li.picked {
     background:#ddd;
+    /*font-weight: bold;*/
+    height: 300px;
 }
 
 div#tabbar {
