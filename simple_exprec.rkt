@@ -34,6 +34,12 @@
           xs))
 
 (all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
 
 ;(trace->json)
 ;(send-url "index.html")
