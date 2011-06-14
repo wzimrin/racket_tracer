@@ -63,8 +63,10 @@ function makeArg(arg,otherForm) {
   
   formalDiv = element("div")
   formalDiv.text(arg)
-  formalDiv.addClass("expandable")
-  formalDiv.data("otherForm",otherForm)
+  if (arg != otherForm) {
+    formalDiv.addClass("expandable")
+    formalDiv.data("otherForm",otherForm)
+  }
   formalTD.append(formalDiv)
   return formalTD
 }
@@ -107,9 +109,11 @@ function showTree(traceNode, displayWhere) {
   var resultTD = element('td')
   resultTD.attr("rowspan",2)
   resultTD.text(traceNode.resultShort)
-  resultTD.data("otherForm",traceNode.result)
   resultTD.addClass("result")
-  resultTD.addClass("expandable")
+  if (traceNode.result != traceNode.resultShort) {
+    resultTD.data("otherForm",traceNode.result)
+    resultTD.addClass("expandable")
+  }
   upperTR.append(resultTD)
 
   upperTable.append(upperTR);

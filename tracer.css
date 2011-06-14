@@ -1,15 +1,15 @@
 .expandedCall {
+    color: black;
     text-align: left;
     border-color: black;
 }
 .shrunkenCall {
-    color: black;
+    color: #23c;
     text-align: left;
     padding: 2px;
     white-space: pre;
 }
 .call {
-    color: black;
     margin: 3px;
     vertical-align: top;
     font-family:"Arial";
@@ -18,12 +18,12 @@
     border-style: solid;
 }
 .background1 {
-    background: #dddddd;
-    border-color: #dddddd;
+    background: #ddd;
+    border-color: #ddd;
 }
 .background2 {
-    background: #aaaaaa;
-    border-color: #aaaaaa;
+    background: #fff;
+    border-color: #fff;
 }
 .delButton div {
     color: white;
@@ -86,6 +86,7 @@ td.delButton {
 }
 
 .shrunkenCall table tr td {
+    color: #23c;
     white-space: pre;
     vertical-align: middle !important;
 }
@@ -111,6 +112,7 @@ ul.tabs li {
     padding: 2px;
     white-space: nowrap;
     font-family: "Arial";
+    font-weight: bold;
 }
 
 ul.tabs li.picked {
@@ -119,7 +121,15 @@ ul.tabs li.picked {
     height: 300px;
 }
 
+ul.tabs li.other {
+    color: #23c
+}
+
 div#tabbar {
     overflow: auto;
     margin-bottom:10px;
+}
+
+.expandable {
+    color: #23c;
 }
