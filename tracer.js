@@ -11,7 +11,6 @@ $('.delButton').live('click',function (event) {
   var target = $(event.target)
   var parent = target.parents('.expandedCall').first()
   parent.data('node').expanded = false
-  //parent.data("delProf", parent.contents())
   parent.empty()
   parent.attr("class",parent.data("oldClass"))
   parent.append(parent.data("oldHTML"))
@@ -125,19 +124,22 @@ function showTree(traceNode, displayWhere) {
 
   var resultTD = element('td')
   resultTD.attr("rowspan",2)
-  //resultTD.text(traceNode.resultShort)
   resultTD.addClass("result")
-  if (traceNode.resultExpanded == undefined || traceNode.resultExpanded[0] == undefined || traceNode.resultExpanded[0] == false) {
-	  resultTD.text(traceNode.resultShort)
-	  resultTD.data("otherForm", traceNode.result)}
-  else if (traceNode.resultExpanded[0] == true) {
+  if(traceNode.result != traceNode.resultShort) {
+  	if (traceNode.resultExpanded == undefined || traceNode.resultExpanded[0] == undefined || traceNode.resultExpanded[0] == false) {
+		  resultTD.text(traceNode.resultShort)
+	  	resultTD.data("otherForm", traceNode.result)}
+  	else if (traceNode.resultExpanded[0] == true) {
+		  resultTD.text(traceNode.result)
+ 	  	resultTD.data("otherForm",traceNode.resultShort)}
+  	resultTD.data("type", ["resultExpanded", 0])
+  	resultTD.data("node", traceNode)
+  	resultTD.addClass("expandable")
+  }
+  else if(traceNode.result == traceNode.resultShort)
 	  resultTD.text(traceNode.result)
- 	  resultTD.data("otherForm",traceNode.resultShort)}
       
-  resultTD.data("type", ["resultExpanded", 0])
-  resultTD.data("node", traceNode)
-  resultTD.addClass("expandable")
-  
+    
   upperTR.append(resultTD)
 
   upperTable.append(upperTR);
@@ -211,26 +213,17 @@ $(".expandable").live("click", function (event) {
   var path = target.data("type")
   var field = path[0]
   var index = path[1]
-  console.log(node)
-  //node.actuals = "3"
 
   //If true, was expanded, want to make unexpanded
   //Default is unexpanded, so if undefined and clicked, want to expand
   if(node[field] == undefined) {
-  	console.log("top if")
  	node[field] = [];
 	node[field][index] = true }
   else if (node[field][index] == undefined || node[field][index] == false) {
-  	console.log("middle elseif")
   	node[field][index] = true}
   else
   	node[field][index] = false;
 
-  console.log(node)
-  /*if(node.path[0].path[1] == true)
-  	node.path[0].path[1] = false;
-  else //False or undefined, want to make expanded
-	node.path[0].path[1] = true;*/
   target.text(newText)
 })
 
