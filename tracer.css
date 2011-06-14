@@ -112,8 +112,6 @@ ul.tabs li {
 
 ul.tabs li.picked {
     background:#ddd;
-    /*font-weight: bold;*/
-    height: 300px;
 }
 
 div#tabbar {
