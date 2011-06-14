@@ -33,8 +33,9 @@
 (define current-call (make-parameter (create-node 'top-level empty empty)))
 
 (define blocked-fun-names 
-  (namespace-mapped-symbols
-   (module->namespace 'lang/htdp-intermediate-lambda)))
+  (append (namespace-mapped-symbols
+           (module->namespace 'lang/htdp-intermediate-lambda))
+          (list bhnode?)))
   
 (define-syntax (app-recorder e)
   (syntax-case e ()
