@@ -1,10 +1,10 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local])
+                    #%app define lambda require #%module-begin let local define-struct])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
-                             define lambda require let local]])
+                             define lambda require let local define-struct]])
 
 (require racket/pretty)
 (require net/sendurl)
@@ -17,6 +17,7 @@
 (provide [rename-out #;(isl:define define)
                      (isl:lambda lambda)
                      (isl:require require)
+                     (ds-recorder define-struct)
                      #;(isl:let let)])
 
 ;(provide struct-accessor-procedure?)
@@ -35,7 +36,29 @@
 (define blocked-fun-names 
   (namespace-mapped-symbols
    (module->namespace 'lang/htdp-intermediate-lambda)))
-  
+
+(define ds-fun-names (box empty))
+
+(define (register-ds name fields)
+  (let* ([name-s (symbol->string name)]
+         [name-s-d (string-append name-s
+                                 "-")])
+    (set-box! ds-fun-names
+              (append (map string->symbol (list (string-append "make-" name-s)
+                                                (string-append name-s "?")))
+                      (map (lambda (field)
+                             (string->symbol 
+                              (string-append name-s-d
+                                             (symbol->string field))))
+                           fields)
+                      (unbox ds-fun-names)))))
+
+(define-syntax (ds-recorder e)
+  (syntax-case e ()
+    [(define-struct name fields)
+     #'(begin (isl:define-struct name fields)
+              (register-ds 'name 'fields))]))
+
 (define-syntax (app-recorder e)
   (syntax-case e ()
     
@@ -44,6 +67,7 @@
      (identifier? #'fun-expr) 
      ;result-expr -- is [block blocked-fun-names] just for ease of reading the code?
      #'(if (or (member 'fun-expr blocked-fun-names)
+               (member 'fun-expr (unbox ds-fun-names))
                (struct-accessor-procedure? fun-expr))
            ;if not a function you want to trace, leave as is
            (#%app fun-expr arg-expr ...)
@@ -75,18 +99,20 @@
 (define-syntax-rule (show-trace)
   (print-right (current-call)))
 
-(define (format-nicely x depth width)
+(define (format-nicely x depth width literal)
   (format "~S" (let [(p (open-output-string "out"))]
     (parameterize [(pretty-print-columns width)
                    (pretty-print-depth depth)]
-      (pretty-display x p))
+      ((if literal
+           pretty-print
+           pretty-display) x p))
     (get-output-string p))))
 
 (define (node->json t)
- (local [(define (format-list lst depth)
+ (local [(define (format-list lst depth literal)
            (string-append "["
                           (string-join (map (lambda (x)
-                                              (format-nicely x depth 40))
+                                              (format-nicely x depth 40 literal))
                                             lst)
                                        ",")
                           "]"))]
@@ -99,12 +125,12 @@
             resultShort: ~a,
             children: [~a]}"
            (node-name t)
-           (format-list (node-formal t) #f)
-           (format-list (node-formal t) 4)
-           (format-list (node-actual t) #f)
-           (format-list (node-actual t) 4)
-           (format-nicely (node-result t) #f 40)
-           (format-nicely (node-result t) 4 40)
+           (format-list (node-formal t) #f #f)
+           (format-list (node-formal t) 4 #f)
+           (format-list (node-actual t) #f #t)
+           (format-list (node-actual t) 4 #t)
+           (format-nicely (node-result t) #f 40 #t)
+           (format-nicely (node-result t) 4 40 #t)
           (if (empty? (node-kids t))
               ""
               (local ([define (loop k)

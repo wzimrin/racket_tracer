@@ -14,7 +14,7 @@
          (make-bhnode y (insert x r) l)))]));we are inserting into an empty heap
 
 (define (make-heap ns)
-  (foldl insert empty ns))
+  (foldl (lambda (x h) (insert x h)) empty ns))
  
 (define get-min bhnode-value)
 
@@ -34,7 +34,8 @@
                   [(or (not (bhnode? l));proceed as above, with l and r flipped
                        (< (get-min r) (get-min l)))
                    (make-bhnode (get-min r)
-                                l
+           
+                     l
                                 (insert-merge x (bhnode-left r) (bhnode-right r)))]))
           (define (left-most h);gets the left-most value (the only one we can easily remove)
             (let ([l (bhnode-left h)]);go left until l is empty, then return the value
@@ -57,4 +58,6 @@
                   (bhnode-left new-h)
                   (bhnode-right new-h))])))
 
-(remove-min (make-heap (list 8 4 3 9 1 6 12 14)))
+(define heap (make-heap (list 8 4 3 9 1 6 12 14)))
+(remove-min heap)
+(get-min heap)

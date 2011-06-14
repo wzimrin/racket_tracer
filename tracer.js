@@ -183,20 +183,24 @@ $(document).ready(function () {
       first = li
     li.data("child",i)
     li.text(theTrace.children[i].name)
+    li.addClass("other")
     ul.append(li)
   }
   first.trigger('click')
 })
 
-$('ul.tabs li').live('click', function (event) {
+$('ul.tabs li.other').live('click', function (event) {
   target = $(this)
   var div = $("#tracer")
   div.empty()
   var child = makeShrunkenCall(theTrace.children[target.data("child")],$(document.body))
   div.append(child)
   child.trigger('click')
-  $("ul.tabs li.picked").removeClass("picked")
+  var oldPicked = $("ul.tabs li.picked")
+  oldPicked.removeClass("picked")
+  oldPicked.addClass("other")
   target.addClass("picked")
+  target.removeClass("other")
 })
 
 $(".expandable").live("click", function (event) {
@@ -229,3 +233,13 @@ $(".expandable").live("click", function (event) {
 	node.path[0].path[1] = true;*/
   target.text(newText)
 })
+
+/*
+function find(object,lst) {
+  var obj = object
+  for (var i = 0; i < lst.length; i++) {
+    obj = obj[lst[i]]
+  }
+  return obj
+}
+*/
