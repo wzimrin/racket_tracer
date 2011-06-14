@@ -1,10 +1,10 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local])
+                    #%app define lambda require #%module-begin let local define-struct])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
-                             define lambda require let local]])
+                             define lambda require let local define-struct]])
 
 (require racket/pretty)
 (require net/sendurl)
@@ -17,6 +17,7 @@
 (provide [rename-out #;(isl:define define)
                      (isl:lambda lambda)
                      (isl:require require)
+                     (ds-recorder define-struct)
                      #;(isl:let let)])
 
 ;(provide struct-accessor-procedure?)
@@ -35,7 +36,29 @@
 (define blocked-fun-names 
   (namespace-mapped-symbols
    (module->namespace 'lang/htdp-intermediate-lambda)))
-  
+
+(define ds-fun-names (box empty))
+
+(define (register-ds name fields)
+  (let* ([name-s (symbol->string name)]
+         [name-s-d (string-append name-s
+                                 "-")])
+    (set-box! ds-fun-names
+              (append (map string->symbol (list (string-append "make-" name-s)
+                                                (string-append name-s "?")))
+                      (map (lambda (field)
+                             (string->symbol 
+                              (string-append name-s-d
+                                             (symbol->string field))))
+                           fields)
+                      (unbox ds-fun-names)))))
+
+(define-syntax (ds-recorder e)
+  (syntax-case e ()
+    [(define-struct name fields)
+     #'(begin (isl:define-struct name fields)
+              (register-ds 'name 'fields))]))
+
 (define-syntax (app-recorder e)
   (syntax-case e ()
     
@@ -44,6 +67,7 @@
      (identifier? #'fun-expr) 
      ;result-expr -- is [block blocked-fun-names] just for ease of reading the code?
      #'(if (or (member 'fun-expr blocked-fun-names)
+               (member 'fun-expr (unbox ds-fun-names))
                (struct-accessor-procedure? fun-expr))
            ;if not a function you want to trace, leave as is
            (#%app fun-expr arg-expr ...)
