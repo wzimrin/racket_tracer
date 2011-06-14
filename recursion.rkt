@@ -57,4 +57,6 @@
                   (bhnode-left new-h)
                   (bhnode-right new-h))])))
 
-(remove-min (make-heap (list 8 4 3 9 1 6 12 14)))
+(define heap (make-heap (list 8 4 3 9 1 6 12 14)))
+(remove-min heap)
+(get-min heap)

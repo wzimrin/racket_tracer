@@ -69,6 +69,10 @@
     white-space: pre;
 }
 
+.childTable {
+    width: 100%;
+}
+
 .childTable tr td {
     vertical-align: top;
 }
@@ -116,12 +120,12 @@ ul.tabs li {
 }
 
 ul.tabs li.picked {
-    background:#ddd;
     /*font-weight: bold;*/
     height: 300px;
 }
 
 ul.tabs li.other {
+    background:#ddd;
     color: #23c
 }
 
