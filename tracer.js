@@ -5,12 +5,12 @@ function element(tag) {
   return $("<"+tag+'/>')
 }
 
-//Creates a shrunken call -- the function, actuals and results in their correct
+//Creates a collapsed call -- the function, actuals and results in their correct
 //expanded or collapsed form. Will alternate the colors of the background to 
 //layer child calls on top of parent calls
-function makeShrunkenCall(child,parent) {
+function makeCollapsedCall(child,parent) {
   var newDisplay = element('div');
-  newDisplay.addClass('shrunkenCall');
+  newDisplay.addClass('collapsedCall');
   newDisplay.addClass('call');
   $(newDisplay).data("node",child)
 
@@ -58,7 +58,7 @@ function makeShrunkenCall(child,parent) {
   return newDisplay
 }
 
-//Helper to make and argument -- used for both formals and actuals
+//Helper to make an argument -- used for both formals and actuals
 //Will check to see if two forms are the same, and if they are, will not make
 //expandable/collapsible
 function makeArg(arg,otherForm, type, node) {
@@ -77,7 +77,9 @@ function makeArg(arg,otherForm, type, node) {
   return TD
 }
 
-function showTree(traceNode, displayWhere) {
+//Makes an expandedCall: delete button, function, formals, actuals and result
+//All in their appropriate expanded or unexpanded form
+function makeExpandedCall(traceNode, displayWhere) {
   displayWhere = $(displayWhere)
   displayWhere.empty()
   
@@ -106,6 +108,7 @@ function showTree(traceNode, displayWhere) {
 
   //Formals and actuals
   for (var i = 0; i < traceNode.formals.length; i++) {
+    //Display in collapsed form if formalsExpanded is undefined or false
     if(traceNode.formalsExpanded == undefined 
 		    || traceNode.formalsExpanded[i] == undefined 
 		    || traceNode.formalsExpanded[i] == false)
@@ -113,6 +116,7 @@ function showTree(traceNode, displayWhere) {
     else if(traceNode.formalsExpanded[i] == true)
     	 upperTR.append(makeArg(traceNode.formals[i], traceNode.formsShort[i], ["formalsExpanded", i], traceNode))
     
+    //Display in collapsed form if actualsExpanded is undefined or false
     if(traceNode.actualsExpanded == undefined 
 		    || traceNode.actualsExpanded[i] == undefined 
 		    || traceNode.actualsExpanded[i] == false)
@@ -158,25 +162,27 @@ function showTree(traceNode, displayWhere) {
   var lowerRow = element('tr');
   lowerTable.append(lowerRow)
   
-  var shrunkenCalls = []	  
+  
+  //Add collapsedCalls and expand if necessary
+  var collapsedCalls = []	  
   
   for (var i = 0; i < traceNode.children.length; i++) {
     cell = element('td')
-    shrunkDiv = makeShrunkenCall(traceNode.children[i],displayWhere);
-    cell.append(shrunkDiv)
+    collapsedDiv = makeCollapsedCall(traceNode.children[i],displayWhere);
+    cell.append(collapsedDiv)
     
     lowerRow.append(cell);
-    shrunkenCalls[i] = shrunkDiv;
+    collapsedCalls[i] = collapsedDiv;
   }
+
   displayWhere.append(lowerTable);
-  
-  displayWhere.removeClass('shrunkenCall');
+  displayWhere.removeClass('collapsedCall');
   displayWhere.addClass('expandedCall');
 
-  for (var i = 0; i < traceNode.children.length; i++) {
-    if (traceNode.children[i].expanded == true) {
-      shrunkenCalls[i].trigger('click')
-    }
+  for (var i = 0; i < traceNode.children.length; i++) 
+  {
+    if (traceNode.children[i].expanded == true)
+      collapsedCalls[i].trigger('click')
   }
 }
 
@@ -206,12 +212,12 @@ $(document).ready(function () {
 //EVENT: Expands shrunkenCall (child) on click
 //Stores current class and html (know what to restore to if an expanded child 
 //is collapsed) and then expands the child
-$('.shrunkenCall').live('click',function (event) {
+$('.collapsedCall').live('click',function (event) {
   var target = $(this)
   target.data("oldClass",target.attr("class"))
   target.data("oldHTML",target.contents())
   target.data('node').expanded = true
-  showTree(target.data('node'),target)
+  makeExpandedCall(target.data('node'),target)
 })
 
 //EVENT: Collapses the expandedCall (child) on click
@@ -231,7 +237,7 @@ $('ul.tabs li.other').live('click', function (event) {
   target = $(this)
   var div = $("#tracer")
   div.empty()
-  var child = makeShrunkenCall(theTrace.children[target.data("child")],$(document.body))
+  var child = makeCollapsedCall(theTrace.children[target.data("child")],$(document.body))
   div.append(child)
   child.trigger('click')
   var oldPicked = $("ul.tabs li.picked")
