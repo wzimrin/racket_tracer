@@ -132,7 +132,6 @@
   (syntax-case stx ()
     [(_ body ...)
      #`(#%plain-module-begin
-        #,(print-expanded #'(provide all-defined-out))
         body ...
         (trace->json)
         (send-url "index.html"))]))
