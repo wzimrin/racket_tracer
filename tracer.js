@@ -36,36 +36,20 @@ function makeShrunkenCall(child,parent) {
   table = element('table')
   var row = element('tr');
 
-  funcName = element('td')
-  funcName.text(child.name);
-  row.append(funcName)
+  funcName = element('td'); funcName.addClass('name');
+  funcName.text(child.name); row.append(funcName);
 
   for (j = 0; j < child.actuals.length; j++) {
 	var arg = element('td');
   	arg.text(child.actuals[j]);
   	row.append(arg);}
 
-  arrow = element('td');
-  arrow.text(' => ');
-  row.append(arrow)
+  arrow = element('td'); arrow.addClass('arrow'); 
+  arrow.text(' => '); row.append(arrow);
 
  result = element('td'); result.text(child.result); row.append(result);
 
   table.append(row);
-	  /*
-  funcName.text(child.name + ' ' + child.actuals);
-  lowerRow.append(funcName);
-
-  arrow = element('td');
-  arrow.text(' => ');
-  lowerRow.append(arrow);
-
-  result = element('td');
-  result.text(child.result);
-  lowerRow.append(result);
-
-  table.append(lowerRow);
-*/
   newDisplay.append(table);
   
   return newDisplay
@@ -101,7 +85,7 @@ function showTree(traceNode, displayWhere) {
   upperTR.append(delTD)
   nameTD = element('td')
   nameTD.attr("rowspan",2)
-  nameTD.text("("+traceNode.name)
+  nameTD.text(traceNode.name)
   nameTD.addClass("name")
   upperTR.append(nameTD)
 
@@ -111,11 +95,11 @@ function showTree(traceNode, displayWhere) {
     actualsTR.append(makeArg(traceNode.actuals[i]))
   }
 
-  closeTD = element('td')
-  closeTD.attr("rowspan",2)
-  closeTD.text(") =>")
-  closeTD.addClass("close")
-  upperTR.append(closeTD)
+  var arrow = element('td')
+  arrow.attr("rowspan",2)
+  arrow.text("=>")
+  arrow.addClass("arrow")
+  upperTR.append(arrow)
 
   resultTD = element('td')
   resultTD.attr("rowspan",2)
