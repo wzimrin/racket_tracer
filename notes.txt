@@ -1,0 +1,20 @@
+ability to expand arguments from shrunken call - lack confusing
+bad printing - use *sl printing - constructor-syntax
+two lists confusing at top level
+formals/actuals not intuitive
+need to correspond between input/output and code
+just formals not enough
+highlighting original code from tracer
+arrow new syntax
+make-heap and args juxtaposition not clear
+... not necessarily clear - additional complexity
+expand arguments is first thing - separate expansion of args and expansion
+expansion
+google maps style zoom for arguments
+children start out expanded
+gray highlights are useful - make current display readable in drracket
+deexpand other branches, in general, we are moving on to a different branch
+bug lets shrunken call args be expanded
+may need more than highlighting source
+x is delete button, actually minimizes
+don't show things as leaves unless they are leaves
