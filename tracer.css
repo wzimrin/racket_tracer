@@ -3,12 +3,14 @@
     text-align: left;
     border-color: black;
 }
+
 .collapsedCall {
     color: #23c !important;
     text-align: left;
     padding: 2px;
     white-space: pre;
 }
+
 .call {
     margin: 3px;
     vertical-align: top;
@@ -17,15 +19,18 @@
     border-radius: 5px;
     border-style: solid;
 }
+
 .background1 {
     background: #ddd;
     border-color: #ddd;
 }
+
 .background2 {
     background: #fff;
     border-color: #fff;
 }
-.delButton div {
+
+.button div {
     color: white;
     background: black;
     text-align: center;
@@ -110,9 +115,7 @@ ul.tabs {
 
 ul.tabs li {
     display: inline;
-    border-color: black;
-    border-width: 2px;
-    border-style: solid;
+    border: 2px solid black;
     padding: 2px;
     white-space: nowrap;
     font-family: "Arial";
@@ -137,6 +140,6 @@ div#tabbar {
 }
 
 .hover {
-	font-weight: bold;
-	font-size: larger;
+	background: #c2d1e5; /*d4dfed; b0c4de; Add8E6; B4CDCD; BFD4F7; #99CCFF;
+	89A8f0;*/
 }
