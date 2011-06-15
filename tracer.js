@@ -229,9 +229,14 @@ $('.collapsedCall').live('mouseenter',function(event) {
 	$(this).trigger('click')
 	/*$(this).addClass('hover')*/
 		})
-/*$('.expandedCall').live('mouseout',function(event) {
-	console.log("mouse exited")
-	$(this).find('.delButton').trigger('click') })*/
+
+$('.expandable').live('mouseenter',function(event) {
+	console.log("mouse entered expandable")
+	$(this).trigger('click') })
+
+$('.expandable').live('mouseout',function(event) {
+	console.log("mouse exited expandable")
+	$(this).trigger('click') })
 
 
 //EVENT: Expands shrunkenCall (child) on click

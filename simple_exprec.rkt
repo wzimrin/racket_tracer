@@ -25,7 +25,7 @@
 (define (close-enough? x y)
   (< (dist x y 0 0) 4))
 
-(fib 10)
+(fib 15)
 (close-enough? 3 3)
 
 (define (all-close-enough? xs)
