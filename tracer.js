@@ -229,9 +229,9 @@ $('.collapsedCall').live('mouseenter',function(event) {
 	$(this).trigger('click')
 	/*$(this).addClass('hover')*/
 		})
-$('.expandedCall').live('mouseout',function(event) {
+/*$('.expandedCall').live('mouseout',function(event) {
 	console.log("mouse exited")
-	$(this).find('.delButton').trigger('click') })
+	$(this).find('.delButton').trigger('click') })*/
 
 
 //EVENT: Expands shrunkenCall (child) on click
