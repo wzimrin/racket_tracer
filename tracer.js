@@ -204,11 +204,34 @@ $(document).ready(function () {
     ul.append(li)
   }
   first.trigger('click')
+
+  
+/*
+$('td').hover(
+  function () {
+    console.log("adding hover class")
+    $(this).addClass('hover');
+  },
+  function () {
+    console.log("removing hover class")
+    $(this).removeClass("hover");
+  }
+)*/
 })
 
 // ----------------------------------------------------------------------------
 //                                      EVENTS
 // ----------------------------------------------------------------------------
+
+
+$('.collapsedCall').live('mouseenter',function(event) {
+	console.log("mouse entered!")
+	$(this).trigger('click')
+	/*$(this).addClass('hover')*/
+		})
+$('.expandedCall').live('mouseout',function(event) {
+	console.log("mouse exited")
+	$(this).find('.delButton').trigger('click') })
 
 
 //EVENT: Expands shrunkenCall (child) on click
