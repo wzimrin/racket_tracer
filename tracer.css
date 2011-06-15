@@ -25,7 +25,7 @@
     background: #fff;
     border-color: #fff;
 }
-.delButton div {
+.button div {
     color: white;
     background: black;
     text-align: center;
@@ -137,6 +137,5 @@ div#tabbar {
 }
 
 .hover {
-	font-weight: bold;
-	font-size: larger;
+    background: #cdf;
 }

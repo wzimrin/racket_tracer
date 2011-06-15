@@ -22,6 +22,16 @@ function makeCollapsedCall(child,parent) {
   
   table = element('table')
   var row = element('tr');
+ 
+  //expand button
+  var expTD = element('td')
+  expTD.attr("rowspan",2)
+  expTD.addClass('expandButton');
+  expTD.addClass("button")
+  var expButton = element('div');
+  expButton.text(' + ');
+  expTD.append(expButton);
+  row.append(expTD)
 
   //Function Name
   funcName = element('td'); 
@@ -95,9 +105,9 @@ function makeExpandedCall(traceNode, displayWhere) {
   var delTD = element('td')
   delTD.attr("rowspan",2)
   delTD.addClass('delButton');
+  delTD.addClass("button")
   var delButton = element('div');
-  delButton.text(' X ');
-  delButton.attr("rowspan",2);
+  delButton.text(' - ');
   delTD.append(delButton);
   upperTR.append(delTD)
 
@@ -224,11 +234,22 @@ $('td').hover(
 // ----------------------------------------------------------------------------
 
 
-$('.collapsedCall').live('mouseenter',function(event) {
-	console.log("mouse entered!")
-	$(this).trigger('click')
-	/*$(this).addClass('hover')*/
-		})
+$('.delButton div').live('mouseenter',function(event) {
+  console.log("mouse entered!")
+  $(this).trigger('click')
+})
+
+$('.expandButton div').live("mouseenter",function (event) {
+  console.log("mouse enteres")
+  $(this).parents(".collapsedCall").first().trigger("click")
+  })
+
+$(".expandable").live("mouseenter",function (event) {
+  $(this).addClass("hover")
+}).live("mouseleave",function (event) {
+  $(this).removeClass("hover")
+})
+
 /*$('.expandedCall').live('mouseout',function(event) {
 	console.log("mouse exited")
 	$(this).find('.delButton').trigger('click') })*/
@@ -248,7 +269,7 @@ $('.collapsedCall').live('click',function (event) {
 //EVENT: Collapses the expandedCall (child) on click
 //Stores the current class and html (know what to restore to if collapsedCall 
 //is expanded again) and then collapses the child
-$('.delButton').live('click',function (event) {
+$('.delButton div').live('click',function (event) {
   var target = $(event.target)
   var parent = target.parents('.expandedCall').first()
   parent.data('node').expanded = false
