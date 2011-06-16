@@ -25,7 +25,7 @@
 (define (close-enough? x y)
   (< (dist x y 0 0) 4))
 
-(fib 15)
+(fib 10)
 (close-enough? 3 3)
 
 (define (all-close-enough? xs)
@@ -34,14 +34,7 @@
           xs))
 
 (all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
 
-;(trace->json)
 ;(send-url "index.html")
 
 #;(begin0 (let-values (((x) (lambda (y) y)))
