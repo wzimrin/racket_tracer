@@ -192,44 +192,45 @@ $(document).ready(function () {
         li.data("child",exp)
         bodies.append(exp)
     }
+
+    // ----------------------------------------------------------------------------
+    //                                      EVENTS
+    // ----------------------------------------------------------------------------
+
+    //makes the expand/collapse buttons work
+    $('.button div').bind('mouseenter',function(event) {
+        toggleCall($(this).parents(".call").first())
+    })
+
+    //makes the expandables expand/collapse appropriately
+    //and highlight on hover
+    $(".expandable").bind("click",function (event) {//expand/collapse
+        toggleExpandable($(this))
+    }).live("mouseenter",function (event) {//hover
+        $(this).addClass("hover")
+    }).live("mouseleave",function (event) {
+        $(this).removeClass("hover")
+    })
+
+    //makes the tabs switch what is displayed and
+    //highlight on hover
+    $('ul.tabs li.other').bind('click', function (event) {//switch display
+        target = $(this)
+        var div = $("#tracer")
+        $(".toplevel").hide()
+        var child = target.data("child")
+        child.show()
+        var oldPicked = $("ul.tabs li.picked")
+        oldPicked.removeClass("picked")
+        oldPicked.addClass("other")
+        target.addClass("picked")
+        target.removeClass("other")
+        target.removeClass("hover")
+    }).bind("mouseenter",function (event) {//hover
+        $(this).addClass("hover")
+    }).bind("mouseleave",function (event) {
+        $(this).removeClass("hover")
+    })
+    
     first.trigger("click")
-})
-
-// ----------------------------------------------------------------------------
-//                                      EVENTS
-// ----------------------------------------------------------------------------
-
-//makes the expand/collapse buttons work
-$('.button div').live('mouseenter',function(event) {
-    toggleCall($(this).parents(".call").first())
-})
-
-//makes the expandables expand/collapse appropriately
-//and highlight on hover
-$(".expandable").live("click",function (event) {//expand/collapse
-    toggleExpandable($(this))
-}).live("mouseenter",function (event) {//hover
-    $(this).addClass("hover")
-}).live("mouseleave",function (event) {
-    $(this).removeClass("hover")
-})
-
-//makes the tabs switch what is displayed and
-//highlight on hover
-$('ul.tabs li.other').live('click', function (event) {//switch display
-    target = $(this)
-    var div = $("#tracer")
-    $(".toplevel").hide()
-    var child = target.data("child")
-    child.show()
-    var oldPicked = $("ul.tabs li.picked")
-    oldPicked.removeClass("picked")
-    oldPicked.addClass("other")
-    target.addClass("picked")
-    target.removeClass("other")
-    target.removeClass("hover")
-}).live("mouseenter",function (event) {//hover
-    $(this).addClass("hover")
-}).live("mouseleave",function (event) {
-    $(this).removeClass("hover")
 })
