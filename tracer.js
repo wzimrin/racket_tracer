@@ -42,10 +42,13 @@ function makeCollapsedCall(child,parent) {
     //Actuals (choose expanded or unexpanded form based on boolean stored in node)
     for (j = 0; j < child.actuals.length; j++) 
     {
-        var arg = element('td');
+        var arg = element('td')
+        console.log(child.actualsExpanded)
+        console.log(child)
         if (child.actualsExpanded == undefined ||
             child.actualsExpanded[j] == false ||
             child.actualsExpanded[j] == undefined){
+            console.log('actualsExpanded was false or undefined for actual ' + j)
             arg.text(child.actualsShort[j])
         }        
         else if(child.actualsExpanded[j] == true) 
@@ -322,10 +325,13 @@ $(".expandable").live("click", function (event) {
     //Default is unexpanded, so if undefined and clicked, want to expand
     if(node[field] == undefined) {
         node[field] = []
-        node[field][index] = true 
+        node[field][index] = true
+        console.log('Set ' + field + ' ' + index + ' to true')
+        console.log(node)
     }
     else if (node[field][index] == undefined || node[field][index] == false) {
         node[field][index] = true
+        console.log(field + ' ' + index + ' to true in else if')
     }
     else
         node[field][index] = false
