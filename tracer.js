@@ -228,19 +228,39 @@ $(document).ready(function () {
 //                                      EVENTS
 // ----------------------------------------------------------------------------
 
+offButton = true
+
 $('.delButton div').live('mouseenter',function(event) {
-    console.log("mouse entered!")
-    $(this).trigger('click')
+    console.log("enter collapse")
+    if(offButton == true) {
+        $(this).trigger('click')
+        offButton = false
+    }
+}).live('mouseleave',function(event) {
+    console.log("leave collapse")
+    offButton = true
 })
 
 $('.expandButton div').live("mouseenter",function (event) {
-    console.log("mouse enteres")
-    $(this).parents(".collapsedCall").first().trigger("click")
+    console.log("enter expand")
+    if(offButton == true) {
+        $(this).parents(".collapsedCall").first().trigger("click")
+        offButton = false
+    }
+}).live('mouseleave',function(event) {
+    console.log("leave expand")
+    offButton = true
 })
 
 $(".expandable").live("mouseenter",function (event) {
     $(this).addClass("hover")
 }).live("mouseleave",function (event) {
+    $(this).removeClass("hover")
+})
+
+$(".other").live("mouseenter", function(event) {
+    $(this).addClass("hover")
+}).live("mouseleave", function(event) {
     $(this).removeClass("hover")
 })
 
@@ -280,7 +300,8 @@ $('ul.tabs li.other').live('click', function (event)
     oldPicked.removeClass("picked")
     oldPicked.addClass("other")
     target.addClass("picked")
-    target.removeClass("other") 
+    target.removeClass("other")
+    target.removeClass("hover")
 })
 
 

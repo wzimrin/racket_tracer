@@ -30,6 +30,11 @@
     border-color: #fff;
 }
 
+td.expandButton {
+    vertical-align: top !important;
+    /*float: top;*/
+}
+
 .button div {
     color: white;
     background: black;
@@ -40,7 +45,7 @@
     border-color:black;
     font-family:"Arial";
     font-weight: bold;
-    font-size: 12px;
+    font-size: 15px;
     width: 15px;
     float: left;
 }
@@ -97,7 +102,7 @@ td.delButton {
 .collapsedCall table tr td {
     color: #23c;
     white-space: pre;
-    vertical-align: middle !important;
+    vertical-align: middle;
 }
 
 .arrow {
@@ -120,13 +125,17 @@ ul.tabs li {
     white-space: nowrap;
     font-family: "Arial";
     font-weight: bold;
+    background:#ddd;
 }
 
 ul.tabs li.picked {
+    background: white;
+    padding: 5px;
 }
 
 ul.tabs li.other {
-    background:#ddd;
+    padding: 5px;
+   /* background:#ddd;*/
     color: #23c
 }
 
@@ -140,6 +149,6 @@ div#tabbar {
 }
 
 .hover {
-	background: #c2d1e5; /*d4dfed; b0c4de; Add8E6; B4CDCD; BFD4F7; #99CCFF;
+	background: #c2d1e5 !important; /*d4dfed; b0c4de; Add8E6; B4CDCD; BFD4F7; #99CCFF;
 	89A8f0;*/
 }
