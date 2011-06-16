@@ -98,6 +98,8 @@ ul.tabs > li.other {
 div#tabbar {
     overflow: auto;
     margin-bottom:10px;
+    float: left;
+    width: 100%;
 }
 
 /* Other */

@@ -237,9 +237,9 @@ $(document).ready(function () {
 
     //makes the tabbar scroll with me
     $(window).scroll(function (event) {
-        $("#tabbar ul.tabs").css("padding-left",pageXOffset+"px")
+        $("#tabbar").css("margin-left",(pageXOffset)+"px")
     })
-    
+
     first.trigger("click")
 })
 
