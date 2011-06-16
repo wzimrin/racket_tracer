@@ -65,7 +65,7 @@
     font-weight: bold;
 }
 
-.callTable > tr > td {
+.callTable > tbody > tr > td {
     vertical-align: middle;
 }
 
@@ -116,6 +116,6 @@ div#tabbar {
     float: left;
 }
 
-.childTable > tr > td {
+.childTable > tbody > tr > td {
     vertical-align: top;
 }
