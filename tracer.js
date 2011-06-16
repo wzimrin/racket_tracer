@@ -226,9 +226,9 @@ $(document).ready(function () {
         target.addClass("picked")
         target.removeClass("other")
         target.removeClass("hover")
-    }).bind("mouseenter",function (event) {//hover
+    }).live("mouseenter",function (event) {//hover
         $(this).addClass("hover")
-    }).bind("mouseleave",function (event) {
+    }).live("mouseleave",function (event) {
         $(this).removeClass("hover")
     })
     
