@@ -66,6 +66,7 @@ function makeCallTable(node) {
     nameTD.attr("rowspan",2)
     nameTD.text(node.name)
     nameTD.addClass("name")
+    nameTD.addClass("cell")
     topRow.append(nameTD)
 
     //Formals and actuals
@@ -86,6 +87,7 @@ function makeCallTable(node) {
     arrow.attr("rowspan",2)
     arrow.text("=>")
     arrow.addClass("arrow")
+    arrow.addClass("cell")
     hidable.push(arrow)
     topRow.append(arrow)
 

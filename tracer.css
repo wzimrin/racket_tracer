@@ -30,28 +30,28 @@
     color: white;
     background: black;
     text-align: center;
+
     vertical-align: middle;
-    border-style: solid;
-    border-radius: 3px;
-    border-color:black;
+    border: 3px solid black; 
+    
     font-family:"Arial";
     font-weight: bold;
     font-size: 15px;
+
     width: 15px;
     height: 50px;
     float: left;
 }
 
-.superparent {
-    overflow-x: visible;
-    width: auto;
+
+/* Call Table */
+
+.cell {
+    white-space: pre;
 }
 
-/* Arguments (formals and actuals) */
-
-.arg {
-    text-align: center;
-    white-space: pre;
+.name {
+    font-weight: bold;
 }
 
 .arg div {
@@ -61,48 +61,26 @@
     width:auto;
 }
 
-.name {
-    white-space: pre;
+.arrow {
     font-weight: bold;
-}
-
-.result {
-    white-space: pre;
-}
-
-.childTable {
-    /*width: 100%;*/
-}
-
-.childTable tr td {
-    vertical-align: top;
 }
 
 .callTable tr td {
     vertical-align: middle;
 }
 
-.callTable {
-    float: top left;
-}
-
-.arrow {
-    white-space: pre;
-    font-weight: bold;
-}
+/* Tab bar */
 
 ul.tabs {
     list-style-type: none;
-    margin:0;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin: 10px 0px; /*TB 10, LR 0*/
     padding-left: 0px
 }
 
 ul.tabs li {
     display: inline;
     border: 2px solid black;
-    padding: 2px;
+    padding: 5px;
     white-space: nowrap;
     font-family: "Arial";
     font-weight: bold;
@@ -111,11 +89,9 @@ ul.tabs li {
 
 ul.tabs li.picked {
     background: white;
-    padding: 5px;
 }
 
 ul.tabs li.other {
-    padding: 5px;
     color: #23c
 }
 
@@ -124,10 +100,21 @@ div#tabbar {
     margin-bottom:10px;
 }
 
+/* Other */
+
 .expandable {
     color: #23c;
 }
 
 .hover {
     background: #c2d1e5 !important; 
+}
+
+.superparent {
+    overflow-x: visible;
+    width: auto;
+}
+
+.childTable tr td {
+    vertical-align: top;
 }
