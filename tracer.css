@@ -101,7 +101,7 @@ td.delButton {
 }
 
 .collapsedCall table tr td {
-    color: #23c;
+    /*color: #23c;*/
     white-space: pre;
     vertical-align: middle;
 }
