@@ -77,13 +77,13 @@ function makeCollapsedCall(child,parent) {
 //Helper to make an argument -- used for both formals and actuals
 //Will check to see if two forms are the same, and if they are, will not make
 //expandable/collapsible
-function makeArg(arg,otherForm, type, node) {
+function makeArg(formShort, formFull, type, node) {
     var TD = element('td')
     TD.addClass("arg")
 
     var div = element("div")
     div.text(arg)
-    if (arg != otherForm) {
+    if (form1 != form2) {
         div.addClass("expandable")
         div.data("otherForm",otherForm)
         div.data("type", type)
@@ -93,55 +93,38 @@ function makeArg(arg,otherForm, type, node) {
   return TD
 }
 
-//Makes an expandedCall: delete button, function, formals, actuals and result
-//All in their appropriate expanded or unexpanded form
-function makeExpandedCall(traceNode, displayWhere) {
-    displayWhere = $(displayWhere)
-    displayWhere.empty()
-
-    var upperTable = element('table')
-    displayWhere.append(upperTable)
-
-    var upperTR = element('tr')
-    actualsTR = element('tr')
-
-    //Delete button
-    var delTD = element('td')
-    delTD.attr("rowspan",2)
-    delTD.addClass('delButton');
-    delTD.addClass("button")
-    var delButton = element('div');
-    delButton.text(' - ');
-    delTD.append(delButton);
-    upperTR.append(delTD)
+//Makes the call table: function name, formals, actuals and result in table form
+function makeCallTable(node) {
+    var topRow = element('tr')
+    var bottomRow = element('tr')
 
     //Function name
     var nameTD = element('td')
     nameTD.attr("rowspan",2)
-    nameTD.text(traceNode.name)
+    nameTD.text(node.name)
     nameTD.addClass("name")
-    upperTR.append(nameTD)
+    row.append(nameTD)
 
     //Formals and actuals
-    for (var i = 0; i < traceNode.formals.length; i++) {
+    for (var i = 0; i < node.formals.length; i++) {
     //Display in collapsed form if formalsExpanded is undefined or false
-        if(traceNode.formalsExpanded == undefined 
-                || traceNode.formalsExpanded[i] == undefined 
-                || traceNode.formalsExpanded[i] == false) {
-        upperTR.append(makeArg(traceNode.formalsShort[i],traceNode.formals[i], ["formalsExpanded", i], traceNode))
+        if(node.formalsExpanded == undefined 
+                || node.formalsExpanded[i] == undefined 
+                || node.formalsExpanded[i] == false) {
+            topRow.append(makeArg(node.formalsShort[i],node.formals[i], ["formalsExpanded", i], node))
         }
-        else if(traceNode.formalsExpanded[i] == true) {
-             upperTR.append(makeArg(traceNode.formals[i], traceNode.formsShort[i], ["formalsExpanded", i], traceNode))
+        else if(node.formalsExpanded[i] == true) {
+             topRow.append(makeArg(node.formals[i], node.formsShort[i], ["formalsExpanded", i], node))
         }
         
         //Display in collapsed form if actualsExpanded is undefined or false
-        if(traceNode.actualsExpanded == undefined 
-                || traceNode.actualsExpanded[i] == undefined 
-                || traceNode.actualsExpanded[i] == false) {
-            actualsTR.append(makeArg(traceNode.actualsShort[i],traceNode.actuals[i], ["actualsExpanded", i], traceNode))
+        if(node.actualsExpanded == undefined 
+                || node.actualsExpanded[i] == undefined 
+                || node.actualsExpanded[i] == false) {
+            bottomRow.append(makeArg(node.actualsShort[i],node.actuals[i], ["actualsExpanded", i], node))
         }
-        else if(traceNode.actualsExpanded[i] == true) {
-            actualsTR.append(makeArg(traceNode.actuals[i], traceNode.actualsShort[i], ["actualsExpanded", i], traceNode))
+        else if(node.actualsExpanded[i] == true) {
+            bottomRow.append(makeArg(node.actuals[i], node.actualsShort[i], ["actualsExpanded", i], node))
         }
     }
 
@@ -150,7 +133,7 @@ function makeExpandedCall(traceNode, displayWhere) {
     arrow.attr("rowspan",2)
     arrow.text("=>")
     arrow.addClass("arrow")
-    upperTR.append(arrow)
+    topRow.append(arrow)
 
     //Result
     var resultTD = element('td')
@@ -179,13 +162,49 @@ function makeExpandedCall(traceNode, displayWhere) {
     upperTable.append(upperTR);
     upperTable.append(actualsTR);
     upperTable.addClass("callTable")
+}
+
+
+//Makes an expandedCall: delete button, function, formals, actuals and result
+//All in their appropriate expanded or unexpanded form
+function makeExpandedCall(traceNode, displayWhere) {
+    displayWhere = $(displayWhere)
+    displayWhere.empty()
+
+    var upperTable = element('table')
+    displayWhere.append(upperTable)
+
+    var upperTR = element('tr')
+    actualsTR = element('tr')
+
+    //Delete button
+    var delTD = element('td')
+    delTD.attr("rowspan",2)
+    delTD.addClass('delButton');
+    delTD.addClass("button")
+    var delButton = element('div');
+    delButton.text(' - ');
+    delTD.append(delButton);
+    upperTR.append(delTD)
+
 
     var lowerTable = element('table')
     lowerTable.addClass("childTable")
     var lowerRow = element('tr');
     lowerTable.append(lowerRow)
 
+    /*for(i = 0; i < traceNode.children.length; i++) {
+        var cell = element('td')
+        var div = element('div')
+        expandedChild = makeExpandedCall(traceNode.children[i],div);
+        cell.append(div)
+        lowerRow.append(cell)
+    }
+    displayWhere.append(lowerTable)
+    displayWhere.removeClass('collapsedCall')
+    displayWhere.addClass('expandedCall')*/
 
+    
     //Add collapsedCalls and expand if necessary
     var collapsedCalls = []	  
 
@@ -204,7 +223,7 @@ function makeExpandedCall(traceNode, displayWhere) {
 
     for (var i = 0; i < traceNode.children.length; i++) 
     {
-        if (traceNode.children[i].expanded == true)
+        //if (traceNode.children[i].expanded == true)
             collapsedCalls[i].trigger('click')
     }
 }
