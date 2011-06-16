@@ -47,6 +47,7 @@ td.expandButton {
     font-weight: bold;
     font-size: 15px;
     width: 15px;
+    height: 50px;
     float: left;
 }
 
@@ -80,7 +81,7 @@ td.expandButton {
 }
 
 .childTable {
-    width: 100%;
+    /*width: 100%;*/
 }
 
 .childTable tr td {
