@@ -1,3 +1,6 @@
+
+/* Calls */
+
 .call {
     margin: 3px;
     vertical-align: top;
@@ -16,6 +19,8 @@
     background: #fff;
     border-color: #fff;
 }
+
+/* Expand/collapse button */
 
 .button {
     vertical-align: top !important;
@@ -42,6 +47,8 @@
     width: auto;
 }
 
+/* Arguments (formals and actuals) */
+
 .arg {
     text-align: center;
     white-space: pre;
@@ -52,10 +59,6 @@
     margin-left:auto;
     margin-right:auto;
     width:auto;
-}
-
-.close {
-    white-space: pre;
 }
 
 .name {
@@ -113,7 +116,6 @@ ul.tabs li.picked {
 
 ul.tabs li.other {
     padding: 5px;
-   /* background:#ddd;*/
     color: #23c
 }
 
@@ -127,6 +129,5 @@ div#tabbar {
 }
 
 .hover {
-    background: #c2d1e5 !important; /*d4dfed; b0c4de; Add8E6; B4CDCD; BFD4F7; #99CCFF;
-	                              89A8f0;*/
+    background: #c2d1e5 !important; 
 }
