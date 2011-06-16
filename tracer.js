@@ -1,54 +1,31 @@
 //William Zimrin and Jeanette Miranda
 //tracer.js	6/02/2011
 
+//creates a dom element of the type tag
 function element(tag) {
     return $("<"+tag+'/>')
 }
 
-function setLoc(location,value) {
-    location.obj[location.location]=value
-}
-
-function getLoc(location) {
-    return location.obj[location.location]
-}
-
-function makeLoc(obj,address) {
-    for (var x = 0; x < address.length-1; x++) {
-        if (obj[address[x]]==undefined) {
-            if (typeof (address[x+1]) == "number") {
-                obj[address[x]]=[]
-            }
-            else {
-                obj[address[x]]={}
-            }
-        }
-        obj = obj[address[x]]
-    }
-    return {obj:obj,location:address[x]}
-}
-
+//makes an expandable show the correct text (as determined by html.data("expanded"))
 function updateExpandable(html) {
-    var expanded = getLoc(html.data("location"))
+    var expanded = html.data("expanded")
     if (expanded)
         html.text(html.data("full"))
     else
         html.text(html.data("short"))
 }
 
+//makes an expandable expand/collapse
 function toggleExpandable(html) {
-    var loc = html.data("location")
-    setLoc(loc,!getLoc(loc))
+    html.data("expanded",!html.data("expanded"))
     updateExpandable(html)
 }
 
-//Creates a collapsed call -- the function, actuals and results in their correct
-//expanded or collapsed form. Will alternate the colors of the background to 
-//layer child calls on top of parent calls
-//Helper to make an argument -- used for both formals and actuals
+//Helper to make an callTable cell -- used for formals, actuals, and results
 //Will check to see if two forms are the same, and if they are, will not make
 //expandable/collapsible
-function makeCell(formShort, formFull, location, cssClass) {
+//takes the short form, the full form, and the class to apply to the td
+function makeCell(formShort, formFull, cssClass) {
     var TD = element('td')
     TD.addClass(cssClass)
 
@@ -57,7 +34,7 @@ function makeCell(formShort, formFull, location, cssClass) {
         div.addClass("expandable")
         div.data("short",formShort)
         div.data("full",formFull)
-        div.data("location", location)
+        div.data("expanded", false)
         updateExpandable(div)
     }
     else {
@@ -93,16 +70,12 @@ function makeCallTable(node) {
     //Formals and actuals
     for (var i = 0; i < node.formals.length; i++) {
         //Display in collapsed form if formalsExpanded is undefined or false
-        var formal = makeCell(node.formalsShort[i],node.formals[i],
-                              makeLoc(node,["formalsExpanded",i]),
-                              "arg")
+        var formal = makeCell(node.formalsShort[i],node.formals[i],"arg")
         topRow.append(formal)
         hidable.push(formal)
         
         //Display in collapsed form if actualsExpanded is undefined or false
-        var actual = makeCell(node.actualsShort[i],node.actuals[i],
-                              makeLoc(node,["actualsExpanded",i]),
-                              "arg")
+        var actual = makeCell(node.actualsShort[i],node.actuals[i],"arg")
         bottomRow.append(actual)
         hidable.push(actual)
     }
@@ -116,9 +89,7 @@ function makeCallTable(node) {
     topRow.append(arrow)
 
     //Result
-    resultTD = makeCell(node.resultShort,node.result,
-                        makeLoc(node,["resultExpanded"]),
-                        "result")
+    resultTD = makeCell(node.resultShort,node.result,"result")
     resultTD.attr("rowspan",2)
     hidable.push(resultTD)
     
@@ -130,6 +101,7 @@ function makeCallTable(node) {
     return {table:table,hidable:hidable,button:buttonDiv}
 }
 
+//sets whether obj is hidden
 function setHide(obj,hidden) {
     if (hidden)
         obj.hide()
@@ -137,8 +109,10 @@ function setHide(obj,hidden) {
         obj.show()
 }
 
+//makes a call display the appropriate amount of stuff,
+//as determined by html.data("expanded"))
 function updateCall(html) {
-    var expanded = getLoc(html.data("location"))
+    var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var button = html.data("button")
     for (var i = 0; i < hidable.length; i++) {
@@ -151,9 +125,9 @@ function updateCall(html) {
     }        
 }
 
+//expands/collapses a call
 function toggleCall(html) {
-    var loc = html.data("location")
-    setLoc(loc,!getLoc(loc))
+    html.data("expanded",!html.data("expanded"))
     updateCall(html)
 }
 
@@ -180,18 +154,6 @@ function makeCall(traceNode, parent) {
     var lowerRow = element('tr');
     lowerTable.append(lowerRow)
 
-    /*for(i = 0; i < traceNode.children.length; i++) {
-        var cell = element('td')
-        var div = element('div')
-        expandedChild = makeCall(traceNode.children[i],div);
-        cell.append(div)
-        lowerRow.append(cell)
-    }
-    displayWhere.append(lowerTable)
-    displayWhere.removeClass('collapsedCall')
-    displayWhere.addClass('expandedCall')*/
-
-    
     for (var i = 0; i < traceNode.children.length; i++) {
         var cell = element('td')
         collapsedDiv = makeCall(traceNode.children[i],div);
@@ -200,19 +162,16 @@ function makeCall(traceNode, parent) {
         lowerRow.append(cell);
     }
 
-    /*for (var i = 0; i < traceNode.children.length; i++) {
-        //if (traceNode.children[i].expanded == true)
-        collapsedCalls[i].trigger('click')
-    }*/
     div.append(upperTable)
     div.append(lowerTable)
-    div.data("location",makeLoc(traceNode,["expanded"]))
+    div.data("expanded",false)
     div.data("hidable",hidable)
     div.data("button",button)
     updateCall(div)
     return div
 }
 
+//sets up js stuff
 $(document).ready(function () {
     var tabs = $("#tabbar")
     var bodies = $("#tracer")
@@ -240,24 +199,24 @@ $(document).ready(function () {
 //                                      EVENTS
 // ----------------------------------------------------------------------------
 
-offButton = true
-
-
+//makes the expand/collapse buttons work
 $('.button div').live('mouseenter',function(event) {
     toggleCall($(this).parents(".call").first())
 })
 
-$(".expandable").live("click",function (event) {
+//makes the expandables expand/collapse appropriately
+//and highlight on hover
+$(".expandable").live("click",function (event) {//expand/collapse
     toggleExpandable($(this))
-})
-
-$(".expandable").live("mouseenter",function (event) {
+}).live("mouseenter",function (event) {//hover
     $(this).addClass("hover")
 }).live("mouseleave",function (event) {
     $(this).removeClass("hover")
 })
 
-$('ul.tabs li.other').live('click', function (event) {
+//makes the tabs switch what is displayed and
+//highlight on hover
+$('ul.tabs li.other').live('click', function (event) {//switch display
     target = $(this)
     var div = $("#tracer")
     $(".toplevel").hide()
@@ -269,90 +228,8 @@ $('ul.tabs li.other').live('click', function (event) {
     target.addClass("picked")
     target.removeClass("other")
     target.removeClass("hover")
-})
-
-$("ul.tabs li.other").live("mouseenter",function (event) {
+}).live("mouseenter",function (event) {//hover
     $(this).addClass("hover")
-})
-
-$("ul.tabs li.other").live("mouseleave",function (event) {
+}).live("mouseleave",function (event) {
     $(this).removeClass("hover")
 })
-
-/*
-
-$('.expandButton div').live("mouseenter",function (event) {
-    console.log("enter expand")
-    if(offButton == true) {
-        $(this).parents(".collapsedCall").first().trigger("click")
-        offButton = false
-    }
-}).live('mouseleave',function(event) {
-    console.log("leave expand")
-    offButton = true
-})
-
-$(".other").live("mouseenter", function(event) {
-    $(this).addClass("hover")
-}).live("mouseleave", function(event) {
-    $(this).removeClass("hover")
-})
-
-//EVENT: Expands shrunkenCall (child) on click
-//Stores current class and html (know what to restore to if an expanded child 
-//is collapsed) and then expands the child
-$('.collapsedCall').live('click',function (event) {
-    var target = $(this)
-    target.data("oldClass",target.attr("class"))
-    target.data("oldHTML",target.contents())
-    target.data('node').expanded = true
-    makeCall(target.data('node'),target)
-})
-
-//EVENT: Collapses the expandedCall (child) on click
-//Stores the current class and html (know what to restore to if collapsedCall 
-//is expanded again) and then collapses the child
-$('.delButton div').live('click',function (event) {
-    var target = $(event.target)
-    var parent = target.parents('.expandedCall').first()
-    parent.data('node').expanded = false
-    parent.empty()
-    parent.attr("class",parent.data("oldClass"))
-    parent.append(parent.data("oldHTML"))
-    event.stopPropagation();
-})
-
-
-
-//EVENT: Expandable/collapsible object on click
-//When an expandable or collapsible object is clicked, swap to its other form
-//And update the appropriate expanded boolean denoting whether it is expanded
-//or collapse
-$(".expandable").live("click", function (event) {
-    target = $(this)
-    var newText = target.data("otherForm")
-    target.data("otherForm",target.text())
-    var node = target.data("node");
-    var path = target.data("type")
-    var field = path[0]
-    var index = path[1]
-
-    //If true, was expanded, want to make unexpanded
-    //Default is unexpanded, so if undefined and clicked, want to expand
-    if(node[field] == undefined) {
-        node[field] = []
-        node[field][index] = true
-        console.log('Set ' + field + ' ' + index + ' to true')
-        console.log(node)
-    }
-    else if (node[field][index] == undefined || node[field][index] == false) {
-        node[field][index] = true
-        console.log(field + ' ' + index + ' to true in else if')
-    }
-    else
-        node[field][index] = false
-
-    target.text(newText)
-})
-*/
-
