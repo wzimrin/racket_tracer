@@ -1,16 +1,3 @@
-.expandedCall {
-    color: black;
-    text-align: left;
-    border-color: black;
-}
-
-.collapsedCall {
-    color: #23c !important;
-    text-align: left;
-    padding: 2px;
-    white-space: pre;
-}
-
 .call {
     margin: 3px;
     vertical-align: top;
@@ -30,16 +17,15 @@
     border-color: #fff;
 }
 
-td.expandButton {
+.button {
     vertical-align: top !important;
-    /*float: top;*/
 }
 
 .button div {
     color: white;
     background: black;
     text-align: center;
-    vertical-align: center;
+    vertical-align: middle;
     border-style: solid;
     border-radius: 3px;
     border-color:black;
@@ -52,7 +38,8 @@ td.expandButton {
 }
 
 .superparent {
-    overflow-x: auto;
+    overflow-x: visible;
+    width: auto;
 }
 
 .arg {
@@ -94,16 +81,6 @@ td.expandButton {
 
 .callTable {
     float: top left;
-}
-
-td.delButton {
-    vertical-align: top !important;
-}
-
-.collapsedCall table tr td {
-    /*color: #23c;*/
-    white-space: pre;
-    vertical-align: middle;
 }
 
 .arrow {
@@ -150,6 +127,6 @@ div#tabbar {
 }
 
 .hover {
-	background: #c2d1e5 !important; /*d4dfed; b0c4de; Add8E6; B4CDCD; BFD4F7; #99CCFF;
-	89A8f0;*/
+    background: #c2d1e5 !important; /*d4dfed; b0c4de; Add8E6; B4CDCD; BFD4F7; #99CCFF;
+	                              89A8f0;*/
 }
