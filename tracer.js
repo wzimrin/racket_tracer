@@ -234,6 +234,12 @@ $(document).ready(function () {
     }).live("mouseleave",function (event) {
         $(this).removeClass("hover")
     })
+
+    //makes the tabbar scroll with me
+    $(window).scroll(function (event) {
+        $("#tabbar ul.tabs").css("padding-left",pageXOffset+"px")
+    })
     
     first.trigger("click")
 })
+
