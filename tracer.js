@@ -28,6 +28,7 @@ function toggleExpandable(html) {
 function makeCell(formShort, formFull, cssClass) {
     var TD = element('td')
     TD.addClass(cssClass)
+    TD.addClass("cell")
 
     var div = element("div")
     if (formShort != formFull) {
