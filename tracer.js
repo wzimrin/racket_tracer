@@ -209,11 +209,11 @@ $(document).ready(function () {
     //and highlight on hover
     $(".expandable").bind("click",function (event) {//expand/collapse
         toggleExpandable($(this))
-    }).live("mouseenter",function (event) {//hover
+    })/*.live("mouseenter",function (event) {//hover
         $(this).addClass("hover")
     }).live("mouseleave",function (event) {
         $(this).removeClass("hover")
-    })
+    })*/
 
     //makes the tabs switch what is displayed and
     //highlight on hover
