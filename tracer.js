@@ -229,11 +229,23 @@ $(document).ready(function () {
         target.addClass("picked")
         target.removeClass("other")
         target.removeClass("hover")
+        $(window).scrollLeft(0)
     }).live("mouseenter",function (event) {//hover
         $(this).addClass("hover")
     }).live("mouseleave",function (event) {
         $(this).removeClass("hover")
     })
-    
+
+    //makes the tabbar scroll with me
+    $(window).scroll(function (event) {
+        //pageXOffset
+        $("#tabbar").animate({display: 'none',
+                              marginLeft: $(window).scrollLeft() + "px"}, 
+                              40,
+                              'linear',
+                              function(){})
+    })
+
     first.trigger("click")
 })
+
