@@ -170,6 +170,7 @@ function makeCall(traceNode, parent) {
     div.data("expanded",false)
     div.data("hidable",hidable)
     div.data("button",button)
+
     updateCall(div)
     return div
 }
