@@ -1,5 +1,33 @@
+/* William Zimrin and Jeanette Miranda
+6/2011
 
-/* Calls */
+Whole Page
+Tracer
+Expand/collapse button
+Call table
+tab bar
+code pane
+scroll buttons
+other
+*/
+
+
+/* Whole page */
+
+body {
+    overflow: hidden;
+}
+
+/* Tracer */
+
+div#tracer {
+    position: absolute;
+    top:100px;
+    left:300px; /* FA adjust depending on whether codePane is open */
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 
 .call {
     margin: 3px;
@@ -66,6 +94,21 @@
 
 /* Tab bar */
 
+/*div#tabbar {
+    overflow: auto;
+    margin-bottom:10px;
+    float: left;
+    width: 100%;
+}*/
+div#tabbar {
+    width: 100%;
+    overflow: auto;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+}
+
 ul.tabs {
     list-style-type: none;
     margin: 10px 0px; /*TB 10, LR 0*/
@@ -90,11 +133,39 @@ ul.tabs > li.other {
     color: #23c
 }
 
-div#tabbar {
-    overflow: auto;
-    margin-bottom:10px;
-    float: left;
-    width: 100%;
+/* Code Pane */
+
+div#codePane {
+    position: absolute;
+    left: 0px;
+    top: 100px;
+    bottom: 0px;
+    width: 300px;
+    background: black;
+}
+
+/* Scroll Buttons */
+
+.scrollButton {
+    background: gray;
+    width: 30px;
+    height: 30px;
+    top: auto;
+    bottom: auto;
+}
+
+.scrollButton:hover {
+    border: 2px solid black;
+}
+
+div#leftScroll {
+    position: absolute;
+    left: 300px;
+}
+
+div#rightScroll {
+    position: absolute;
+    right: 0px;
 }
 
 /* Other */

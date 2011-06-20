@@ -166,6 +166,15 @@ function makeCall(traceNode, parent) {
 $(document).ready(function () {
     var tabs = $("#tabbar")
     var bodies = $("#tracer")
+    var leftScroll = $("#leftScroll")
+    leftScroll.addClass('scrollButton')
+    var rightScroll = $("#rightScroll")
+    rightScroll.addClass('scrollButton')
+    var codePane = $("#codePane")
+    codePane.text("i will be code") // change to code after merge FA
+    var codePaneWidth = 300;
+
+
     var ul = element("ul")
     ul.addClass("tabs")
     tabs.append(ul)
@@ -186,6 +195,36 @@ $(document).ready(function () {
     // ----------------------------------------------------------------------------
     //                                      EVENTS
     // ----------------------------------------------------------------------------
+
+    var moveInc = 2
+    var t;
+    $('#leftScroll').bind('mousedown', function(event) {
+        var moveLeft = function() {
+            newPos = bodies.css('left')
+            newPosInt = parseInt(newPos.substring(0, newPos.length-2))+moveInc
+            if(newPosInt <= codePaneWidth)
+                bodies.css('left', newPosInt+'px')}
+        t = setInterval(moveLeft, 1)
+    }).bind('mouseup', function(event) {
+        clearInterval(t)
+    }).bind('mouseleave', function(event) {
+        clearInterval(t)
+    })
+
+    var tR;
+    $('#rightScroll').bind('mousedown', function(event) {
+        var moveRight = function() {
+            newPos = bodies.css('left')
+            newPosInt = parseInt(newPos.substring(0, newPos.length-2))-moveInc
+            if(newPosInt > document.body.clientWidth-bodies.width()) {
+                bodies.css('left', newPosInt+'px')}
+            }
+        tR = setInterval(moveRight, 1)
+    }).bind('mouseup', function(event) {
+        clearInterval(tR)
+    }).bind('mouseleave', function(event) {
+        clearInterval(tR)
+    })
 
     //makes the expand/collapse buttons work
     $('.button').bind('mouseenter',function(event) {

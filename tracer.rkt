@@ -199,4 +199,8 @@
         (run-tests)
         (display-results)
         (trace->json)
+        (send-url "index.html")
+        (external-browser 'firefox)
+        (send-url "index.html")
+        (external-browser 'konqueror)
         (send-url "index.html"))]))
