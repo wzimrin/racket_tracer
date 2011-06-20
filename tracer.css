@@ -103,6 +103,15 @@ div#tabbar {
     color: #23c;
 }
 
+.background1 > table > tbody > tr > td > div.expandable:hover {
+    background: #c2d1e5;
+}
+
+
+.background2 > table > tbody > tr > td > div.expandable:hover {
+    background: #DCE5F0; /*#E6ECF4; #D4DFED;*/
+}
+
 .hover {
     background: #c2d1e5 !important; 
 }

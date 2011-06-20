@@ -57,7 +57,14 @@
            (insert-merge extra;new-h is a valid BrownHeap, so this results in a valid BrownHeap
                   (bhnode-left new-h)
                   (bhnode-right new-h))])))
+(define (add x y) (+ x y))
+
+(define (add-on e l) (cons e l))
+
+(add-on 5 (add-on 4 (add-on 3 empty)))
 
 (define heap (make-heap (list 8 4 3 9 1 6 12 14)))
 (remove-min heap)
+(check-expect (make-heap (list 1 2)) 
+              (remove-min (make-heap (list 1 2 3))))
 (get-min heap)

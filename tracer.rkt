@@ -5,6 +5,7 @@
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let local define-struct]])
+(require test-engine/scheme-tests)
 
 (require racket/pretty)
 (require net/sendurl)
@@ -195,5 +196,7 @@
     [(_ body ...)
      #`(#%plain-module-begin
         body ...
+        (run-tests)
+        (display-results)
         (trace->json)
         (send-url "index.html"))]))

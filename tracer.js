@@ -157,6 +157,7 @@ function makeCall(traceNode, parent) {
     div.data("expanded",false)
     div.data("hidable",hidable)
     div.data("button",button)
+
     updateCall(div)
     return div
 }
@@ -195,11 +196,11 @@ $(document).ready(function () {
     //and highlight on hover
     $(".expandable").bind("click",function (event) {//expand/collapse
         toggleExpandable($(this))
-    }).live("mouseenter",function (event) {//hover
+    })/*.live("mouseenter",function (event) {//hover
         $(this).addClass("hover")
     }).live("mouseleave",function (event) {
         $(this).removeClass("hover")
-    })
+    })*/
 
     //makes the tabs switch what is displayed and
     //highlight on hover
@@ -215,6 +216,7 @@ $(document).ready(function () {
         target.addClass("picked")
         target.removeClass("other")
         target.removeClass("hover")
+        $(window).scrollLeft(0)
     }).live("mouseenter",function (event) {//hover
         $(this).addClass("hover")
     }).live("mouseleave",function (event) {
@@ -223,7 +225,12 @@ $(document).ready(function () {
 
     //makes the tabbar scroll with me
     $(window).scroll(function (event) {
-        $("#tabbar").css("margin-left",(pageXOffset)+"px")
+        //pageXOffset
+        $("#tabbar").animate({display: 'none',
+                              marginLeft: $(window).scrollLeft() + "px"}, 
+                              40,
+                              'linear',
+                              function(){})
     })
 
     $(".literal").tooltip({
