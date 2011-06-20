@@ -1,4 +1,4 @@
-#lang s-exp "tracer.rkt"
+#lang planet tracer/tracer
 
 (define-struct bhnode (value left right))
 

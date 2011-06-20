@@ -165,13 +165,15 @@ function makeCall(traceNode, parent) {
 //sets up js stuff
 $(document).ready(function () {
     var tabs = $("#tabbar")
+    var bodyWrapper = $("#tracerWrapper")
     var bodies = $("#tracer")
+    //bodyWrapper.append(bodies)
     var leftScroll = $("#leftScroll")
     leftScroll.addClass('scrollButton')
     var rightScroll = $("#rightScroll")
     rightScroll.addClass('scrollButton')
     var codePane = $("#codePane")
-    codePane.text("i will be code") // change to code after merge FA
+    codePane.text(code) // change to code after merge FA
     var codePaneWidth = 300;
 
 
@@ -280,7 +282,5 @@ $(document).ready(function () {
     })
 
     first.trigger("click")
-
-    $("#code").text(code)
 })
 

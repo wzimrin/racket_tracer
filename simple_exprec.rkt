@@ -1,4 +1,4 @@
-#lang s-exp "tracer.rkt"
+#lang planet tracer/tracer
 
 (let [(x (lambda (y) y))]
   (x 2))

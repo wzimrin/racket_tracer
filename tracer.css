@@ -18,14 +18,35 @@ body {
     overflow: hidden;
 }
 
+div#middle {
+    padding-left: 300px;
+}
+
+div#middle .column {
+    float: left;
+    position: relative;
+}
+
 /* Tracer */
+
+div#tracerWrapper {
+    float: left;
+    width: 100%;
+    /*position: relative;*/
+    right: 0px;
+    height: 10px;
+    /*z-index: -1;*/
+    
+
+}
 
 div#tracer {
     position: absolute;
-    top:100px;
-    left:300px; /* FA adjust depending on whether codePane is open */
+    top:0px;
+    left:0px; /* FA adjust depending on whether codePane is open */
     overflow: hidden;
     white-space: nowrap;
+    /*z-index: -1;*/
 }
 
 
@@ -103,10 +124,11 @@ div#tracer {
 div#tabbar {
     width: 100%;
     overflow: auto;
-    position: absolute;
+    /*position: absolute;
     left: 0px;
     top: 0px;
-    right: 0px;
+    right: 0px;*/
+    float: top;
 }
 
 ul.tabs {
@@ -136,12 +158,20 @@ ul.tabs > li.other {
 /* Code Pane */
 
 div#codePane {
-    position: absolute;
+    /*position: absolute;
     left: 0px;
     top: 100px;
-    bottom: 0px;
+    bottom: 0px;*/
+    /*position: relative;
+    left: 0px;
+    top: 0px;*/
+    margin-left: -100%;
+    right: 300px;
     width: 300px;
-    background: black;
+    background: black;e
+    color: white;
+    white-space: pre;
+    overflow:auto
 }
 
 /* Scroll Buttons */
@@ -150,8 +180,7 @@ div#codePane {
     background: gray;
     width: 30px;
     height: 30px;
-    top: auto;
-    bottom: auto;
+    /*z-index: 1;*/
 }
 
 .scrollButton:hover {
@@ -160,12 +189,15 @@ div#codePane {
 
 div#leftScroll {
     position: absolute;
-    left: 300px;
+    left: 0px; /*
+    float: left;*/
+
 }
 
 div#rightScroll {
     position: absolute;
-    right: 0px;
+    right: 10px;/*
+    float: right;*/
 }
 
 /* Other */
