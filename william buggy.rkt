@@ -60,3 +60,6 @@
 
 (permutations (list 1 2 3 4))
 (permutations (list 1))
+
+(lambda (num)(my-map (lambda (a-perm) (cons num a-perm))
+                     (permutations (drop num lst))))
