@@ -25,7 +25,7 @@ function toggleExpandable(html) {
 //Will check to see if two forms are the same, and if they are, will not make
 //expandable/collapsible
 //takes the short form, the full form, and the class to apply to the td
-function makeCell(formShort, formFull, cssClass) {
+function makeCell(formShort, formFull, literalForm, cssClass) {
     var TD = element('td')
     TD.addClass(cssClass)
     TD.addClass("cell")
@@ -41,67 +41,49 @@ function makeCell(formShort, formFull, cssClass) {
     else {
         div.text(formShort)
     }
+    if (literalForm){
+        div.addClass("literal")
+        div.data("literal",literalForm)
+    }
     TD.append(div)
     return TD
 }
 
 //Makes the call table: function name, formals, actuals and result in table form
 function makeCallTable(node) {
-    var topRow = element('tr')
-    var bottomRow = element('tr')
+    var row = element('tr')
     var table = element("table")
-
-    var hidable = []
-
-    var button = element("td")
-    button.attr("rowspan",2)
-    var buttonDiv = element("div")
-    buttonDiv.text("-")
-    button.append(buttonDiv)
-    button.addClass("button")
-    topRow.append(button)
 
     //Function name
     var nameTD = element('td')
-    nameTD.attr("rowspan",2)
+    nameTD.attr("rowspan")
     nameTD.text(node.name)
     nameTD.addClass("name")
     nameTD.addClass("cell")
-    topRow.append(nameTD)
+    row.append(nameTD)
 
     //Formals and actuals
     for (var i = 0; i < node.formals.length; i++) {
-        //Display in collapsed form if formalsExpanded is undefined or false
-        var formal = makeCell(node.formalsShort[i],node.formals[i],"arg")
-        topRow.append(formal)
-        hidable.push(formal)
-        
         //Display in collapsed form if actualsExpanded is undefined or false
-        var actual = makeCell(node.actualsShort[i],node.actuals[i],"arg")
-        bottomRow.append(actual)
-        hidable.push(actual)
+        var actual = makeCell(node.actualsShort[i],node.actuals[i],node.formals[i],"arg")
+        row.append(actual)
     }
 
     //Arrow
     var arrow = element('td')
-    arrow.attr("rowspan",2)
     arrow.text("=>")
     arrow.addClass("arrow")
     arrow.addClass("cell")
-    hidable.push(arrow)
-    topRow.append(arrow)
+    row.append(arrow)
 
     //Result
-    resultTD = makeCell(node.resultShort,node.result,"result")
-    resultTD.attr("rowspan",2)
-    hidable.push(resultTD)
+    resultTD = makeCell(node.resultShort,node.result,false,"result")
     
-    topRow.append(resultTD)
+    row.append(resultTD)
 
-    table.append(topRow)
-    table.append(bottomRow)
+    table.append(row)
     table.addClass("callTable")
-    return {table:table,hidable:hidable,button:buttonDiv}
+    return table
 }
 
 //sets whether obj is hidden
@@ -146,10 +128,13 @@ function makeCall(traceNode, parent) {
         div.addClass("background1")
     div.addClass("call")
 
-    var upperTableObj = makeCallTable(traceNode)
-    var upperTable = upperTableObj.table
-    var button = upperTableObj.button
-    var hidable = upperTableObj.hidable
+    var upperTable = makeCallTable(traceNode)
+
+    var button = element("div")
+    button.text("-")
+    button.addClass("button")
+
+    var hidable = []
 
     var lowerTable = element('table')
     hidable.push(lowerTable)
@@ -166,6 +151,8 @@ function makeCall(traceNode, parent) {
     }
 
     div.append(upperTable)
+    if (traceNode.children.length!=0)
+        div.append(button)
     div.append(lowerTable)
     div.data("expanded",false)
     div.data("hidable",hidable)
@@ -191,7 +178,6 @@ $(document).ready(function () {
         ul.append(li)
         var exp = makeCall(theTrace.children[i],tabs)
         exp.addClass("toplevel")
-        toggleCall(exp)
         li.data("child",exp)
         bodies.append(exp)
     }
@@ -201,7 +187,7 @@ $(document).ready(function () {
     // ----------------------------------------------------------------------------
 
     //makes the expand/collapse buttons work
-    $('.button div').bind('mouseenter',function(event) {
+    $('.button').bind('mouseenter',function(event) {
         toggleCall($(this).parents(".call").first())
     })
 
@@ -240,6 +226,15 @@ $(document).ready(function () {
         $("#tabbar").css("margin-left",(pageXOffset)+"px")
     })
 
+    $(".literal").tooltip({
+        bodyHandler:function () {
+            return $(this).data("literal")
+        },
+        fade:250
+    })
+
     first.trigger("click")
+
+    $("#code").text(code)
 })
 
