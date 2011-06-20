@@ -241,7 +241,5 @@ $(document).ready(function () {
     })
 
     first.trigger("click")
-
-    $("#code").text(code)
 })
 

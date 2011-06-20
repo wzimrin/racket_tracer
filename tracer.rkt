@@ -9,6 +9,7 @@
 
 (require racket/pretty)
 (require net/sendurl)
+(require [for-syntax racket/port])
 
 (provide let local define)
 
@@ -27,6 +28,8 @@
 
 ;the actual struct that stores our data
 (struct node (name formal result actual kids) #:mutable #:transparent)
+
+(define src (box ""))
 
 ;creates a node with no result or children
 ;takes a name, a formals list, and an actuals list
@@ -183,7 +186,9 @@
 (define-syntax-rule (trace->json)
     (with-output-to-file "tree-of-trace.js"
       (lambda ()
-        (display (format "var theTrace = ~a" (node->json (current-call)))))
+        (display (format "var theTrace = ~a\nvar code = ~S"
+                         (node->json (current-call))
+                         (unbox src))))
     #:exists 'replace))
 
 (define-for-syntax (print-expanded d)
@@ -193,8 +198,9 @@
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
   (syntax-case stx ()
-    [(_ body ...)
+    [(_ source body ...)
      #`(#%plain-module-begin
+        (set-box! src source)
         body ...
         (run-tests)
         (display-results)
