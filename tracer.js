@@ -1,6 +1,29 @@
 //William Zimrin and Jeanette Miranda
 //tracer.js	6/02/2011
 
+
+function highlightSpan(el,idx,span) {
+    if (el.data("text")) {
+        el.empty()
+        el.text(el.data("text"))
+        el.data("text",false)
+    }
+    var text = el.text()
+    var startIdx = idx-1
+    var endIdx = idx+span-1
+    var beginText = text.substring(0,startIdx)
+    var highlightedText = text.substring(startIdx,endIdx)
+    var endText = text.substring(endIdx)
+    el.data("text",text)
+    el.empty()
+    var hi = element("span")
+    hi.addClass("highlight")
+    hi.text(highlightedText)
+    el.append(beginText,hi,endText)
+    console.log(highlightedText)
+    console.log(text.length)
+}
+
 //creates a dom element of the type tag
 function element(tag) {
     return $("<"+tag+'/>')
@@ -60,6 +83,9 @@ function makeCallTable(node) {
     nameTD.text(node.name)
     nameTD.addClass("name")
     nameTD.addClass("cell")
+    nameTD.data("idx",node.idx)
+    nameTD.data("span",node.span)
+    nameTD.data("linum",node.linum)
     row.append(nameTD)
 
     //Formals and actuals
@@ -202,6 +228,14 @@ $(document).ready(function () {
     // ----------------------------------------------------------------------------
     //                                      EVENTS
     // ----------------------------------------------------------------------------
+
+    $("td.name").click(function () {
+        var target = $(this)
+        console.log(target.data("idx"))
+        console.log(target.data("span"))
+        highlightSpan($("div#codePane"),target.data("idx"),target.data("span"))
+    })
+    
     var originalMoveInc = 2
 
     function scrollHelper(button,pred,dir,mult) {

@@ -178,6 +178,10 @@ div#codePane {
     font-size: 14px;
 }
 
+.highlight {
+    background: #666;
+}
+
 /* Scroll Buttons */
 
 .scrollButton {
