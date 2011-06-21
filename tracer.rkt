@@ -91,7 +91,7 @@
                        list)
                       ;otherwise, return it
                       binding)]
-            [linum (syntax-position #'fun-expr)])
+            [linum (syntax-line #'fun-expr)])
        (displayln linum)
        ;we want to potentially trace fun-expr if it was bound in the file
        (if (or (equal? vals 'lexical)
@@ -151,14 +151,14 @@
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
   ;javascript list
- (local [(define (format-list lst depth literal)
-           (string-append "["
-                          (string-join (map (lambda (x)
-                                              (format-nicely x depth 40 literal))
-                                            lst)
-                                       ",")
-                          "]"))]
-   (format "{name: \"~a\",
+  (local [(define (format-list lst depth literal)
+            (string-append "["
+                           (string-join (map (lambda (x)
+                                               (format-nicely x depth 40 literal))
+                                             lst)
+                                        ",")
+                           "]"))]
+    (format "{name: \"~a\",
             formals: ~a,
             formalsShort: ~a,
             actuals: ~a,
@@ -167,24 +167,23 @@
             resultShort: ~a,
             linum: ~a,
             children: [~a]}"
-           (node-name t)
-           (format-list (node-formal t) #f #f)
-           (format-list (node-formal t) 4 #f)
-           (format-list (node-actual t) #f #t)
-           (format-list (node-actual t) 4 #t)
-           (format-nicely (node-result t) #f 40 #t)
-           (format-nicely (node-result t) 4 40 #t)
-           #;(node-linum t)
-           1
-          (if (empty? (node-kids t))
-              ""
-              (local ([define (loop k)
-                        (if (empty? (rest k))
-                            (first k)
-                            (string-append (first k)
-                                           ","
-                                           (loop (rest k))))])
-                (loop (map node->json (reverse (node-kids t)))))))))
+            (node-name t)
+            (format-list (node-formal t) #f #f)
+            (format-list (node-formal t) 4 #f)
+            (format-list (node-actual t) #f #t)
+            (format-list (node-actual t) 4 #t)
+            (format-nicely (node-result t) #f 40 #t)
+            (format-nicely (node-result t) 4 40 #t)
+            (node-linum t)
+            (if (empty? (node-kids t))
+                ""
+                (local ([define (loop k)
+                          (if (empty? (rest k))
+                              (first k)
+                              (string-append (first k)
+                                             ","
+                                             (loop (rest k))))])
+                  (loop (map node->json (reverse (node-kids t)))))))))
 
 ; Why is this a macro and not a function?  Because make it a function
 ; affects the call record!
