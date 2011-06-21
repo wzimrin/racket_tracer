@@ -59,8 +59,11 @@ div.call {
 }
 
 .background2 {
-    background: #a3b3c7; /*5f7a9c;  light blue #ddd;*/
-    border-color: #a3b3c7;
+    background: white;
+    border-color: white;
+    /*
+    background: #a3b3c7; 5f7a9c;  light blue #ddd;
+    border-color: #a3b3c7;*/
 }
 
 .background1 {
@@ -69,11 +72,12 @@ div.call {
 }
 
 .background1>table>tbody>tr>td.arg {
-    background: #f6f8f9; /*#eee; /* #d3e4e1; /*#d1c49e; /* light olive */
+    background: #f6f8f9
+    /*background: #f6f8f9; /*#eee; /* #d3e4e1; /*#d1c49e; /* light olive */
 }
 
 .background2>table>tbody>tr>td.arg {
-    background: #b9c6d4; /*6b819c;*/
+    background: #e7ebef; /*#b9c6d4; /*6b819c;*/
 }
 
 /* Expand/collapse button */
@@ -141,11 +145,15 @@ div#tabbar {
     width: 100%;
     overflow: auto;
     float: top;
+    border-style: none;
+    border-bottom-style: solid;
+    border-bottom-color: black;
+    border-bottom-weight: 3px;
 }
 
 ul.tabs {
     list-style-type: none;
-    margin: 10px 0px; /*TB 10, LR 0*/
+    margin: 5px 0px; /*TB 10, LR 0*/
     padding-left: 0px
 }
 
@@ -224,10 +232,10 @@ div#downScroll {
 }
 
 /* Other */
-
+/*
 .expandable {
     color: #23c;
-}
+}*/
 
 .background1 > table > tbody > tr > td > div.expandable:hover {
     font-weight: bold;
