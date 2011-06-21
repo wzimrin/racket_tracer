@@ -20,8 +20,6 @@ function highlightSpan(el,idx,span) {
     hi.addClass("highlight")
     hi.text(highlightedText)
     el.append(beginText,hi,endText)
-    console.log(highlightedText)
-    console.log(text.length)
 }
 
 //creates a dom element of the type tag
@@ -101,7 +99,7 @@ function makeCallTable(node) {
 
     //Arrow
     var arrow = element('td')
-    arrow.text("=>")
+    arrow.html("&rarr;")
     arrow.addClass("arrow")
     arrow.addClass("cell")
     row.append(arrow)
@@ -257,13 +255,12 @@ $(document).ready(function () {
         var span = pane.find("span")
         var pos = span.position()
         var height = pane.height()
-        pane.scrollTop(pos.top-(height/2))
+        if (pos.top < 0 || pos.top > (height-span.height()))
+            pane.scrollTop(pos.top-(height/2)+pane.scrollTop())
     }
 
     $("td.name").click(function () {
         var target = $(this)
-        console.log(target.data("idx"))
-        console.log(target.data("span"))
         highlightSpan($("div#codePane"),target.data("idx"),target.data("span"))
         expandCodePane()
         showSpan()

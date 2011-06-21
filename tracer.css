@@ -127,10 +127,6 @@ td.arg.cell {
     -moz-border-radius: 2px;
 }
 
-.arrow {
-    font-weight: bold;
-}
-
 .callTable > tbody > tr > td {
     vertical-align: middle;
 }
