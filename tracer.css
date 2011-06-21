@@ -53,19 +53,27 @@ div.call {
     margin: 3px;
     vertical-align: top;
     font-size:12px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
     border-style: solid;
 }
 
 .background2 {
-    background: #ddd;
-    border-color: #ddd;
+    background: #a3b3c7; /*5f7a9c;  light blue #ddd;*/
+    border-color: #a3b3c7;
 }
 
 .background1 {
-    background: #fff;
-    border-color: #fff;
+    background: #e7ebef; /*#6a877f; /*#b3d0ca; /*#b9a56a; /*#758a56; /*#4e5b39; /* <-- olive #d1d1d1; #fff;*/
+    border-color: #e7ebef; /*#fff;*/
+}
+
+.background1>table>tbody>tr>td.arg {
+    background: #f6f8f9; /*#eee; /* #d3e4e1; /*#d1c49e; /* light olive */
+}
+
+.background2>table>tbody>tr>td.arg {
+    background: #b9c6d4; /*6b819c;*/
 }
 
 /* Expand/collapse button */
@@ -77,8 +85,8 @@ div.call {
 
     vertical-align: middle;
     border: 3px solid black;
-    border-radius: 5px;
-    -moz-border-radius: 5px;
+    border-radius: 2px;
+    -moz-border-radius: 2px;
     
     /*font-family:"Arial";*/
     font-weight: bold;
@@ -110,7 +118,9 @@ div.call {
 }
 
 td.arg.cell {
-    background: #ccc;
+    background: #ebebeb; /* #ccc;*/
+    border-radius: 2px;
+    -moz-border-radius: 2px;
 }
 
 .arrow {

@@ -9,9 +9,12 @@
      (let [(y (bhnode-value h))
            (l (bhnode-left h))
            (r (bhnode-right h))]
-       (if (< x y);always insert into the right (smaller) subtree
-         (make-bhnode x (insert y r) l);once done, make sure that is the left (larger) subtree
-         (make-bhnode y (insert x r) l)))]));we are inserting into an empty heap
+       ;always insert into the right (smaller) subtree
+       (if (< x y)
+         ;once done, make sure that is the left (larger) subtree
+         (make-bhnode x (insert y r) l)
+         ;we are inserting into an empty heap
+         (make-bhnode y (insert x r) l)))]))
 
 (define (make-heap ns)
   (foldl (lambda (x h) (insert x h)) empty ns))
@@ -19,16 +22,23 @@
 (define get-min bhnode-value)
 
 (define (remove-min h)
-  (local [(define (insert-merge x l r);makes a new tree from x and the l and r subtrees
+  
+  (local [;makes a new tree from x and the l and r subtrees
+          (define (insert-merge x l r)
             ;easy, since no structure changes - simply move values around
-            (cond [(andmap (lambda (y)
-                             (or (not (bhnode? y));if x is less than the get-min of all existing subtrees
-                                 (< x (get-min y))))
-                           (list l r))
-                   (make-bhnode x l r)];we can simply put x here - it is a valid tree
-                  [(or (not (bhnode? r));if r is empty
-                       (< (get-min l) (get-min r)));or if l is less than r
-                   (make-bhnode (get-min l);insert it into l and use l as the new min of the tree
+            (cond [(andmap 
+                    (lambda (y)
+                      ;if x is less than the get-min of all existing subtrees
+                      (or (not (bhnode? y))
+                          (< x (get-min y))))
+                    (list l r))
+                   ;we can simply put x here - it is a valid tree
+                   (make-bhnode x l r)]
+                  [;if r is empty or if l is less than r
+                   (or (not (bhnode? r))
+                       (< (get-min l) (get-min r)))
+                   ;insert it into l and use l as the new min of the tree
+                   (make-bhnode (get-min l)
                                 (insert-merge x (bhnode-left l) (bhnode-right l));we don't insert it into 
                                 r)];r if r is empty because we don't want to change the structure
                   [(or (not (bhnode? l));proceed as above, with l and r flipped

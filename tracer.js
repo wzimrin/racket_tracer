@@ -92,7 +92,7 @@ function makeCallTable(node) {
     for (var i = 0; i < node.formals.length; i++) {
         //Display in collapsed form if actualsExpanded is undefined or false
         var actual = makeCell(node.actualsShort[i],node.actuals[i],node.formals[i],"arg")
-        /*if(i%2 == 0)
+       /* if()
             actual.css('background', 'red')
         else
             actual.css('background', 'blue')*/
@@ -250,8 +250,10 @@ $(document).ready(function () {
                 newPos = bodies.css(dir)
                 newPosInt = (parseInt(newPos.substring(0,newPos.length-2))+
                              (mult*Math.floor(moveInc)))
-                if (pred(newPosInt))
+                if (pred(newPosInt)){
                     bodies.css(dir,newPosInt+"px")
+
+                    }
                 moveInc = moveInc * 1.01
             }
             moveInc = originalMoveInc
