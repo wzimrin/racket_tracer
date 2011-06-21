@@ -32,7 +32,7 @@ div#middle .column {
 
 div#tracerWrapper {
     float: left;
-    width: 50%;
+    width: 90%;
     /*border: 2px solid black;*/
     /*position: relative;*/
     height: 10px;
@@ -175,7 +175,7 @@ div#codePane {
     /*padding-left: 5px;
     padding-right: 5px;*/
     /*right: 300px;*/
-    width: 50%;
+    width: 10%;
     background: black;
     /*margin-right: 10px;*/
     height: 100%;

@@ -236,9 +236,16 @@ $(document).ready(function () {
     }
     
     function setCodePaneWidth(newWidth) {
-        codePaneWidth = newWidth
-        $("div#codePane").css("width",newWidth+"%")
-        $("div#tracerWrapper").css("width",(100-newWidth)+"%")
+        if (codePaneWidth != newWidth) {
+            codePaneWidth = newWidth
+            $("div#codePane").animate({"width":newWidth+"%"},
+                                      {duration:'slow',
+                                       queue:false})
+            
+            $("div#tracerWrapper").animate({"width":(100-newWidth)+"%"},
+                                           {duration:'slow',
+                                            queue:false})
+        }
     }
     
     $("div#codePane").click(function () {
