@@ -172,6 +172,11 @@ $(document).ready(function () {
     leftScroll.addClass('scrollButton')
     var rightScroll = $("#rightScroll")
     rightScroll.addClass('scrollButton')
+    var upScroll = $("#upScroll")
+    upScroll.addClass('scrollButton')
+    var downScroll = $("#downScroll")
+    downScroll.addClass('scrollButton')
+
     var codePane = $("#codePane")
     codePane.text(code) // change to code after merge FA
     var codePaneWidth = 300;
@@ -199,18 +204,18 @@ $(document).ready(function () {
     // ----------------------------------------------------------------------------
 
     var moveInc = 2
-    var t;
+    var tL;
     $('#leftScroll').bind('mousedown', function(event) {
         var moveLeft = function() {
             newPos = bodies.css('left')
             newPosInt = parseInt(newPos.substring(0, newPos.length-2))+moveInc
-            if(newPosInt <= codePaneWidth)
+            /*if(newPosInt <= codePaneWidth)*/
                 bodies.css('left', newPosInt+'px')}
-        t = setInterval(moveLeft, 1)
+        tL = setInterval(moveLeft, 1)
     }).bind('mouseup', function(event) {
-        clearInterval(t)
+        clearInterval(tL)
     }).bind('mouseleave', function(event) {
-        clearInterval(t)
+        clearInterval(tL)
     })
 
     var tR;
@@ -218,8 +223,8 @@ $(document).ready(function () {
         var moveRight = function() {
             newPos = bodies.css('left')
             newPosInt = parseInt(newPos.substring(0, newPos.length-2))-moveInc
-            if(newPosInt > document.body.clientWidth-bodies.width()) {
-                bodies.css('left', newPosInt+'px')}
+           /* if(newPosInt > document.body.clientWidth-bodies.width()) */
+                bodies.css('left', newPosInt+'px')
             }
         tR = setInterval(moveRight, 1)
     }).bind('mouseup', function(event) {
@@ -227,6 +232,35 @@ $(document).ready(function () {
     }).bind('mouseleave', function(event) {
         clearInterval(tR)
     })
+    
+    var tU;
+    $('#upScroll').bind('mousedown', function(event) {
+        var moveUp = function() {
+            newPos = bodies.css('top')
+            newPosInt = parseInt(newPos.substring(0, newPos.length-2))+moveInc
+            /*if(newPosInt <= codePaneWidth)*/
+                bodies.css('top', newPosInt+'px')}
+        tL = setInterval(moveLeft, 1)
+    }).bind('mouseup', function(event) {
+        clearInterval(tU)
+    }).bind('mouseleave', function(event) {
+        clearInterval(tU)
+    })
+
+    var tD;
+    $('#downScroll').bind('mousedown', function(event) {
+        var moveDown = function() {
+            newPos = bodies.css('top')
+            newPosInt = parseInt(newPos.substring(0, newPos.length-2))-moveInc
+            /*if(newPosInt <= codePaneWidth)*/
+                bodies.css('top', newPosInt+'px')}
+        tL = setInterval(moveLeft, 1)
+    }).bind('mouseup', function(event) {
+        clearInterval(tD)
+    }).bind('mouseleave', function(event) {
+        clearInterval(tD)
+    })
+
 
     //makes the expand/collapse buttons work
     $('.button').bind('mouseenter',function(event) {

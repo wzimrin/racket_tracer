@@ -196,8 +196,21 @@ div#leftScroll {
 
 div#rightScroll {
     position: absolute;
-    right: 10px;/*
+    right: 0px;/*
     float: right;*/
+}
+
+div#upScroll {
+    position: absolute;
+    top: 0px;
+    left: 50%;
+    /*
+    float: right;*/
+}
+
+div#downScroll {
+    position: absolute;
+    bottom: 0px;
 }
 
 /* Other */
