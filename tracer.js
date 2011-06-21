@@ -256,7 +256,7 @@ $(document).ready(function () {
         var pos = span.position()
         var height = pane.height()
         if (pos.top < 0 || pos.top > (height-span.height()))
-            pane.scrollTop(pos.top-(height/2)+pane.scrollTop())
+            pane.animate({scrollTop: pos.top-(height/2)+pane.scrollTop()}, 'slow');
     }
 
     $("td.name").click(function () {
