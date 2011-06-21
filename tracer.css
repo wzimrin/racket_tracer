@@ -113,10 +113,6 @@ td.arg.cell {
     background: #ccc;
 }
 
-.arrow {
-    font-weight: bold;
-}
-
 .callTable > tbody > tr > td {
     vertical-align: middle;
 }

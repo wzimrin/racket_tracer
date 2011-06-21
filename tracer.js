@@ -101,7 +101,7 @@ function makeCallTable(node) {
 
     //Arrow
     var arrow = element('td')
-    arrow.text("=>")
+    arrow.html("&rarr;")
     arrow.addClass("arrow")
     arrow.addClass("cell")
     row.append(arrow)
