@@ -152,10 +152,10 @@ function makeCall(traceNode, parent) {
     parent = $(parent)
 
     var div = element("div")
-    if (parent.hasClass("background1"))
-        div.addClass("background2")
-    else
+    if (parent.hasClass("background2"))
         div.addClass("background1")
+    else
+        div.addClass("background2")
     div.addClass("call")
 
     var upperTable = makeCallTable(traceNode)
@@ -233,11 +233,40 @@ $(document).ready(function () {
     //                                      EVENTS
     // ----------------------------------------------------------------------------
 
+    function expandCodePane() {
+        setCodePaneWidth(50)
+    }
+    
+    function setCodePaneWidth(newWidth) {
+        codePaneWidth = newWidth
+        $("div#codePane").css("width",newWidth+"%")
+        $("div#tracerWrapper").css("width",(100-newWidth)+"%")
+    }
+    
+    $("div#codePane").click(function () {
+        if (codePaneWidth==50)
+            setCodePaneWidth(10)
+        else
+            setCodePaneWidth(50)
+    })
+    
+    setCodePaneWidth(10)
+    
+    function showSpan() {
+        var pane = $("div#codePane")
+        var span = pane.find("span")
+        var pos = span.position()
+        var height = pane.height()
+        pane.scrollTop(pos.top-(height/2))
+    }
+
     $("td.name").click(function () {
         var target = $(this)
         console.log(target.data("idx"))
         console.log(target.data("span"))
         highlightSpan($("div#codePane"),target.data("idx"),target.data("span"))
+        expandCodePane()
+        showSpan()
     })
     
     var originalMoveInc = 2
@@ -343,19 +372,5 @@ $(document).ready(function () {
     
     $(window).resize(setColumnHeight)
 
-    function setCodePaneWidth(newWidth) {
-        codePaneWidth = newWidth
-        $("div#codePane").css("right",newWidth+"px").css("width",newWidth-20+"px")
-        $("div#middle").css("padding-left",newWidth+"px")
-    }
-    
-    setCodePaneWidth(50)
-
-    $("div#codePane").click(function () {
-        if (codePaneWidth==300)
-            setCodePaneWidth(50)
-        else
-            setCodePaneWidth(300)
-    })
 })
 
