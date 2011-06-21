@@ -316,5 +316,29 @@ $(document).ready(function () {
     })
 
     first.trigger("click")
+    
+    function setColumnHeight() {
+        $(".column").height($(window).height()-$("div#tabbar").height()
+                            -2*parseInt($(document.body).css("margin-top")))
+    }
+
+    setColumnHeight()
+    
+    $(window).resize(setColumnHeight)
+
+    function setCodePaneWidth(newWidth) {
+        codePaneWidth = newWidth
+        $("div#codePane").css("right",newWidth+"px").css("width",newWidth-10+"px")
+        $("div#middle").css("padding-left",newWidth+"px")
+    }
+    
+    setCodePaneWidth(50)
+
+    $("div#codePane").click(function () {
+        if (codePaneWidth==300)
+            setCodePaneWidth(50)
+        else
+            setCodePaneWidth(300)
+    })
 })
 
