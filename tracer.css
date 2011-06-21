@@ -20,7 +20,7 @@ body {
 }
 
 div#middle {
-    padding-left: 300px;
+    /*padding-left: 300px;*/
 }
 
 div#middle .column {
@@ -32,8 +32,8 @@ div#middle .column {
 
 div#tracerWrapper {
     float: left;
-    width: 100%;
-    border: 2px solid black;
+    width: 50%;
+    /*border: 2px solid black;*/
     /*position: relative;*/
     height: 10px;
     overflow: hidden;
@@ -131,6 +131,10 @@ td.arg.cell {
     vertical-align: middle;
 }
 
+.name:hover {
+    font-weight:bold;
+}
+
 /* Tab bar */
 
 div#tabbar {
@@ -163,13 +167,13 @@ ul.tabs > li.other:hover {
 /* Code Pane */
 
 div#codePane {
-    margin-left: -100%;
-    padding-left: 5px;
-    padding-right: 5px;
-    right: 300px;
-    width: 290px;
+    /*margin-left: -100%;*/
+    /*padding-left: 5px;
+    padding-right: 5px;*/
+    /*right: 300px;*/
+    width: 50%;
     background: black;
-    margin-right: 10px;
+    /*margin-right: 10px;*/
     height: 100%;
     color: white;
     white-space: pre;
