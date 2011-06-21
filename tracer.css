@@ -121,6 +121,10 @@ td.arg.cell {
     vertical-align: middle;
 }
 
+.name:hover {
+    font-weight:bold;
+}
+
 /* Tab bar */
 
 div#tabbar {
