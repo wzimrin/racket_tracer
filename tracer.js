@@ -202,67 +202,49 @@ $(document).ready(function () {
     // ----------------------------------------------------------------------------
     //                                      EVENTS
     // ----------------------------------------------------------------------------
+    var originalMoveInc = 2
 
-    var moveInc = 2
-    var tL;
-    $('#leftScroll').bind('mousedown', function(event) {
-        var moveLeft = function() {
-            newPos = bodies.css('left')
-            newPosInt = parseInt(newPos.substring(0, newPos.length-2))+moveInc
-            if(newPosInt <= 0)
-                bodies.css('left', newPosInt+'px')}
-        tL = setInterval(moveLeft, 1)
-    }).bind('mouseup', function(event) {
-        clearInterval(tL)
-    }).bind('mouseleave', function(event) {
-        clearInterval(tL)
-    })
-
-    var tR;
-    $('#rightScroll').bind('mousedown', function(event) {
-        var moveRight = function() {
-            newPos = bodies.css('left')
-            newPosInt = parseInt(newPos.substring(0, newPos.length-2))-moveInc
-             if(newPosInt + bodies.width() >= bodyWrapper.width())
-                bodies.css('left', newPosInt+'px')
+    function scrollHelper(button,pred,dir,mult) {
+        var t;
+        var moveInc = 2
+        $(button).bind("mousedown",function () {
+            function move() {
+                newPos = bodies.css(dir)
+                console.log(newPos)
+                console.log(newPos.substring(0,newPos.length-2))
+                console.log(parseInt(newPos.substring(0,newPos.length-2)))
+                newPosInt = (parseInt(newPos.substring(0,newPos.length-2))+
+                             (mult*Math.floor(moveInc)))
+                console.log(pred(newPosInt))
+                if (pred(newPosInt))
+                    bodies.css(dir,newPosInt+"px")
+                moveInc = moveInc * 1.01
             }
-        tR = setInterval(moveRight, 1)
-    }).bind('mouseup', function(event) {
-        clearInterval(tR)
-    }).bind('mouseleave', function(event) {
-        clearInterval(tR)
-    })
-    
-    var tU;
-    $('#upScroll').bind('mousedown', function(event) {
-        console.log("upscroll mousedown")
-        var moveUp = function() {
-            console.log("moveUp")
-            newPos = bodies.css('top')
-            newPosInt = parseInt(newPos.substring(0, newPos.length-2))+moveInc
-            console.log("newPosInt up" + newPosInt)
-            if(newPosInt <= 0)
-                bodies.css('top', newPosInt+'px')}
-        tU = setInterval(moveUp, 1)
-    }).bind('mouseup', function(event) {
-        clearInterval(tU)
-    }).bind('mouseleave', function(event) {
-        clearInterval(tU)
-    })
+            moveInc = originalMoveInc
+            t = setInterval(move,1)
+        }).bind("mouseup",function () {
+            clearInterval(t)
+        }).bind("mouseleave",function () {
+            clearInterval(t)
+        })
+    }
 
-    var tD;
-    $('#downScroll').bind('mousedown', function(event) {
-        var moveDown = function() {
-            newPos = bodies.css('top')
-            newPosInt = parseInt(newPos.substring(0, newPos.length-2))-moveInc
-            if(newPosInt + bodies.height() >= bodyWrapper.height()) 
-                bodies.css('top', newPosInt+'px')}
-        tD = setInterval(moveDown, 1)
-    }).bind('mouseup', function(event) {
-        clearInterval(tD)
-    }).bind('mouseleave', function(event) {
-        clearInterval(tD)
-    })
+    scrollHelper("#leftScroll",
+                 function (newPosInt) {return newPosInt <= 0},
+                 "left",1)
+    scrollHelper("#rightScroll",
+                 function (newPosInt) {
+                     return newPosInt + bodies.width() >= bodyWrapper.width()
+                 },
+                 "left",-1)
+    scrollHelper("#upScroll",
+                 function (newPosInt) {return newPosInt <= 0},
+                 "top",1)
+    scrollHelper("#downScroll",
+                 function (newPosInt) {
+                     return newPosInt + bodies.height() >= bodyWrapper.height()
+                 },
+                 "top",-1)
 
 
     //makes the expand/collapse buttons work
