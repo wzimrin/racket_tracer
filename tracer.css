@@ -168,7 +168,8 @@ div#codePane {
     margin-left: -100%;
     right: 300px;
     width: 300px;
-    background: black;e
+    background: black;
+    height: 100%;
     color: white;
     white-space: pre;
     overflow:auto

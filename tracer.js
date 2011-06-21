@@ -282,5 +282,14 @@ $(document).ready(function () {
     })
 
     first.trigger("click")
+    
+    function setCodePaneHeight() {
+        $("div#codePane").height($(window).height()-$("div#tabbar").height()
+                                 -2*parseInt($(document.body).css("margin-top")))
+    }
+
+    setCodePaneHeight()
+    
+    $(window).resize(setCodePaneHeight)
 })
 
