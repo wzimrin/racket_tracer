@@ -131,7 +131,7 @@ td.arg.cell {
     vertical-align: middle;
 }
 
-.name:hover {
+td.name:hover {
     font-weight:bold;
 }
 
@@ -145,6 +145,7 @@ div#tabbar {
     border-bottom-style: solid;
     border-bottom-color: black;
     border-bottom-weight: 3px;
+    overflow-y: hidden;
 }
 
 ul.tabs {
