@@ -209,7 +209,7 @@ $(document).ready(function () {
         var moveLeft = function() {
             newPos = bodies.css('left')
             newPosInt = parseInt(newPos.substring(0, newPos.length-2))+moveInc
-            /*if(newPosInt <= codePaneWidth)*/
+            if(newPosInt <= 0)
                 bodies.css('left', newPosInt+'px')}
         tL = setInterval(moveLeft, 1)
     }).bind('mouseup', function(event) {
@@ -223,7 +223,7 @@ $(document).ready(function () {
         var moveRight = function() {
             newPos = bodies.css('left')
             newPosInt = parseInt(newPos.substring(0, newPos.length-2))-moveInc
-           /* if(newPosInt > document.body.clientWidth-bodies.width()) */
+             if(newPosInt + bodies.width() >= bodyWrapper.width())
                 bodies.css('left', newPosInt+'px')
             }
         tR = setInterval(moveRight, 1)
@@ -235,12 +235,15 @@ $(document).ready(function () {
     
     var tU;
     $('#upScroll').bind('mousedown', function(event) {
+        console.log("upscroll mousedown")
         var moveUp = function() {
+            console.log("moveUp")
             newPos = bodies.css('top')
             newPosInt = parseInt(newPos.substring(0, newPos.length-2))+moveInc
-            /*if(newPosInt <= codePaneWidth)*/
+            console.log("newPosInt up" + newPosInt)
+            if(newPosInt <= 0)
                 bodies.css('top', newPosInt+'px')}
-        tL = setInterval(moveLeft, 1)
+        tU = setInterval(moveUp, 1)
     }).bind('mouseup', function(event) {
         clearInterval(tU)
     }).bind('mouseleave', function(event) {
@@ -252,9 +255,9 @@ $(document).ready(function () {
         var moveDown = function() {
             newPos = bodies.css('top')
             newPosInt = parseInt(newPos.substring(0, newPos.length-2))-moveInc
-            /*if(newPosInt <= codePaneWidth)*/
+            if(newPosInt + bodies.height() >= bodyWrapper.height()) 
                 bodies.css('top', newPosInt+'px')}
-        tL = setInterval(moveLeft, 1)
+        tD = setInterval(moveDown, 1)
     }).bind('mouseup', function(event) {
         clearInterval(tD)
     }).bind('mouseleave', function(event) {

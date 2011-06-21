@@ -190,13 +190,15 @@ div#codePane {
 
 div#leftScroll {
     position: absolute;
-    left: 0px; /*
+    left: 0px; 
+    top: 50%; /*
     float: left;*/
 
 }
 
 div#rightScroll {
     position: absolute;
+    top: 50%;
     right: 0px;/*
     float: right;*/
 }
@@ -211,6 +213,7 @@ div#upScroll {
 
 div#downScroll {
     position: absolute;
+    left: 50%;
     bottom: 0px;
 }
 
