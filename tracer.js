@@ -214,12 +214,8 @@ $(document).ready(function () {
         $(button).bind("mousedown",function () {
             function move() {
                 newPos = bodies.css(dir)
-                console.log(newPos)
-                console.log(newPos.substring(0,newPos.length-2))
-                console.log(parseInt(newPos.substring(0,newPos.length-2)))
                 newPosInt = (parseInt(newPos.substring(0,newPos.length-2))+
                              (mult*Math.floor(moveInc)))
-                console.log(pred(newPosInt))
                 if (pred(newPosInt))
                     bodies.css(dir,newPosInt+"px")
                 moveInc = moveInc * 1.01
@@ -260,11 +256,7 @@ $(document).ready(function () {
     //and highlight on hover
     $(".expandable").bind("click",function (event) {//expand/collapse
         toggleExpandable($(this))
-    })/*.live("mouseenter",function (event) {//hover
-        $(this).addClass("hover")
-    }).live("mouseleave",function (event) {
-        $(this).removeClass("hover")
-    })*/
+    })
 
     //makes the tabs switch what is displayed and
     //highlight on hover
@@ -279,13 +271,13 @@ $(document).ready(function () {
         oldPicked.addClass("other")
         target.addClass("picked")
         target.removeClass("other")
-        target.removeClass("hover")
+        //target.removeClass("hover")
         $(window).scrollLeft(0)
-    }).live("mouseenter",function (event) {//hover
+    })/*.live("mouseenter",function (event) {//hover
         $(this).addClass("hover")
     }).live("mouseleave",function (event) {
         $(this).removeClass("hover")
-    })
+    })*/
 
     //makes the tabbar scroll with me
     $(window).scroll(function (event) {
@@ -301,6 +293,8 @@ $(document).ready(function () {
         bodyHandler:function () {
             return $(this).data("literal")
         },
+        top: 5,
+        left: 5,
         fade:250
     })
 
@@ -317,7 +311,7 @@ $(document).ready(function () {
 
     function setCodePaneWidth(newWidth) {
         codePaneWidth = newWidth
-        $("div#codePane").css("right",newWidth+"px").css("width",newWidth-10+"px")
+        $("div#codePane").css("right",newWidth+"px").css("width",newWidth-20+"px")
         $("div#middle").css("padding-left",newWidth+"px")
     }
     

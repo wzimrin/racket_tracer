@@ -57,14 +57,21 @@
            (insert-merge extra;new-h is a valid BrownHeap, so this results in a valid BrownHeap
                   (bhnode-left new-h)
                   (bhnode-right new-h))])))
-(define (add x y) (+ x y))
 
-(define (add-on e l) (cons e l))
+(define (food a b c)
+  (remove-min a))
 
-(add-on 5 (add-on 4 (add-on 3 empty)))
+(define (munchies a b c)
+  (if (= a 0)
+      c
+      (munchies 0 b c)))
+
+(munchies 1 2 3)
+
+(food (make-heap (list 3 1 4 1 5 9 2 6 5))
+      (make-heap (make-list 5 5))
+      (make-heap (build-list 10 (lambda(x) (* x x)))))
 
 (define heap (make-heap (list 8 4 3 9 1 6 12 14)))
 (remove-min heap)
-(check-expect (make-heap (list 1 2)) 
-              (remove-min (make-heap (list 1 2 3))))
 (get-min heap)

@@ -16,6 +16,7 @@ other
 
 body {
     overflow: hidden;
+    font-family: "monospace";
 }
 
 div#middle {
@@ -32,6 +33,7 @@ div#middle .column {
 div#tracerWrapper {
     float: left;
     width: 100%;
+    border: 2px solid black;
     /*position: relative;*/
     height: 10px;
     overflow: hidden;
@@ -43,27 +45,25 @@ div#tracer {
     position: absolute;
     top:0px;
     left:0px; /* FA adjust depending on whether codePane is open */
-    overflow: hidden;
     white-space: nowrap;
-    /*z-index: -1;*/
 }
 
 
-.call {
+div.call {
     margin: 3px;
     vertical-align: top;
-    font-family:"Arial";
     font-size:12px;
+    -moz-border-radius: 5px;
     border-radius: 5px;
     border-style: solid;
 }
 
-.background1 {
+.background2 {
     background: #ddd;
     border-color: #ddd;
 }
 
-.background2 {
+.background1 {
     background: #fff;
     border-color: #fff;
 }
@@ -76,9 +76,11 @@ div#tracer {
     text-align: center;
 
     vertical-align: middle;
-    border: 3px solid black; 
+    border: 3px solid black;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
     
-    font-family:"Arial";
+    /*font-family:"Arial";*/
     font-weight: bold;
     font-size: 15px;
 
@@ -95,11 +97,8 @@ div#tracer {
 
 .cell {
     white-space: pre;
-    /*padding: 20px;*/
-}
-
-.name {
-    font-weight: bold;
+    font-size: 14px;
+    /*font-family: "monospace";*/
 }
 
 .arg > div {
@@ -108,8 +107,10 @@ div#tracer {
     margin-left:auto;
     margin-right:auto;
     width:auto;
+}
+
+td.arg.cell {
     background: #ccc;
-    /*background: #eee;*/
 }
 
 .arrow {
@@ -122,19 +123,9 @@ div#tracer {
 
 /* Tab bar */
 
-/*div#tabbar {
-    overflow: auto;
-    margin-bottom:10px;
-    float: left;
-    width: 100%;
-}*/
 div#tabbar {
     width: 100%;
     overflow: auto;
-    /*position: absolute;
-    left: 0px;
-    top: 0px;
-    right: 0px;*/
     float: top;
 }
 
@@ -146,33 +137,25 @@ ul.tabs {
 
 ul.tabs > li {
     display: inline;
-    border: 2px solid black;
-    padding: 5px;
+    padding: 7px;
     white-space: nowrap;
-    font-family: "Arial";
-    font-weight: bold;
-    background:#ddd;
+    /*font-family: "monospace";*/
 }
 
 ul.tabs > li.picked {
-    background: white;
+    font-weight: bold;
 }
 
-ul.tabs > li.other {
-    color: #23c
+ul.tabs > li.other:hover {
+    font-weight: bold;
 }
 
 /* Code Pane */
 
 div#codePane {
-    /*position: absolute;
-    left: 0px;
-    top: 100px;
-    bottom: 0px;*/
-    /*position: relative;
-    left: 0px;
-    top: 0px;*/
     margin-left: -100%;
+    padding-left: 5px;
+    padding-right: 5px;
     right: 300px;
     width: 290px;
     background: black;
@@ -180,43 +163,43 @@ div#codePane {
     height: 100%;
     color: white;
     white-space: pre;
-    overflow:auto
+    overflow:auto;
+    /*font-family: "monospace";*/
+    font-size: 13px;
 }
 
 /* Scroll Buttons */
 
 div.scrollButton {
-    background: gray;
-    width: 30px;
-    height: 30px;
-    border-style: solid;
-    border-width: 2px;
-    border-color: gray;
+    font-size: 32px;
+    opacity: .3;
 }
 
 div.scrollButton:hover {
-    border-color: black;
+    opacity: 1;
 }
 
 div#leftScroll {
     position: absolute;
     left: 0px; 
     top: 50%; 
-
 }
 
 div#rightScroll {
     position: absolute;
+    right: 0px;
     top: 50%;
 }
 
 div#upScroll {
+    text-align: center;
     position: absolute;
     top: 0px;
     left: 50%;
 }
 
 div#downScroll {
+    text-align: center;
     position: absolute;
     left: 50%;
     bottom: 0px;
@@ -229,12 +212,14 @@ div#downScroll {
 }
 
 .background1 > table > tbody > tr > td > div.expandable:hover {
-    background: #c2d1e5;
+    font-weight: bold;
+    /*background: #c2d1e5;*/
 }
 
 
 .background2 > table > tbody > tr > td > div.expandable:hover {
-    background: #DCE5F0; /*#E6ECF4; #D4DFED;*/
+    font-weight: bold;
+    /*background: #DCE5F0; #E6ECF4; #D4DFED;*/
 }
 
 .hover {

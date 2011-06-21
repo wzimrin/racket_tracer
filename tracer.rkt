@@ -27,21 +27,21 @@
 (provide show-trace trace->json #%module-begin)
 
 ;the actual struct that stores our data
-(struct node (name formal result actual kids) #:mutable #:transparent)
+(struct node (name formal result actual kids linum) #:mutable #:transparent)
 
 (define src (box ""))
 
 ;creates a node with no result or children
 ;takes a name, a formals list, and an actuals list
-(define (create-node n f a)
-  (node n f 'no-result a empty))
+(define (create-node n f a l)
+  (node n f 'no-result a empty l))
 
 ;adds a kid k to node n
 (define (add-kid n k)
   (set-node-kids! n (cons k (node-kids n))))
 
 ;the current definition we are in
-(define current-call (make-parameter (create-node 'top-level empty empty)))
+(define current-call (make-parameter (create-node 'top-level empty empty 0)))
 
 ;a boxed list of all functions that define-struct has defined in this namespace
 (define ds-fun-names (box empty))
@@ -90,18 +90,21 @@
                          (module-path-index-split (car binding)))
                        list)
                       ;otherwise, return it
-                      binding)])
+                      binding)]
+            [linum (syntax-position #'fun-expr)])
+       (displayln linum)
        ;we want to potentially trace fun-expr if it was bound in the file
        (if (or (equal? vals 'lexical)
                (equal? vals '(#f #f)))
            ;we also need to check at runtime if fun-expr was defined by define-struct
-           #'(if (or (member 'fun-expr (unbox ds-fun-names))
+           #`(if (or (member 'fun-expr (unbox ds-fun-names))
                      (struct-accessor-procedure? fun-expr))
                  ;if not a function you want to trace, leave as is
                  (#%app fun-expr arg-expr ...)
                  ;otherwise trace
                  (let ([n (create-node 'fun-expr '(arg-expr ...)
-                                       "nothing here yet!")])
+                                       "nothing here yet!"
+                                       #,(syntax-line #'fun-expr))])
                    (begin
                      ;adds n to current-call's kids 
                      (add-kid (current-call) n)
@@ -162,6 +165,7 @@
             actualsShort: ~a,
             result: ~a,
             resultShort: ~a,
+            linum: ~a,
             children: [~a]}"
            (node-name t)
            (format-list (node-formal t) #f #f)
@@ -170,6 +174,8 @@
            (format-list (node-actual t) 4 #t)
            (format-nicely (node-result t) #f 40 #t)
            (format-nicely (node-result t) 4 40 #t)
+           #;(node-linum t)
+           1
           (if (empty? (node-kids t))
               ""
               (local ([define (loop k)
