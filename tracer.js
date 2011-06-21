@@ -291,5 +291,20 @@ $(document).ready(function () {
     setCodePaneHeight()
     
     $(window).resize(setCodePaneHeight)
+
+    function setCodePaneWidth(newWidth) {
+        codePaneWidth = newWidth
+        $("div#codePane").css("right",newWidth+"px").css("width",newWidth+"px")
+        $("div#middle").css("padding-left",newWidth+"px")
+    }
+    
+    setCodePaneWidth(50)
+
+    $("div#codePane").click(function () {
+        if (codePaneWidth==300)
+            setCodePaneWidth(50)
+        else
+            setCodePaneWidth(300)
+    })
 })
 
