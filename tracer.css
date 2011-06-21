@@ -89,8 +89,13 @@ div#tracer {
 
 /* Call Table */
 
+.callTable {
+    border-spacing: 5px;
+}
+
 .cell {
     white-space: pre;
+    /*padding: 20px;*/
 }
 
 .name {
@@ -99,9 +104,12 @@ div#tracer {
 
 .arg > div {
     text-align:left;
+    padding: 5px;
     margin-left:auto;
     margin-right:auto;
     width:auto;
+    background: #ccc;
+    /*background: #eee;*/
 }
 
 .arrow {
@@ -177,38 +185,35 @@ div#codePane {
 
 /* Scroll Buttons */
 
-.scrollButton {
+div.scrollButton {
     background: gray;
     width: 30px;
     height: 30px;
-    /*z-index: 1;*/
+    border-style: solid;
+    border-width: 2px;
+    border-color: gray;
 }
 
-.scrollButton:hover {
-    border: 2px solid black;
+div.scrollButton:hover {
+    border-color: black;
 }
 
 div#leftScroll {
     position: absolute;
     left: 0px; 
-    top: 50%; /*
-    float: left;*/
+    top: 50%; 
 
 }
 
 div#rightScroll {
     position: absolute;
     top: 50%;
-    right: 0px;/*
-    float: right;*/
 }
 
 div#upScroll {
     position: absolute;
     top: 0px;
     left: 50%;
-    /*
-    float: right;*/
 }
 
 div#downScroll {

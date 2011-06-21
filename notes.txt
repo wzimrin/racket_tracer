@@ -10,8 +10,6 @@
 - Bug with hover remaining blue too long
 - Check-expects
 - Contracts
-- Jumpiness of tab bar movement
-- Mouse-over scroll to right rather than using scroll bar
 - Expand collapse --> up down arrows?
 - Some way to prevent mouseovers from expanding/collapsing items
 
@@ -34,6 +32,8 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- Mouse-over scroll to right rather than using scroll bar (6/21)
+- Jumpiness of tab bar movement (6/21)
 - x is delete button, actually minimizes
 - bug lets shrunken call args be expanded
 - more no click interaction
