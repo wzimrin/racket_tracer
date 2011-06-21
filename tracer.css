@@ -34,6 +34,7 @@ div#tracerWrapper {
     width: 100%;
     /*position: relative;*/
     height: 10px;
+    overflow: hidden;
     /*z-index: -1;*/
 
 }
@@ -165,9 +166,9 @@ div#codePane {
     top: 0px;*/
     margin-left: -100%;
     right: 300px;
-    width: 300px;
-    padding: 10px
+    width: 290px;
     background: black;
+    margin-right: 10px;
     height: 100%;
     color: white;
     white-space: pre;

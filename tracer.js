@@ -283,18 +283,18 @@ $(document).ready(function () {
 
     first.trigger("click")
     
-    function setCodePaneHeight() {
-        $("div#codePane").height($(window).height()-$("div#tabbar").height()
-                                 -2*parseInt($(document.body).css("margin-top")))
+    function setColumnHeight() {
+        $(".column").height($(window).height()-$("div#tabbar").height()
+                            -2*parseInt($(document.body).css("margin-top")))
     }
 
-    setCodePaneHeight()
+    setColumnHeight()
     
-    $(window).resize(setCodePaneHeight)
+    $(window).resize(setColumnHeight)
 
     function setCodePaneWidth(newWidth) {
         codePaneWidth = newWidth
-        $("div#codePane").css("right",newWidth+"px").css("width",newWidth+"px")
+        $("div#codePane").css("right",newWidth+"px").css("width",newWidth-10+"px")
         $("div#middle").css("padding-left",newWidth+"px")
     }
     
