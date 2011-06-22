@@ -22,6 +22,38 @@ function highlightSpan(el,idx,span) {
     el.append(beginText,hi,endText)
 }
 
+
+function findPosX(obj) {
+    var curleft = 0;
+    if(obj.offsetParent)
+        while(1) 
+        {
+          curleft += obj.offsetLeft;
+          if(!obj.offsetParent)
+            break;
+          obj = obj.offsetParent;
+        }
+    else if(obj.x)
+        curleft += obj.x;
+    return curleft;
+}
+
+function findPosY(obj) {
+    var curtop = 0;
+    if(obj.offsetParent)
+        while(1)
+        {
+          curtop += obj.offsetTop;
+          if(!obj.offsetParent)
+            break;
+          obj = obj.offsetParent;
+        }
+    else if(obj.y)
+        curtop += obj.y;
+    return curtop;
+}
+
+
 //creates a dom element of the type tag
 function element(tag) {
     return $("<"+tag+'/>')
@@ -323,6 +355,55 @@ $(document).ready(function () {
     //makes the expand/collapse buttons work
     $('.button').bind('mouseenter',function(event) {
         toggleCall($(this).parents(".call").first())
+        thisCall = $(this).parents(".call").first()
+        
+        pos = thisCall.position()
+        //want to adjust LR position of screen only if expanding
+        if(thisCall.data('expanded')) { 
+            posX = pos.left
+            offLeft = bodies.css('left')
+            offLeftInt = parseInt(offLeft.substring(0, offLeft.length-2))
+            callWidth = thisCall.width()
+            widthPane = $("div#tracerWrapper").width()
+            //Amount of the current call that is off the screen to the right
+            callOffRight = callWidth - (widthPane-(posX+offLeftInt))
+            //Call goes off the screen on the right border
+            if((posX + offLeftInt) + callWidth >= widthPane) {
+                //and is not as wide as the tracerWindow
+                if(callWidth <= widthPane) {
+                    bodies.animate({left: (offLeftInt-callOffRight-15)}, 
+                                  'fast')
+                }
+                else if (callWidth > widthPane) {
+                    bodies.animate({left: -posX}, 'fast')
+                }
+            }
+        }
+        //Want to adjust TB position of screen on both expand and collapse  
+        posY = pos.top
+        offTop = bodies.css('top')
+        offTopInt = parseInt(offTop.substring(0, offTop.length-2))
+        callHeight = thisCall.height()
+        heightPane = $("div#tracerWrapper").height()
+        callOffBottom = callHeight - (heightPane-(posY+offTopInt))
+        console.log("callOffBottom: " + callOffBottom)
+        //Call goes off the screen on the bottom
+        if((posY + offTopInt) + callHeight >= heightPane) {
+            console.log("height outer if")
+            if(callHeight <= heightPane) {
+                console.log("height inner if")
+                bodies.animate({top: (offTopInt-callOffBottom-15)}, 
+                              'fast')
+            }
+            else if (callHeight > heightPane) {
+                console.log("height bottom if")
+                bodies.animate({top: -posY}, 'fast')
+            }
+        }
+        else if (callOffBottom < 0 && $("div#tracer").height() >= heightPane) {
+            console.log("else if height")
+            bodies.animate({top: Math.min(0, offTopInt-callOffBottom)}, 'slow')
+        }
     })
 
     //makes the expandables expand/collapse appropriately
