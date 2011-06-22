@@ -83,5 +83,5 @@
       (make-heap (build-list 10 (lambda(x) (* x x)))))
 
 (define heap (make-heap (list 8 4 3 9 1 6 12 14)))
-(remove-min heap)
-(get-min heap)
+(check-expect (remove-min heap) (make-heap (list 8 4 3 9 6 12 14)))
+(check-expect (get-min heap) 1)

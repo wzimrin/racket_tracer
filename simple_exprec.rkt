@@ -1,19 +1,13 @@
 #lang planet tracer/tracer
 
-(let [(x (lambda (y) y))]
-  (x 2))
-
-
-(define (add x y)
-  (+ x y))
-
-(add 1 2)
-
 (define (fib x)
   (if (< x 2)
       x
       (+ (fib (- x 1))
          (fib (- x 2)))))
+
+(define (add x y)
+  (+ x y))
 
 (define (squared x)
   (* x x))
@@ -34,6 +28,10 @@
           xs))
 
 (all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+
+(check-expect (fib 5) (+ (fib 4) (fib 2)))
+(check-expect (fib 5) (+ (fib 4) (fib 3)))
+(check-expect (fib 5) 1)
 
 ;(send-url "index.html")
 

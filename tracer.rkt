@@ -1,19 +1,20 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local define-struct])
+                    #%app define lambda require #%module-begin let local define-struct check-expect let*])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let local define-struct]])
-(require test-engine/scheme-tests)
+(require test-engine/racket-tests)
 
 (require racket/pretty)
 (require net/sendurl)
 (require [for-syntax racket/port])
 
-(provide let local define)
+(provide let local define let*)
 
-(provide [rename-out (app-recorder #%app)])
+(provide [rename-out (app-recorder #%app)
+                     (check-expect-recorder check-expect)])
 ;(provide app-recorder)
 (provide [all-from-out lang/htdp-intermediate-lambda])
 (provide [rename-out #;(isl:define define)
@@ -71,6 +72,41 @@
     [(define-struct name fields)
      #'(begin (isl:define-struct name fields)
               (register-ds 'name 'fields))]))
+
+(define-syntax (check-expect-recorder e)
+  (with-syntax ([linum (syntax-line e)]
+                [idx (syntax-position e)]
+                [span (syntax-span e)]
+                [ce 'check-expect]
+                [actual 'actual]
+                [expected 'expected])
+    (syntax-case e ()
+      [(_ actualStx expectedStx)
+       #`(begin (define parent-node (create-node 'ce empty empty linum idx span))
+                (check-expect (let ([actual-node (create-node 'actual (list 'actualStx)
+                                                              empty
+                                                              #,(syntax-line #'actualStx)
+                                                              #,(syntax-position #'actualStx)
+                                                              #,(syntax-span #'actualStx))])
+                                (add-kid parent-node actual-node)
+                                (parameterize ([current-call actual-node])
+                                  (set-node-result! actual-node actualStx))
+                                (when (not (apply equal?
+                                                  (map node-result
+                                                       (node-kids parent-node))))
+                                  (set-node-result! parent-node #f)
+                                  (add-kid (current-call) parent-node))
+                                (node-result actual-node))
+                              (let ([expected-node (create-node 'expected (list 'expectedStx)
+                                                                empty
+                                                                #,(syntax-line #'expectedStx)
+                                                                #,(syntax-position #'expectedStx)
+                                                                #,(syntax-span #'expectedStx))])
+                                (add-kid parent-node expected-node)
+                                (parameterize ([current-call expected-node])
+                                  (let [(result expectedStx)]
+                                    (set-node-result! expected-node result)
+                                    result)))))])))
 
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)

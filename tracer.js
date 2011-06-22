@@ -87,7 +87,7 @@ function makeCallTable(node) {
     row.append(nameTD)
 
     //Formals and actuals
-    for (var i = 0; i < node.formals.length; i++) {
+    for (var i = 0; i < node.actuals.length; i++) {
         //Display in collapsed form if actualsExpanded is undefined or false
         var actual = makeCell(node.actualsShort[i],node.actuals[i],node.formals[i],"arg")
        /* if()
@@ -273,11 +273,11 @@ $(document).ready(function () {
         showSpan()
     })
     
-    var originalMoveInc = 2
+    var originalMoveInc = 30
 
-    function scrollHelper(button,pred,dir,mult) {
+    function scrollHelper(button,pred,max,dir,mult) {
         var t;
-        var moveInc = 2
+        var moveInc
         $(button).bind("mousedown",function () {
             function move() {
                 newPos = bodies.css(dir)
@@ -285,12 +285,14 @@ $(document).ready(function () {
                              (mult*Math.floor(moveInc)))
                 if (pred(newPosInt)){
                     bodies.css(dir,newPosInt+"px")
-
-                    }
+                } else {
+                    var m = max()
+                    bodies.css(dir,m+"px")
+                }
                 moveInc = moveInc * 1.01
             }
             moveInc = originalMoveInc
-            t = setInterval(move,1)
+            t = setInterval(move,50)
         }).bind("mouseup",function () {
             clearInterval(t)
         }).bind("mouseleave",function () {
@@ -300,19 +302,23 @@ $(document).ready(function () {
 
     scrollHelper("#leftScroll",
                  function (newPosInt) {return newPosInt <= 0},
+                 function () {return 0},
                  "left",1)
     scrollHelper("#rightScroll",
                  function (newPosInt) {
                      return newPosInt + bodies.width() >= bodyWrapper.width()
                  },
+                 function () {return bodyWrapper.width() - bodies.width()},
                  "left",-1)
     scrollHelper("#upScroll",
                  function (newPosInt) {return newPosInt <= 0},
+                 function () {return 0},
                  "top",1)
     scrollHelper("#downScroll",
                  function (newPosInt) {
                      return newPosInt + bodies.height() >= bodyWrapper.height()
                  },
+                 function () {return bodyWrapper.height() - bodies.height()},
                  "top",-1)
 
 
