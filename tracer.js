@@ -1,7 +1,6 @@
 //William Zimrin and Jeanette Miranda
 //tracer.js	6/02/2011
 
-
 function highlightSpan(el,idx,span) {
     if (el.data("text")) {
         el.empty()
@@ -221,6 +220,43 @@ function makeCall(traceNode, parent) {
     updateCall(div)
     return div
 }
+/*
+function refocusScreen()
+{ 
+    visibleCalls = $("div#tracer").find(".call").filter(":visible")
+    paneWidth = $("div#tracer").width()
+
+    visibleCalls.each(function(index) {
+        var fromLeft = $(this).offset().left 
+                        + $("div#tracer").offset().left
+        var offsetLeft = $(this).offset().left
+        var tracerOffset = $("div#tracerWrapper").scrollLeft()
+
+        var callTable = $(this).children(".callTable").first()
+        var button = $(this).children(".button").first()
+        
+            console.log(fromLeft)
+            console.log(offsetLeft)
+            console.log(tracerOffset)
+        /*if(callTable.width() < paneWidth) {
+            if(fromLeft < 0) {
+                console.log("inner if")
+                callTable.css('marginLeft', -fromLeft)
+                button.css('marginLeft', -fromLeft)
+            }
+
+        }*/
+
+        /*
+    })
+    
+        
+}
+*/
+
+function refocusScreen() {
+    console.log("i need a body")
+}
 
 //sets up js stuff
 $(document).ready(function () {
@@ -410,6 +446,8 @@ $(document).ready(function () {
             console.log("else if height")
             bodies.animate({top: Math.min(0, offTopInt-callOffBottom)}, 'slow')
         }
+        
+        refocusScreen()
     })
 
     //makes the expandables expand/collapse appropriately
@@ -456,6 +494,9 @@ $(document).ready(function () {
 
     first.trigger("click")
     
+    
+    refocusScreen(bodies, bodyWrapper)
+
     function setColumnHeight() {
         $(".column").height($(window).height()-$("div#tabbar").height()
                             -2*parseInt($(document.body).css("margin-top")))

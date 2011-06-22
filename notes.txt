@@ -5,10 +5,8 @@
     - Rearrange call table to be vertical rather than horizontal. See how we like it
     - Coloring of arguments or some other separation between them
 - Parent calls visible at all levels --> scroll with the bar
-- Autoscroll to most recently expanded argument
 - If tree of traces is empty don't open index.html --> message to the user
 - Bug with hover remaining blue too long
-- Check-expects
 - Contracts
 - Expand collapse --> up down arrows?
 - Some way to prevent mouseovers from expanding/collapsing items
@@ -33,6 +31,8 @@
 
 ***** FIXED ISSUES *****
 - Mouse-over scroll to right rather than using scroll bar (6/21)
+- tracing failed check-expects
+- Autoscroll to most recently expanded argument
 - Jumpiness of tab bar movement (6/21)
 - x is delete button, actually minimizes
 - bug lets shrunken call args be expanded
