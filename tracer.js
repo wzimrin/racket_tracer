@@ -220,7 +220,7 @@ function makeCall(traceNode, parent) {
     updateCall(div)
     return div
 }
-/*
+
 function refocusScreen()
 { 
     visibleCalls = $("div#tracer").find(".call").filter(":visible")
@@ -228,35 +228,32 @@ function refocusScreen()
 
     visibleCalls.each(function(index) {
         var fromLeft = $(this).offset().left 
-                        + $("div#tracer").offset().left
-        var offsetLeft = $(this).offset().left
-        var tracerOffset = $("div#tracerWrapper").scrollLeft()
+                        - $("div#tracer").scrollLeft()
+                        - 11
 
         var callTable = $(this).children(".callTable").first()
         var button = $(this).children(".button").first()
         
-            console.log(fromLeft)
-            console.log(offsetLeft)
-            console.log(tracerOffset)
-        /*if(callTable.width() < paneWidth) {
+        console.log("fromLeft: " + fromLeft)
+        if(callTable.width() < $(this).width()) {
             if(fromLeft < 0) {
                 console.log("inner if")
                 callTable.css('marginLeft', -fromLeft)
                 button.css('marginLeft', -fromLeft)
             }
 
-        }*/
+        }
 
-        /*
     })
     
         
 }
-*/
 
+/*
 function refocusScreen() {
     console.log("i need a body")
 }
+*/
 
 //sets up js stuff
 $(document).ready(function () {
@@ -307,12 +304,10 @@ $(document).ready(function () {
         if (codePaneWidth != newWidth) {
             codePaneWidth = newWidth
             $("div#codePane").animate({"width":newWidth+"%"},
-                                      {duration:'slow',
-                                       queue:false})
+                                      {duration:'slow'})
             
             $("div#tracerWrapper").animate({"width":(100-newWidth)+"%"},
-                                           {duration:'slow',
-                                            queue:false})
+                                           {duration:'slow'})
         }
     }
     
@@ -395,16 +390,48 @@ $(document).ready(function () {
 
 
     //makes the expand/collapse buttons work
-    $('.button').bind('mouseenter',function(event) {
-        toggleCall($(this).parents(".call").first())
+    $('.button').bind('click',function(event) {
         thisCall = $(this).parents(".call").first()
+        toggleCall(thisCall)
+        if (thisCall.data("expanded")) {
+            console.log(thisCall)
+            var offset = thisCall.offset()
+            var wrapperOffset = bodyWrapper.offset()
+            var tracerOffset = bodies.offset()
+            var posX = offset.left - wrapperOffset.left
+            var posY = offset.top - wrapperOffset.top
+            var paneWidth = bodyWrapper.width()
+            var paneHeight = bodyWrapper.height()
+            var callWidth = thisCall.outerWidth()
+            var callHeight = thisCall.outerHeight()
+            var newX,newY
+            if (posX+callWidth > paneWidth) {
+                if (callWidth > paneWidth) {
+                    newX = offset.left - tracerOffset.left
+                } else {
+                    newX = offset.left - tracerOffset.left - paneWidth + callWidth
+                }
+            }
+            if (posY+callHeight > paneHeight) {
+                if (callHeight > paneHeight) {
+                    newY = offset.top - tracerOffset.top
+                } else {
+                    newY = offset.top - tracerOffset.top - paneHeight + callHeight
+                }
+            }
+            if (newX)
+                bodyWrapper.scrollLeft(newX)
+            if (newY)
+                bodyWrapper.scrollTop(newY)
+        }
+        refocusScreen()
         
-        pos = thisCall.position()
+        /*
         //want to adjust LR position of screen only if expanding
         if(thisCall.data('expanded')) { 
             posX = pos.left
-            offLeft = bodies.css('left')
-            offLeftInt = parseInt(offLeft.substring(0, offLeft.length-2))
+            //offLeft = bodies.css('left')
+            offLeftInt = bodyWrapper.scrollLeft()//parseInt(offLeft.substring(0, offLeft.length-2))
             callWidth = thisCall.width()
             widthPane = $("div#tracerWrapper").width()
             //Amount of the current call that is off the screen to the right
@@ -413,41 +440,35 @@ $(document).ready(function () {
             if((posX + offLeftInt) + callWidth >= widthPane) {
                 //and is not as wide as the tracerWindow
                 if(callWidth <= widthPane) {
-                    bodies.animate({left: (offLeftInt-callOffRight-15)}, 
-                                  'fast')
+                    bodyWrapper.animate({scrollLeft: -1*(offLeftInt-callOffRight-15)}, 
+                                        'fast')
                 }
                 else if (callWidth > widthPane) {
-                    bodies.animate({left: -posX}, 'fast')
+                    bodyWrapper.animate({scrollLeft: posX}, 'fast')
                 }
             }
         }
         //Want to adjust TB position of screen on both expand and collapse  
         posY = pos.top
-        offTop = bodies.css('top')
-        offTopInt = parseInt(offTop.substring(0, offTop.length-2))
+        //offTop = bodies.css('top')
+        offTopInt = bodyWrapper.scrollTop()//parseInt(offTop.substring(0, offTop.length-2))
         callHeight = thisCall.height()
         heightPane = $("div#tracerWrapper").height()
         callOffBottom = callHeight - (heightPane-(posY+offTopInt))
-        console.log("callOffBottom: " + callOffBottom)
         //Call goes off the screen on the bottom
         if((posY + offTopInt) + callHeight >= heightPane) {
-            console.log("height outer if")
             if(callHeight <= heightPane) {
-                console.log("height inner if")
-                bodies.animate({top: (offTopInt-callOffBottom-15)}, 
-                              'fast')
+                bodyWrapper.animate({scrollTop: -1*(offTopInt-callOffBottom-15)}, 
+                                    'fast')
             }
             else if (callHeight > heightPane) {
-                console.log("height bottom if")
-                bodies.animate({top: -posY}, 'fast')
+                bodyWrapper.animate({scrollTop: posY}, 'fast')
             }
         }
         else if (callOffBottom < 0 && $("div#tracer").height() >= heightPane) {
-            console.log("else if height")
-            bodies.animate({top: Math.min(0, offTopInt-callOffBottom)}, 'slow')
-        }
-        
-        refocusScreen()
+            bodyWrapper.animate({scrollTop: Math.max(0, -1*(offTopInt-callOffBottom))},
+                                'slow')
+        }*/
     })
 
     //makes the expandables expand/collapse appropriately
