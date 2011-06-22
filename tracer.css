@@ -36,7 +36,7 @@ div#tracerWrapper {
     /*border: 2px solid black;*/
     /*position: relative;*/
     height: 10px;
-    overflow: hidden;
+    overflow: auto;
     /*z-index: -1;*/
 
 }
