@@ -59,20 +59,22 @@ div.call {
 }
 
 .background2 {
+    
     background: white;
     border-color: white;
+
     /*
     background: #a3b3c7; 5f7a9c;  light blue #ddd;
     border-color: #a3b3c7;*/
 }
 
 .background1 {
-    background: #e7ebef; /*#6a877f; /*#b3d0ca; /*#b9a56a; /*#758a56; /*#4e5b39; /* <-- olive #d1d1d1; #fff;*/
+    background: #e7ebef; /*#6a877f; /*#b3d0ca; /*#b9a56a; /*#758a56; /*#4e5b39;  <-- olive #d1d1d1; #fff;*/
     border-color: #e7ebef; /*#fff;*/
 }
 
 .background1>table>tbody>tr>td.arg {
-    background: #f6f8f9
+    background: #f6f8f9;
     /*background: #f6f8f9; /*#eee; /* #d3e4e1; /*#d1c49e; /* light olive */
 }
 
@@ -82,7 +84,7 @@ div.call {
 
 /* Expand/collapse button */
 
-.button {
+div.button {
     color: white;
     background: black;
     text-align: center;
@@ -100,11 +102,19 @@ div.call {
     height: 15px;
 }
 
+div.button:hover {
+    border-color: gray;
+}
+
 
 /* Call Table */
 
 .callTable {
     border-spacing: 5px;
+}
+
+.callTableShifted {
+    margin-left: 100px;
 }
 
 .cell {
@@ -131,7 +141,7 @@ td.arg.cell {
     vertical-align: middle;
 }
 
-.name:hover {
+td.name:hover {
     font-weight:bold;
 }
 
@@ -145,6 +155,7 @@ div#tabbar {
     border-bottom-style: solid;
     border-bottom-color: black;
     border-bottom-weight: 3px;
+    overflow-y: hidden;
 }
 
 ul.tabs {
