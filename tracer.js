@@ -391,7 +391,7 @@ $(document).ready(function () {
     
     $(window).resize(setColumnHeight)
     
-    bodyWrapper.mousedown(function (event) {
+    bodies.mousedown(function (event) {
         var oldX=event.pageX
         var oldY=event.pageY
         //var oldTime=new Date().getTime()
