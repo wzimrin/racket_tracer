@@ -16,7 +16,7 @@ other
 
 body {
     overflow: hidden;
-    font-family: "monospace";
+    font-family: "dejavu sans mono","monaco","monospace";
 }
 
 body.dragging {
@@ -124,7 +124,6 @@ div.button:hover {
 .cell {
     white-space: pre;
     font-size: 14px;
-    /*font-family: "monospace";*/
 }
 
 .arg > div {
@@ -172,7 +171,6 @@ ul.tabs > li {
     display: inline;
     padding: 7px;
     white-space: nowrap;
-    /*font-family: "monospace";*/
 }
 
 ul.tabs > li.picked {
@@ -197,7 +195,6 @@ div#codePane {
     color: white;
     white-space: pre;
     overflow:auto;
-    /*font-family: "monospace";*/
     font-size: 13px;
 }
 
