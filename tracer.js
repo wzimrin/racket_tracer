@@ -1,7 +1,6 @@
 //William Zimrin and Jeanette Miranda
 //tracer.js	6/02/2011
 
-
 function highlightSpan(el,idx,span) {
     if (el.data("text")) {
         el.empty()
@@ -22,6 +21,10 @@ function highlightSpan(el,idx,span) {
     el.append(beginText,hi,endText)
 }
 
+function toInt(cssString)
+{
+    return parseInt(cssString.substring(0, cssString.length - 2))
+}
 
 function findPosX(obj) {
     var curleft = 0;
@@ -225,6 +228,39 @@ function makeCall(traceNode, parent) {
     return div
 }
 
+function refocusScreen()
+{
+    //Find all visible calls
+    visibleCalls = $("div#tracer").find(".call").filter(":visible")
+
+    //Check the alignment of each visible call
+    visibleCalls.each(function(index) {
+        var callTable = $(this).children(".callTable").first()
+        var button = $(this).children(".button").first()
+        var callTableMarL = toInt(callTable.css('marginLeft'))
+        var fromLeft = $(this).position().left
+                        + toInt($(this).css('marginLeft'))
+                        + callTableMarL
+                        - $("div#tracerWrapper").scrollLeft()
+        
+        //only move callTables that are less wide than the current width
+        //of the call (will this condition always be true?)
+        if(callTable.width() < $(this).width()) {
+            //This call is off the screen to the left
+            if(fromLeft < 0) {
+                callTable.animate({marginLeft: callTableMarL-fromLeft}, 'slow')
+                button.animate({marginLeft: callTableMarL-fromLeft}, 'slow')
+            }
+            //This screen is to the right of the left edge of the screen
+            //And not aligned with its left edge
+            else if (fromLeft > 0 && callTableMarL > 0) {
+                callTable.animate({marginLeft: 3}, 'slow')
+                button.animate({marginLeft: 3}, 'slow')
+            }
+        }
+    })
+}
+
 //sets up js stuff
 $(document).ready(function () {
     var tabs = $("#tabbar")
@@ -262,9 +298,9 @@ $(document).ready(function () {
         bodies.append(exp)
     }
 
-    // ----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     //                                      EVENTS
-    // ----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     function expandCodePane() {
         setCodePaneWidth(50)
@@ -302,7 +338,7 @@ $(document).ready(function () {
                           scrollLeft: pos.left-(width/2)+pane.scrollLeft()}, 
                           'slow');
     }
-
+    
     $("td.name").click(function () {
         var target = $(this)
         highlightSpan($("div#codePane"),target.data("idx"),target.data("span"))
@@ -315,6 +351,8 @@ $(document).ready(function () {
         thisCall = $(this).parents(".call").first()
         toggleCall(thisCall,"fast")
     })
+
+    bodyWrapper.scroll(refocusScreen)
 
     //makes the expandables expand/collapse appropriately
     //and highlight on hover
