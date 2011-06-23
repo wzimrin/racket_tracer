@@ -336,21 +336,6 @@ $(document).ready(function () {
                           'slow');
     }
     
-
-    $(".callTable").hover(function() {
-        //margin originally at 3px
-        //default position is 3 px to the right of the left edge of the screen
-        var fromLeft = $(this).position().left 
-                        + toInt($(this).css('marginLeft'))
-                        - $("div#tracerWrapper").scrollLeft()
-                        - 6
-
-        console.log("Position: " + $(this).position().left)
-        console.log("leftMargin: " + toInt($(this).css('marginLeft')))
-        console.log("scrollLeft: " + $("div#tracerWrapper").scrollLeft())
-        console.log("From Left: " + fromLeft)
-        })
-
     $("td.name").click(function () {
         var target = $(this)
         highlightSpan($("div#codePane"),target.data("idx"),target.data("span"))
