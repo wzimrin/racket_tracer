@@ -378,7 +378,8 @@ $(document).ready(function () {
         target.addClass("picked")
         target.removeClass("other")
         //target.removeClass("hover")
-        $(window).scrollLeft(0)
+        $(bodyWrapper).scrollLeft(0)
+        refocusScreen()
     })
 
     first.trigger("click")
