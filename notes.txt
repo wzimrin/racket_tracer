@@ -1,20 +1,48 @@
-ability to expand arguments from shrunken call - lack confusing
-bad printing - use *sl printing - constructor-syntax
-two lists confusing at top level
-formals/actuals not intuitive
-need to correspond between input/output and code
-just formals not enough
-highlighting original code from tracer
-arrow new syntax
-make-heap and args juxtaposition not clear
-... not necessarily clear - additional complexity
-expand arguments is first thing - separate expansion of args and expansion
+
+
+***** CURRENT ISSUES*****
+- Call table
+    - Rearrange call table to be vertical rather than horizontal. See how we like it
+    - Coloring of arguments or some other separation between them
+- Parent calls visible at all levels --> scroll with the bar
+- If tree of traces is empty don't open index.html --> message to the user
+- Bug with hover remaining blue too long
+- Contracts
+- Expand collapse --> up down arrows?
+- Some way to prevent mouseovers from expanding/collapsing items
+
+***** WISHLIST *****
+- Tracing failed check expects
+- Dr Racket highlighting syntax / Correspondence between input/output and code
+- Tracing errors
+- Actual formals
+- Matching parentheses on display on hover(?)
+- Bad printing - use *sl printing - constructor-syntax
+    - Differing syntax on lists at top level. Fix: printer from language level, clear 
+      one is from code other is actual.
+    - Dealing with large flat data structures
+
+***** THINK ABOUT *****
+- Other arguments de-expand when you shift your focus
+- Google maps style zoom for arguments
+- Formals/actuals not intuitive
+- Make-heap and args juxtaposition not clear
+- ... not necessarily clear - additional complexity
+
+***** FIXED ISSUES *****
+- Mouse-over scroll to right rather than using scroll bar (6/21)
+- tracing failed check-expects
+- Autoscroll to most recently expanded argument
+- Jumpiness of tab bar movement (6/21)
+- x is delete button, actually minimizes
+- bug lets shrunken call args be expanded
+- more no click interaction
+- ability to expand arguments from shrunken call - lack confusing
+- expand arguments is first thing - separate expansion of args and expansion
 expansion
-google maps style zoom for arguments
-children start out expanded
-gray highlights are useful - make current display readable in drracket
-deexpand other branches, in general, we are moving on to a different branch
-bug lets shrunken call args be expanded
-may need more than highlighting source
-x is delete button, actually minimizes
-don't show things as leaves unless they are leaves
+
+:%s/foo/bar/gc
+
+gg beginning of document
+SHIFT g end of doc
+

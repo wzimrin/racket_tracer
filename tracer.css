@@ -1,120 +1,262 @@
+/* William Zimrin and Jeanette Miranda
+6/2011
 
-/* Calls */
+Whole Page
+Tracer
+Expand/collapse button
+Call table
+tab bar
+code pane
+scroll buttons
+other
+*/
 
-.call {
+
+/* Whole page */
+
+body {
+    overflow: hidden;
+    font-family: "monospace";
+}
+
+body.dragging {
+    cursor: move;
+}
+
+div#middle {
+    /*padding-left: 300px;*/
+}
+
+div#middle .column {
+    float: left;
+    position: relative;
+}
+
+/* Tracer */
+
+div#tracerWrapper {
+    float: left;
+    width: 90%;
+    /*border: 2px solid black;*/
+    /*position: relative;*/
+    height: 10px;
+    overflow: auto;
+    /*z-index: -1;*/
+
+}
+
+div#tracer {
+    position: absolute;
+    top:0px;
+    left:0px; /* FA adjust depending on whether codePane is open */
+    white-space: nowrap;
+}
+
+
+div.call {
     margin: 3px;
     vertical-align: top;
-    font-family:"Arial";
     font-size:12px;
-    border-radius: 5px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
     border-style: solid;
 }
 
-.background1 {
-    background: #ddd;
-    border-color: #ddd;
+.background2 {
+    
+    background: white;
+    border-color: white;
+
+    /*
+    background: #a3b3c7; 5f7a9c;  light blue #ddd;
+    border-color: #a3b3c7;*/
 }
 
-.background2 {
-    background: #fff;
-    border-color: #fff;
+.background1 {
+    background: #e7ebef; /*#6a877f; /*#b3d0ca; /*#b9a56a; /*#758a56; /*#4e5b39;  <-- olive #d1d1d1; #fff;*/
+    border-color: #e7ebef; /*#fff;*/
+}
+
+.background1>table>tbody>tr>td.arg {
+    background: #f6f8f9;
+    /*background: #f6f8f9; /*#eee; /* #d3e4e1; /*#d1c49e; /* light olive */
+}
+
+.background2>table>tbody>tr>td.arg {
+    background: #e7ebef; /*#b9c6d4; /*6b819c;*/
 }
 
 /* Expand/collapse button */
 
-.button {
-    vertical-align: top !important;
-}
-
-.button > div {
+div.button {
     color: white;
     background: black;
     text-align: center;
 
     vertical-align: middle;
-    border: 3px solid black; 
+    border: 3px solid black;
+    border-radius: 2px;
+    -moz-border-radius: 2px;
     
-    font-family:"Arial";
+    /*font-family:"Arial";*/
     font-weight: bold;
     font-size: 15px;
 
-    width: 15px;
-    height: 50px;
-    float: left;
+    width: 50px;
+    height: 15px;
+}
+
+div.button:hover {
+    border-color: gray;
 }
 
 
 /* Call Table */
 
-.cell {
-    white-space: pre;
+.callTable {
+    border-spacing: 5px;
 }
 
-.name {
-    font-weight: bold;
+.callTableShifted {
+    margin-left: 100px;
+}
+
+.cell {
+    white-space: pre;
+    font-size: 14px;
+    /*font-family: "monospace";*/
 }
 
 .arg > div {
     text-align:left;
+    padding: 5px;
     margin-left:auto;
     margin-right:auto;
     width:auto;
 }
 
-.arrow {
-    font-weight: bold;
+td.arg.cell {
+    background: #ebebeb; /* #ccc;*/
+    border-radius: 2px;
+    -moz-border-radius: 2px;
 }
 
 .callTable > tbody > tr > td {
     vertical-align: middle;
 }
 
+td.name:hover {
+    font-weight:bold;
+}
+
 /* Tab bar */
+
+div#tabbar {
+    width: 100%;
+    overflow: auto;
+    float: top;
+    border-style: none;
+    border-bottom-style: solid;
+    border-bottom-color: black;
+    border-bottom-weight: 3px;
+    overflow-y: hidden;
+}
 
 ul.tabs {
     list-style-type: none;
-    margin: 10px 0px; /*TB 10, LR 0*/
+    margin: 5px 0px; /*TB 10, LR 0*/
     padding-left: 0px
 }
 
 ul.tabs > li {
     display: inline;
-    border: 2px solid black;
-    padding: 5px;
+    padding: 7px;
     white-space: nowrap;
-    font-family: "Arial";
-    font-weight: bold;
-    background:#ddd;
+    /*font-family: "monospace";*/
 }
 
 ul.tabs > li.picked {
-    background: white;
+    font-weight: bold;
 }
 
-ul.tabs > li.other {
-    color: #23c
+ul.tabs > li.other:hover {
+    font-weight: bold;
 }
 
-div#tabbar {
-    overflow: auto;
-    margin-bottom:10px;
-    float: left;
-    width: 100%;
+/* Code Pane */
+
+div#codePane {
+    /*margin-left: -100%;*/
+    /*padding-left: 5px;
+    padding-right: 5px;*/
+    /*right: 300px;*/
+    width: 10%;
+    background: black;
+    /*margin-right: 10px;*/
+    height: 100%;
+    color: white;
+    white-space: pre;
+    overflow:auto;
+    /*font-family: "monospace";*/
+    font-size: 13px;
+}
+
+.highlight {
+    background: #666;
+}
+
+/* Scroll Buttons */
+
+div.scrollButton {
+    font-size: 32px;
+    opacity: .3;
+}
+
+div.scrollButton:hover {
+    opacity: 1;
+}
+
+div#leftScroll {
+    position: absolute;
+    left: 0px; 
+    top: 50%; 
+}
+
+div#rightScroll {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+}
+
+div#upScroll {
+    text-align: center;
+    position: absolute;
+    top: 0px;
+    left: 50%;
+}
+
+div#downScroll {
+    text-align: center;
+    position: absolute;
+    left: 50%;
+    bottom: 0px;
 }
 
 /* Other */
-
+/*
 .expandable {
     color: #23c;
-}
+}*/
 
 .background1 > table > tbody > tr > td > div.expandable:hover {
-    background: #c2d1e5;
+    font-weight: bold;
+    /*background: #c2d1e5;*/
 }
 
 
 .background2 > table > tbody > tr > td > div.expandable:hover {
-    background: #DCE5F0; /*#E6ECF4; #D4DFED;*/
+    font-weight: bold;
+    /*background: #DCE5F0; #E6ECF4; #D4DFED;*/
 }
 
 .hover {
@@ -129,4 +271,8 @@ div#tabbar {
 
 .childTable > tbody > tr > td {
     vertical-align: top;
+}
+
+.childTableParent {
+    overflow:hidden;
 }

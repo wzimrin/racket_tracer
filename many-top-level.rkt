@@ -1,4 +1,4 @@
-#lang s-exp "tracer.rkt"
+#lang planet tracer/tracer
 
 (define (fooooooooooooooo a b)
   (build-list a b))

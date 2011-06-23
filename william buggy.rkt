@@ -1,4 +1,4 @@
-#lang s-exp "tracer.rkt"
+#lang planet tracer/tracer
 
 (define (concat xs ys)
   (if (empty? xs)
@@ -10,6 +10,16 @@
   (cond [(empty? l) empty]
         [(cons? l) (append (f (first l))
                            (map-concat f (rest l)))]))
+#|
+(check-expect (map-concat (λ(x) (list (add1 x)))
+                          (list 2 3 4 5))
+              (list 3 4 5 6))
+(check-expect (map-concat rest
+                          (list (list 0 1 2)
+                                (list 1 2 3)
+                                (list 3 4 5)))
+              (list 1 2 2 3 4 5))|#
+
 
 (define (drop x lst)
   (cond
@@ -17,20 +27,34 @@
     [(equal? (first lst) x) (rest lst)]
     [#t (cons (first lst) (drop x (rest lst)))]))
 
-(define (collect f lst)
+#|(check-expect (drop 1 (list 1)) empty)
+(check-expect (drop 2 (list 2 1)) (list 1))
+(check-expect (drop 2 (list 1 2)) (list 1))
+(check-expect (drop 3 (list 1 3 2)) (list 1 2))|#
+
+(define (my-map f lst)
   (cond
     [(empty? lst) empty]
     [(cons? lst) (cons (f (first lst))
-                       (collect f (rest lst)))]))
+                       (my-map f (rest lst)))]))
+
+#|
+(check-expect (my-map add1 (list 1)) (list 2))
+(check-expect (my-map add1 (list 3 1 2)) (list 4 2 3))
+(check-expect (my-map rest (list (list 1 2) (list 1 2 3) (list 1 2 3 4)))
+              (list (list 2) (list 2 3) (list 2 3 4)))|#
+
+
 
 (define (permutations lst)
   (cond
-    [(empty? lst) empty]
+    [(empty? lst) (list empty)]
+;    [(empty? (rest lst)) (list lst)]
     [(cons? lst) (map-concat
                   (lambda (num)
-                    (collect (lambda (perms)
-                               (cons num perms))
-                             (permutations
+                    (my-map (lambda (a-perm)
+                               (cons num a-perm))
+                             (permutations 
                               (drop num lst))))
                   lst)]))
 

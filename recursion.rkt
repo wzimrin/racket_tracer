@@ -1,4 +1,4 @@
-#lang s-exp "tracer.rkt"
+#lang planet tracer/tracer
 
 (define-struct bhnode (value left right))
 
@@ -9,9 +9,12 @@
      (let [(y (bhnode-value h))
            (l (bhnode-left h))
            (r (bhnode-right h))]
-       (if (< x y);always insert into the right (smaller) subtree
-         (make-bhnode x (insert y r) l);once done, make sure that is the left (larger) subtree
-         (make-bhnode y (insert x r) l)))]));we are inserting into an empty heap
+       ;always insert into the right (smaller) subtree
+       (if (< x y)
+         ;once done, make sure that is the left (larger) subtree
+         (make-bhnode x (insert y r) l)
+         ;we are inserting into an empty heap
+         (make-bhnode y (insert x r) l)))]))
 
 (define (make-heap ns)
   (foldl (lambda (x h) (insert x h)) empty ns))
@@ -19,16 +22,23 @@
 (define get-min bhnode-value)
 
 (define (remove-min h)
-  (local [(define (insert-merge x l r);makes a new tree from x and the l and r subtrees
+  
+  (local [;makes a new tree from x and the l and r subtrees
+          (define (insert-merge x l r)
             ;easy, since no structure changes - simply move values around
-            (cond [(andmap (lambda (y)
-                             (or (not (bhnode? y));if x is less than the get-min of all existing subtrees
-                                 (< x (get-min y))))
-                           (list l r))
-                   (make-bhnode x l r)];we can simply put x here - it is a valid tree
-                  [(or (not (bhnode? r));if r is empty
-                       (< (get-min l) (get-min r)));or if l is less than r
-                   (make-bhnode (get-min l);insert it into l and use l as the new min of the tree
+            (cond [(andmap 
+                    (lambda (y)
+                      ;if x is less than the get-min of all existing subtrees
+                      (or (not (bhnode? y))
+                          (< x (get-min y))))
+                    (list l r))
+                   ;we can simply put x here - it is a valid tree
+                   (make-bhnode x l r)]
+                  [;if r is empty or if l is less than r
+                   (or (not (bhnode? r))
+                       (< (get-min l) (get-min r)))
+                   ;insert it into l and use l as the new min of the tree
+                   (make-bhnode (get-min l)
                                 (insert-merge x (bhnode-left l) (bhnode-right l));we don't insert it into 
                                 r)];r if r is empty because we don't want to change the structure
                   [(or (not (bhnode? l));proceed as above, with l and r flipped
@@ -57,14 +67,21 @@
            (insert-merge extra;new-h is a valid BrownHeap, so this results in a valid BrownHeap
                   (bhnode-left new-h)
                   (bhnode-right new-h))])))
-(define (add x y) (+ x y))
 
-(define (add-on e l) (cons e l))
+(define (food a b c)
+  (remove-min a))
 
-(add-on 5 (add-on 4 (add-on 3 empty)))
+(define (munchies a b c)
+  (if (= a 0)
+      c
+      (munchies 0 b c)))
+
+(munchies 1 2 3)
+
+(food (make-heap (list 3 1 4 1 5 9 2 6 5))
+      (make-heap (make-list 5 5))
+      (make-heap (build-list 10 (lambda(x) (* x x)))))
 
 (define heap (make-heap (list 8 4 3 9 1 6 12 14)))
-(remove-min heap)
-(check-expect (make-heap (list 1 2)) 
-              (remove-min (make-heap (list 1 2 3))))
-(get-min heap)
+(check-expect (remove-min heap) (make-heap (list 8 4 3 9 6 12 14)))
+(check-expect (get-min heap) 1)

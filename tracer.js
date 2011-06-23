@@ -1,6 +1,62 @@
 //William Zimrin and Jeanette Miranda
 //tracer.js	6/02/2011
 
+function highlightSpan(el,idx,span) {
+    if (el.data("text")) {
+        el.empty()
+        el.text(el.data("text"))
+        el.data("text",false)
+    }
+    var text = el.text()
+    var startIdx = idx-1
+    var endIdx = idx+span-1
+    var beginText = text.substring(0,startIdx)
+    var highlightedText = text.substring(startIdx,endIdx)
+    var endText = text.substring(endIdx)
+    el.data("text",text)
+    el.empty()
+    var hi = element("span")
+    hi.addClass("highlight")
+    hi.text(highlightedText)
+    el.append(beginText,hi,endText)
+}
+
+function toInt(cssString)
+{
+    return parseInt(cssString.substring(0, cssString.length - 2))
+}
+
+function findPosX(obj) {
+    var curleft = 0;
+    if(obj.offsetParent)
+        while(1) 
+        {
+          curleft += obj.offsetLeft;
+          if(!obj.offsetParent)
+            break;
+          obj = obj.offsetParent;
+        }
+    else if(obj.x)
+        curleft += obj.x;
+    return curleft;
+}
+
+function findPosY(obj) {
+    var curtop = 0;
+    if(obj.offsetParent)
+        while(1)
+        {
+          curtop += obj.offsetTop;
+          if(!obj.offsetParent)
+            break;
+          obj = obj.offsetParent;
+        }
+    else if(obj.y)
+        curtop += obj.y;
+    return curtop;
+}
+
+
 //creates a dom element of the type tag
 function element(tag) {
     return $("<"+tag+'/>')
@@ -25,7 +81,7 @@ function toggleExpandable(html) {
 //Will check to see if two forms are the same, and if they are, will not make
 //expandable/collapsible
 //takes the short form, the full form, and the class to apply to the td
-function makeCell(formShort, formFull, cssClass) {
+function makeCell(formShort, formFull, literalForm, cssClass) {
     var TD = element('td')
     TD.addClass(cssClass)
     TD.addClass("cell")
@@ -41,85 +97,74 @@ function makeCell(formShort, formFull, cssClass) {
     else {
         div.text(formShort)
     }
+    if (literalForm){
+        div.addClass("literal")
+        div.data("literal",literalForm)
+    }
     TD.append(div)
     return TD
 }
 
 //Makes the call table: function name, formals, actuals and result in table form
 function makeCallTable(node) {
-    var topRow = element('tr')
-    var bottomRow = element('tr')
+    var row = element('tr')
     var table = element("table")
-
-    var hidable = []
-
-    var button = element("td")
-    button.attr("rowspan",2)
-    var buttonDiv = element("div")
-    buttonDiv.text("-")
-    button.append(buttonDiv)
-    button.addClass("button")
-    topRow.append(button)
 
     //Function name
     var nameTD = element('td')
-    nameTD.attr("rowspan",2)
+    nameTD.attr("rowspan")
     nameTD.text(node.name)
     nameTD.addClass("name")
     nameTD.addClass("cell")
-    topRow.append(nameTD)
+    nameTD.data("idx",node.idx)
+    nameTD.data("span",node.span)
+    nameTD.data("linum",node.linum)
+    row.append(nameTD)
 
     //Formals and actuals
-    for (var i = 0; i < node.formals.length; i++) {
-        //Display in collapsed form if formalsExpanded is undefined or false
-        var formal = makeCell(node.formalsShort[i],node.formals[i],"arg")
-        topRow.append(formal)
-        hidable.push(formal)
-        
+    for (var i = 0; i < node.actuals.length; i++) {
         //Display in collapsed form if actualsExpanded is undefined or false
-        var actual = makeCell(node.actualsShort[i],node.actuals[i],"arg")
-        bottomRow.append(actual)
-        hidable.push(actual)
+        var actual = makeCell(node.actualsShort[i],node.actuals[i],node.formals[i],"arg")
+       /* if()
+            actual.css('background', 'red')
+        else
+            actual.css('background', 'blue')*/
+        row.append(actual)
     }
 
     //Arrow
     var arrow = element('td')
-    arrow.attr("rowspan",2)
-    arrow.text("=>")
+    arrow.html("&rarr;")
     arrow.addClass("arrow")
     arrow.addClass("cell")
-    hidable.push(arrow)
-    topRow.append(arrow)
+    row.append(arrow)
 
     //Result
-    resultTD = makeCell(node.resultShort,node.result,"result")
-    resultTD.attr("rowspan",2)
-    hidable.push(resultTD)
+    resultTD = makeCell(node.resultShort,node.result,false,"result")
     
-    topRow.append(resultTD)
+    row.append(resultTD)
 
-    table.append(topRow)
-    table.append(bottomRow)
+    table.append(row)
     table.addClass("callTable")
-    return {table:table,hidable:hidable,button:buttonDiv}
+    return table
 }
 
 //sets whether obj is hidden
-function setHide(obj,hidden) {
+function setHide(obj,hidden,animate) {
     if (hidden)
-        obj.hide()
+        obj.hide(animate)
     else
-        obj.show()
+        obj.show(animate)
 }
 
 //makes a call display the appropriate amount of stuff,
 //as determined by html.data("expanded"))
-function updateCall(html) {
+function updateCall(html,animate) {
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var button = html.data("button")
     for (var i = 0; i < hidable.length; i++) {
-        setHide(hidable[i],!expanded)
+        setHide(hidable[i],!expanded,animate)
     }
     if (expanded) {
         button.text("-")
@@ -129,9 +174,9 @@ function updateCall(html) {
 }
 
 //expands/collapses a call
-function toggleCall(html) {
+function toggleCall(html,animate) {
     html.data("expanded",!html.data("expanded"))
-    updateCall(html)
+    updateCall(html,animate)
 }
 
 //Makes an expandedCall: delete button, function, formals, actuals and result
@@ -145,14 +190,19 @@ function makeCall(traceNode, parent) {
     else
         div.addClass("background1")
     div.addClass("call")
+    
+    var upperTable = makeCallTable(traceNode)
 
-    var upperTableObj = makeCallTable(traceNode)
-    var upperTable = upperTableObj.table
-    var button = upperTableObj.button
-    var hidable = upperTableObj.hidable
+    var button = element("div")
+    button.text("-")
+    button.addClass("button")
 
+    var hidable = []
+    
+    var lowerDiv = element("div")
+    lowerDiv.addClass("childTableParent")
     var lowerTable = element('table')
-    hidable.push(lowerTable)
+    hidable.push(lowerDiv)
     lowerTable.addClass("childTable")
     var lowerRow = element('tr');
     lowerTable.append(lowerRow)
@@ -164,20 +214,77 @@ function makeCall(traceNode, parent) {
 
         lowerRow.append(cell);
     }
-
+    
+    lowerDiv.append(lowerTable)
     div.append(upperTable)
-    div.append(lowerTable)
+    if (traceNode.children.length!=0)
+        div.append(button)
+    div.append(lowerDiv)
     div.data("expanded",false)
     div.data("hidable",hidable)
     div.data("button",button)
+
     updateCall(div)
     return div
+}
+
+function refocusScreen()
+{
+    //Find all visible calls
+    visibleCalls = $("div#tracer").find(".call").filter(":visible")
+
+    //Check the alignment of each visible call
+    visibleCalls.each(function(index) {
+        var callTable = $(this).children(".callTable").first()
+        var button = $(this).children(".button").first()
+        var callTableMarL = toInt(callTable.css('marginLeft'))
+        var fromLeft = $(this).position().left
+                        + toInt($(this).css('marginLeft'))
+                        + callTableMarL
+                        - $("div#tracerWrapper").scrollLeft()
+        
+        //only move callTables that are less wide than the current width
+        //of the call (will this condition always be true?)
+        if(callTable.width() < $(this).width()) {
+            //This call is off the screen to the left
+            if(fromLeft < 0) {
+                var shiftBy = Math.min($(this).width()-callTable.width(), 
+                                        callTableMarL-fromLeft)
+                //if(-fromLeft > $(this).width() - callTable.width())
+                  //  shiftBy = callTableMarL-($(this).width()-callTable.width())
+                callTable.css('marginLeft', shiftBy)
+                button.css('marginLeft', shiftBy)
+            }
+            //This call is to the right of the left edge of the screen
+            //And not aligned with its left edge
+            else if (fromLeft > 0 && callTableMarL > 0) {
+                callTable.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
+                button.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
+            }
+        }
+    })
 }
 
 //sets up js stuff
 $(document).ready(function () {
     var tabs = $("#tabbar")
+    var bodyWrapper = $("#tracerWrapper")
     var bodies = $("#tracer")
+    //bodyWrapper.append(bodies)
+    var leftScroll = $("#leftScroll")
+    leftScroll.addClass('scrollButton')
+    var rightScroll = $("#rightScroll")
+    rightScroll.addClass('scrollButton')
+    var upScroll = $("#upScroll")
+    upScroll.addClass('scrollButton')
+    var downScroll = $("#downScroll")
+    downScroll.addClass('scrollButton')
+
+    var codePane = $("#codePane")
+    codePane.text(code) // change to code after merge FA
+    var codePaneWidth = 300;
+
+
     var ul = element("ul")
     ul.addClass("tabs")
     tabs.append(ul)
@@ -191,29 +298,71 @@ $(document).ready(function () {
         ul.append(li)
         var exp = makeCall(theTrace.children[i],tabs)
         exp.addClass("toplevel")
-        toggleCall(exp)
         li.data("child",exp)
         bodies.append(exp)
     }
 
-    // ----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     //                                      EVENTS
-    // ----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-    //makes the expand/collapse buttons work
-    $('.button div').bind('mouseenter',function(event) {
-        toggleCall($(this).parents(".call").first())
+    function expandCodePane() {
+        setCodePaneWidth(50)
+    }
+    
+    function setCodePaneWidth(newWidth) {
+        if (codePaneWidth != newWidth) {
+            codePaneWidth = newWidth
+            $("div#codePane").animate({"width":newWidth+"%"},
+                                      {duration:'slow'})
+            
+            $("div#tracerWrapper").animate({"width":(100-newWidth)+"%"},
+                                           {duration:'slow'})
+        }
+    }
+    
+    $("div#codePane").click(function () {
+        if (codePaneWidth==50)
+            setCodePaneWidth(10)
+        else
+            setCodePaneWidth(50)
     })
+    
+    setCodePaneWidth(10)
+    
+    function showSpan() {
+        var pane = $("div#codePane")
+        var span = pane.find("span")
+        var pos = span.position()
+        var height = pane.height()
+        var width = pane.width()
+        if (pos.top < 0 || pos.top > (height-span.height()) 
+            || pos.left < 0 || pos.left > (width - span.width()))
+            pane.animate({scrollTop: pos.top-(height/2)+pane.scrollTop(),
+                          scrollLeft: pos.left-(width/2)+pane.scrollLeft()}, 
+                          'slow');
+    }
+    
+    $("td.name").click(function () {
+        var target = $(this)
+        highlightSpan($("div#codePane"),target.data("idx"),target.data("span"))
+        expandCodePane()
+        showSpan()
+    })
+    
+    //makes the expand/collapse buttons work
+    $('.button').bind('click',function(event) {
+        thisCall = $(this).parents(".call").first()
+        toggleCall(thisCall,"fast")
+    })
+
+    bodyWrapper.scroll(refocusScreen)
 
     //makes the expandables expand/collapse appropriately
     //and highlight on hover
     $(".expandable").bind("click",function (event) {//expand/collapse
         toggleExpandable($(this))
-    })/*.live("mouseenter",function (event) {//hover
-        $(this).addClass("hover")
-    }).live("mouseleave",function (event) {
-        $(this).removeClass("hover")
-    })*/
+    })
 
     //makes the tabs switch what is displayed and
     //highlight on hover
@@ -228,24 +377,58 @@ $(document).ready(function () {
         oldPicked.addClass("other")
         target.addClass("picked")
         target.removeClass("other")
-        target.removeClass("hover")
+        //target.removeClass("hover")
         $(window).scrollLeft(0)
-    }).live("mouseenter",function (event) {//hover
-        $(this).addClass("hover")
-    }).live("mouseleave",function (event) {
-        $(this).removeClass("hover")
-    })
-
-    //makes the tabbar scroll with me
-    $(window).scroll(function (event) {
-        //pageXOffset
-        $("#tabbar").animate({display: 'none',
-                              marginLeft: $(window).scrollLeft() + "px"}, 
-                              40,
-                              'linear',
-                              function(){})
     })
 
     first.trigger("click")
+    
+    function setColumnHeight() {
+        $(".column").height($(window).height()-$("div#tabbar").height()
+                            -2*parseInt($(document.body).css("margin-top")))
+    }
+
+    setColumnHeight()
+    
+    $(window).resize(setColumnHeight)
+    
+    bodies.mousedown(function (event) {
+        var oldX=event.pageX
+        var oldY=event.pageY
+        //var oldTime=new Date().getTime()
+        var body = $(document.body)
+        body.addClass("dragging")
+
+        function moveHandler(event) {
+            var newTime = new Date().getTime()
+            //if (newTime-20>=oldTime) {
+            //oldTime = newTime
+            console.log(newTime)
+            var newX = event.pageX
+            var newY = event.pageY
+            bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
+            bodyWrapper.scrollTop(bodyWrapper.scrollTop()-newY+oldY)
+            oldX=newX
+            oldY=newY
+            return false
+            //}
+        }
+        function endHandler(event) {
+            var newX = event.pageX
+            var newY = event.pageY
+            bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
+            bodyWrapper.scrollTop(bodyWrapper.scrollTop()-newY+oldY)
+            body.unbind("mousemove",moveHandler)
+            body.unbind("mouseup",endHandler)
+            body.unbind("mouseleave",endHandler)
+            body.removeClass("dragging")
+            return false
+        }
+        
+        body.mousemove(moveHandler)
+        body.mouseup(endHandler)
+        body.mouseleave(endHandler)
+        return false
+    })
 })
 

@@ -1,18 +1,20 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local define-struct])
+                    #%app define lambda require #%module-begin let local define-struct check-expect let*])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let local define-struct]])
-(require test-engine/scheme-tests)
+(require test-engine/racket-tests)
 
 (require racket/pretty)
 (require net/sendurl)
+(require [for-syntax racket/port])
 
-(provide let local define)
+(provide let local define let*)
 
-(provide [rename-out (app-recorder #%app)])
+(provide [rename-out (app-recorder #%app)
+                     (check-expect-recorder check-expect)])
 ;(provide app-recorder)
 (provide [all-from-out lang/htdp-intermediate-lambda])
 (provide [rename-out #;(isl:define define)
@@ -26,19 +28,21 @@
 (provide show-trace trace->json #%module-begin)
 
 ;the actual struct that stores our data
-(struct node (name formal result actual kids) #:mutable #:transparent)
+(struct node (name formal result actual kids linum idx span) #:mutable #:transparent)
+
+(define src (box ""))
 
 ;creates a node with no result or children
 ;takes a name, a formals list, and an actuals list
-(define (create-node n f a)
-  (node n f 'no-result a empty))
+(define (create-node n f a l i s)
+  (node n f 'no-result a empty l i s))
 
 ;adds a kid k to node n
 (define (add-kid n k)
   (set-node-kids! n (cons k (node-kids n))))
 
 ;the current definition we are in
-(define current-call (make-parameter (create-node 'top-level empty empty)))
+(define current-call (make-parameter (create-node 'top-level empty empty 0 0 0)))
 
 ;a boxed list of all functions that define-struct has defined in this namespace
 (define ds-fun-names (box empty))
@@ -69,6 +73,41 @@
      #'(begin (isl:define-struct name fields)
               (register-ds 'name 'fields))]))
 
+(define-syntax (check-expect-recorder e)
+  (with-syntax ([linum (syntax-line e)]
+                [idx (syntax-position e)]
+                [span (syntax-span e)]
+                [ce 'check-expect]
+                [actual 'actual]
+                [expected 'expected])
+    (syntax-case e ()
+      [(_ actualStx expectedStx)
+       #`(begin (define parent-node (create-node 'ce empty empty linum idx span))
+                (check-expect (let ([actual-node (create-node 'actual (list 'actualStx)
+                                                              empty
+                                                              #,(syntax-line #'actualStx)
+                                                              #,(syntax-position #'actualStx)
+                                                              #,(syntax-span #'actualStx))])
+                                (add-kid parent-node actual-node)
+                                (parameterize ([current-call actual-node])
+                                  (set-node-result! actual-node actualStx))
+                                (when (not (apply equal?
+                                                  (map node-result
+                                                       (node-kids parent-node))))
+                                  (set-node-result! parent-node #f)
+                                  (add-kid (current-call) parent-node))
+                                (node-result actual-node))
+                              (let ([expected-node (create-node 'expected (list 'expectedStx)
+                                                                empty
+                                                                #,(syntax-line #'expectedStx)
+                                                                #,(syntax-position #'expectedStx)
+                                                                #,(syntax-span #'expectedStx))])
+                                (add-kid parent-node expected-node)
+                                (parameterize ([current-call expected-node])
+                                  (let [(result expectedStx)]
+                                    (set-node-result! expected-node result)
+                                    result)))))])))
+
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)
   (syntax-case e ()
@@ -87,18 +126,25 @@
                          (module-path-index-split (car binding)))
                        list)
                       ;otherwise, return it
-                      binding)])
+                      binding)]
+            [linum (syntax-line e)]
+            [idx (syntax-position e)]
+            [span (syntax-span e)])
        ;we want to potentially trace fun-expr if it was bound in the file
-       (if (or (equal? vals 'lexical)
+       (with-syntax ([linum linum]
+                     [idx idx]
+                     [span span])
+         (if (or (equal? vals 'lexical)
                (equal? vals '(#f #f)))
            ;we also need to check at runtime if fun-expr was defined by define-struct
-           #'(if (or (member 'fun-expr (unbox ds-fun-names))
+           #`(if (or (member 'fun-expr (unbox ds-fun-names))
                      (struct-accessor-procedure? fun-expr))
                  ;if not a function you want to trace, leave as is
                  (#%app fun-expr arg-expr ...)
                  ;otherwise trace
                  (let ([n (create-node 'fun-expr '(arg-expr ...)
-                                       "nothing here yet!")])
+                                       "nothing here yet!"
+                                       linum idx span)])
                    (begin
                      ;adds n to current-call's kids 
                      (add-kid (current-call) n)
@@ -114,7 +160,7 @@
                              (begin
                                (set-node-result! n v)
                                v))))))))
-           #'(#%app fun-expr arg-expr ...)))]))
+           #'(#%app fun-expr arg-expr ...))))]))
 
 (define (print-right t)
   (node (node-formal t)
@@ -145,37 +191,43 @@
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
   ;javascript list
- (local [(define (format-list lst depth literal)
-           (string-append "["
-                          (string-join (map (lambda (x)
-                                              (format-nicely x depth 40 literal))
-                                            lst)
-                                       ",")
-                          "]"))]
-   (format "{name: \"~a\",
+  (local [(define (format-list lst depth literal)
+            (string-append "["
+                           (string-join (map (lambda (x)
+                                               (format-nicely x depth 40 literal))
+                                             lst)
+                                        ",")
+                           "]"))]
+    (format "{name: \"~a\",
             formals: ~a,
             formalsShort: ~a,
             actuals: ~a,
             actualsShort: ~a,
             result: ~a,
             resultShort: ~a,
+            linum: ~a,
+            idx: ~a,
+            span: ~a,
             children: [~a]}"
-           (node-name t)
-           (format-list (node-formal t) #f #f)
-           (format-list (node-formal t) 4 #f)
-           (format-list (node-actual t) #f #t)
-           (format-list (node-actual t) 4 #t)
-           (format-nicely (node-result t) #f 40 #t)
-           (format-nicely (node-result t) 4 40 #t)
-          (if (empty? (node-kids t))
-              ""
-              (local ([define (loop k)
-                        (if (empty? (rest k))
-                            (first k)
-                            (string-append (first k)
-                                           ","
-                                           (loop (rest k))))])
-                (loop (map node->json (reverse (node-kids t)))))))))
+            (node-name t)
+            (format-list (node-formal t) #f #f)
+            (format-list (node-formal t) 4 #f)
+            (format-list (node-actual t) #f #t)
+            (format-list (node-actual t) 4 #t)
+            (format-nicely (node-result t) #f 40 #t)
+            (format-nicely (node-result t) 4 40 #t)
+            (node-linum t)
+            (node-idx t)
+            (node-span t)
+            (if (empty? (node-kids t))
+                ""
+                (local ([define (loop k)
+                          (if (empty? (rest k))
+                              (first k)
+                              (string-append (first k)
+                                             ","
+                                             (loop (rest k))))])
+                  (loop (map node->json (reverse (node-kids t)))))))))
 
 ; Why is this a macro and not a function?  Because make it a function
 ; affects the call record!
@@ -183,7 +235,9 @@
 (define-syntax-rule (trace->json)
     (with-output-to-file "tree-of-trace.js"
       (lambda ()
-        (display (format "var theTrace = ~a" (node->json (current-call)))))
+        (display (format "var theTrace = ~a\nvar code = ~S"
+                         (node->json (current-call))
+                         (unbox src))))
     #:exists 'replace))
 
 (define-for-syntax (print-expanded d)
@@ -193,10 +247,14 @@
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
   (syntax-case stx ()
-    [(_ body ...)
+    [(_ source body ...)
      #`(#%plain-module-begin
+        (set-box! src source)
         body ...
         (run-tests)
         (display-results)
         (trace->json)
+        (external-browser 'firefox)
+        (send-url "index.html")
+        (external-browser 'google-chrome)
         (send-url "index.html"))]))
