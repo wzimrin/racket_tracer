@@ -248,9 +248,10 @@ function refocusScreen()
         if(callTable.width() < $(this).width()) {
             //This call is off the screen to the left
             if(fromLeft < 0) {
-                var shiftBy = callTableMarL-fromLeft
-                if(-fromLeft > $(this).width() - callTable.width())
-                    shiftBy = callTableMarL-($(this).width()-callTable.width())
+                var shiftBy = Math.min($(this).width()-callTable.width(), 
+                                        callTableMarL-fromLeft)
+                //if(-fromLeft > $(this).width() - callTable.width())
+                  //  shiftBy = callTableMarL-($(this).width()-callTable.width())
                 callTable.css('marginLeft', shiftBy)
                 button.css('marginLeft', shiftBy)
             }
