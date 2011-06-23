@@ -16,7 +16,7 @@ other
 
 body {
     overflow: hidden;
-    font-family: "dejavu sans mono","monaco","monospace";
+    font-family: "dejavu sans mono","courier new","courier","monospace";
 }
 
 body.dragging {
