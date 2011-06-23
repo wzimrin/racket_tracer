@@ -231,6 +231,9 @@ function makeCall(traceNode, parent) {
 //----- CREATING PAGE -----
 
 $(document).ready(function () {
+    //alert(jQuery.browser)
+    //alert($.browser)
+    
     var tabs = $("#tabbar")
     var bodyWrapper = $("#tracerWrapper")
     var bodies = $("#tracer")
