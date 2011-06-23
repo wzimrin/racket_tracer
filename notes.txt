@@ -16,17 +16,10 @@
 - plumbing for wescheme
 - plumbing for dr racket
 - why line paper
-
-
-- Call table
-    - Rearrange call table to be vertical rather than horizontal. See how we like it
-    - Coloring of arguments or some other separation between them
-- Parent calls visible at all levels --> scroll with the bar
 - If tree of traces is empty don't open index.html --> message to the user
-- Bug with hover remaining blue too long
 - Contracts
 - Expand collapse --> up down arrows?
-- Some way to prevent mouseovers from expanding/collapsing items
+- testing with bootstrap code
 
 ***** WISHLIST *****
 - Tracing failed check expects
@@ -47,6 +40,11 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- Bug with hover remaining blue too long
+- Call table
+    - Rearrange call table to be vertical rather than horizontal. See how we like it
+    - Coloring of arguments or some other separation between them
+- Parent calls visible at all levels --> scroll with the bar
 - Mouse-over scroll to right rather than using scroll bar (6/21)
 - tracing failed check-expects
 - Autoscroll to most recently expanded argument
