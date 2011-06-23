@@ -150,21 +150,21 @@ function makeCallTable(node) {
 }
 
 //sets whether obj is hidden
-function setHide(obj,hidden) {
+function setHide(obj,hidden,animate) {
     if (hidden)
-        obj.hide()
+        obj.hide(animate)
     else
-        obj.show()
+        obj.show(animate)
 }
 
 //makes a call display the appropriate amount of stuff,
 //as determined by html.data("expanded"))
-function updateCall(html) {
+function updateCall(html,animate) {
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var button = html.data("button")
     for (var i = 0; i < hidable.length; i++) {
-        setHide(hidable[i],!expanded)
+        setHide(hidable[i],!expanded,animate)
     }
     if (expanded) {
         button.text("-")
@@ -174,9 +174,9 @@ function updateCall(html) {
 }
 
 //expands/collapses a call
-function toggleCall(html) {
+function toggleCall(html,animate) {
     html.data("expanded",!html.data("expanded"))
-    updateCall(html)
+    updateCall(html,animate)
 }
 
 //Makes an expandedCall: delete button, function, formals, actuals and result
@@ -190,7 +190,7 @@ function makeCall(traceNode, parent) {
     else
         div.addClass("background1")
     div.addClass("call")
-
+    
     var upperTable = makeCallTable(traceNode)
 
     var button = element("div")
@@ -198,9 +198,11 @@ function makeCall(traceNode, parent) {
     button.addClass("button")
 
     var hidable = []
-
+    
+    var lowerDiv = element("div")
+    lowerDiv.addClass("childTableParent")
     var lowerTable = element('table')
-    hidable.push(lowerTable)
+    hidable.push(lowerDiv)
     lowerTable.addClass("childTable")
     var lowerRow = element('tr');
     lowerTable.append(lowerRow)
@@ -212,11 +214,12 @@ function makeCall(traceNode, parent) {
 
         lowerRow.append(cell);
     }
-
+    
+    lowerDiv.append(lowerTable)
     div.append(upperTable)
     if (traceNode.children.length!=0)
         div.append(button)
-    div.append(lowerTable)
+    div.append(lowerDiv)
     div.data("expanded",false)
     div.data("hidable",hidable)
     div.data("button",button)
@@ -344,136 +347,13 @@ $(document).ready(function () {
         showSpan()
     })
     
-    var originalMoveInc = 30
-
-    function scrollHelper(button,pred,max,dir,mult) {
-        var t;
-        var moveInc
-        $(button).bind("mousedown",function () {
-            function move() {
-                newPos = bodies.css(dir)
-                newPosInt = (parseInt(newPos.substring(0,newPos.length-2))+
-                             (mult*Math.floor(moveInc)))
-                if (pred(newPosInt)){
-                    bodies.css(dir,newPosInt+"px")
-                } else {
-                    var m = max()
-                    bodies.css(dir,m+"px")
-                }
-                moveInc = moveInc * 1.01
-            }
-            moveInc = originalMoveInc
-            t = setInterval(move,50)
-        }).bind("mouseup",function () {
-            clearInterval(t)
-        }).bind("mouseleave",function () {
-            clearInterval(t)
-        })
-    }
-
-    scrollHelper("#leftScroll",
-                 function (newPosInt) {return newPosInt <= 0},
-                 function () {return 0},
-                 "left",1)
-    scrollHelper("#rightScroll",
-                 function (newPosInt) {
-                     return newPosInt + bodies.width() >= bodyWrapper.width()
-                 },
-                 function () {return bodyWrapper.width() - bodies.width()},
-                 "left",-1)
-    scrollHelper("#upScroll",
-                 function (newPosInt) {return newPosInt <= 0},
-                 function () {return 0},
-                 "top",1)
-    scrollHelper("#downScroll",
-                 function (newPosInt) {
-                     return newPosInt + bodies.height() >= bodyWrapper.height()
-                 },
-                 function () {return bodyWrapper.height() - bodies.height()},
-                 "top",-1)
-
-
     //makes the expand/collapse buttons work
     $('.button').bind('click',function(event) {
         thisCall = $(this).parents(".call").first()
-        toggleCall(thisCall)
-        if (thisCall.data("expanded")) {
-            //console.log(thisCall)
-            var offset = thisCall.offset()
-            var wrapperOffset = bodyWrapper.offset()
-            var tracerOffset = bodies.offset()
-            var posX = offset.left - wrapperOffset.left
-            var posY = offset.top - wrapperOffset.top
-            var paneWidth = bodyWrapper.width()
-            var paneHeight = bodyWrapper.height()
-            var callWidth = thisCall.outerWidth()
-            var callHeight = thisCall.outerHeight()
-            var newX,newY
-            if (posX+callWidth > paneWidth) {
-                if (callWidth > paneWidth) {
-                    newX = offset.left - tracerOffset.left
-                } else {
-                    newX = offset.left - tracerOffset.left - paneWidth + callWidth
-                }
-            }
-            if (posY+callHeight > paneHeight) {
-                if (callHeight > paneHeight) {
-                    newY = offset.top - tracerOffset.top
-                } else {
-                    newY = offset.top - tracerOffset.top - paneHeight + callHeight
-                }
-            }
-            if (newX)
-                bodyWrapper.scrollLeft(newX)
-            if (newY)
-                bodyWrapper.scrollTop(newY)
-        }
-        refocusScreen()
-        
-        /*
-        //want to adjust LR position of screen only if expanding
-        if(thisCall.data('expanded')) { 
-            posX = pos.left
-            //offLeft = bodies.css('left')
-            offLeftInt = bodyWrapper.scrollLeft()//parseInt(offLeft.substring(0, offLeft.length-2))
-            callWidth = thisCall.width()
-            widthPane = $("div#tracerWrapper").width()
-            //Amount of the current call that is off the screen to the right
-            callOffRight = callWidth - (widthPane-(posX+offLeftInt))
-            //Call goes off the screen on the right border
-            if((posX + offLeftInt) + callWidth >= widthPane) {
-                //and is not as wide as the tracerWindow
-                if(callWidth <= widthPane) {
-                    bodyWrapper.animate({scrollLeft: -1*(offLeftInt-callOffRight-15)}, 
-                                        'fast')
-                }
-                else if (callWidth > widthPane) {
-                    bodyWrapper.animate({scrollLeft: posX}, 'fast')
-                }
-            }
-        }
-        //Want to adjust TB position of screen on both expand and collapse  
-        posY = pos.top
-        //offTop = bodies.css('top')
-        offTopInt = bodyWrapper.scrollTop()//parseInt(offTop.substring(0, offTop.length-2))
-        callHeight = thisCall.height()
-        heightPane = $("div#tracerWrapper").height()
-        callOffBottom = callHeight - (heightPane-(posY+offTopInt))
-        //Call goes off the screen on the bottom
-        if((posY + offTopInt) + callHeight >= heightPane) {
-            if(callHeight <= heightPane) {
-                bodyWrapper.animate({scrollTop: -1*(offTopInt-callOffBottom-15)}, 
-                                    'fast')
-            }
-            else if (callHeight > heightPane) {
-                bodyWrapper.animate({scrollTop: posY}, 'fast')
-            }
-        }
-        else if (callOffBottom < 0 && $("div#tracer").height() >= heightPane) {
-            bodyWrapper.animate({scrollTop: Math.max(0, -1*(offTopInt-callOffBottom))},
-                                'slow')
-        }*/
+        toggleCall(thisCall,"fast")
     })
+
+    bodyWrapper.scroll(refocusScreen)
 
     //makes the expandables expand/collapse appropriately
     //and highlight on hover
@@ -498,30 +378,8 @@ $(document).ready(function () {
         $(window).scrollLeft(0)
     })
 
-    //makes the tabbar scroll with me
-    $(window).scroll(function (event) {
-        //pageXOffset
-        $("#tabbar").animate({display: 'none',
-                              marginLeft: $(window).scrollLeft() + "px"}, 
-                              40,
-                              'linear',
-                              function(){})
-    })
-
-    $(".literal").tooltip({
-        bodyHandler:function () {
-            return $(this).data("literal")
-        },
-        top: 5,
-        left: 5,
-        fade:250
-    })
-
     first.trigger("click")
     
-    
-    refocusScreen(bodies, bodyWrapper)
-
     function setColumnHeight() {
         $(".column").height($(window).height()-$("div#tabbar").height()
                             -2*parseInt($(document.body).css("margin-top")))
@@ -530,6 +388,44 @@ $(document).ready(function () {
     setColumnHeight()
     
     $(window).resize(setColumnHeight)
+    
+    bodies.mousedown(function (event) {
+        var oldX=event.pageX
+        var oldY=event.pageY
+        //var oldTime=new Date().getTime()
+        var body = $(document.body)
+        body.addClass("dragging")
 
+        function moveHandler(event) {
+            var newTime = new Date().getTime()
+            //if (newTime-20>=oldTime) {
+            //oldTime = newTime
+            console.log(newTime)
+            var newX = event.pageX
+            var newY = event.pageY
+            bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
+            bodyWrapper.scrollTop(bodyWrapper.scrollTop()-newY+oldY)
+            oldX=newX
+            oldY=newY
+            return false
+            //}
+        }
+        function endHandler(event) {
+            var newX = event.pageX
+            var newY = event.pageY
+            bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
+            bodyWrapper.scrollTop(bodyWrapper.scrollTop()-newY+oldY)
+            body.unbind("mousemove",moveHandler)
+            body.unbind("mouseup",endHandler)
+            body.unbind("mouseleave",endHandler)
+            body.removeClass("dragging")
+            return false
+        }
+        
+        body.mousemove(moveHandler)
+        body.mouseup(endHandler)
+        body.mouseleave(endHandler)
+        return false
+    })
 })
 
