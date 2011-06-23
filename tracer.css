@@ -19,6 +19,10 @@ body {
     font-family: "monospace";
 }
 
+body.dragging {
+    cursor: move;
+}
+
 div#middle {
     /*padding-left: 300px;*/
 }
@@ -267,4 +271,8 @@ div#downScroll {
 
 .childTable > tbody > tr > td {
     vertical-align: top;
+}
+
+.childTableParent {
+    overflow:hidden;
 }
