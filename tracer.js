@@ -254,11 +254,11 @@ function refocusScreen()
                 callTable.css('marginLeft', shiftBy)
                 button.css('marginLeft', shiftBy)
             }
-            //This screen is to the right of the left edge of the screen
+            //This call is to the right of the left edge of the screen
             //And not aligned with its left edge
             else if (fromLeft > 0 && callTableMarL > 0) {
-                callTable.css('marginLeft', 3)
-                button.css('marginLeft', 3)
+                callTable.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
+                button.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
             }
         }
     })
