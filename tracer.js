@@ -21,6 +21,10 @@ function highlightSpan(el,idx,span) {
     el.append(beginText,hi,endText)
 }
 
+function toInt(cssString)
+{
+    return parseInt(cssString.substring(0, cssString.length - 2))
+}
 
 function findPosX(obj) {
     var curleft = 0;
@@ -222,38 +226,37 @@ function makeCall(traceNode, parent) {
 }
 
 function refocusScreen()
-{ 
+{
+    //Find all visible calls
     visibleCalls = $("div#tracer").find(".call").filter(":visible")
-    paneWidth = $("div#tracer").width()
 
+    //Check the alignment of each visible call
     visibleCalls.each(function(index) {
-        var fromLeft = $(this).offset().left 
-                        - $("div#tracer").scrollLeft()
-                        - 11
-
         var callTable = $(this).children(".callTable").first()
         var button = $(this).children(".button").first()
+        var callTableMarL = toInt(callTable.css('marginLeft'))
+        var fromLeft = $(this).position().left
+                        + toInt($(this).css('marginLeft'))
+                        + callTableMarL
+                        - $("div#tracerWrapper").scrollLeft()
         
-        console.log("fromLeft: " + fromLeft)
+        //only move callTables that are less wide than the current width
+        //of the call (will this condition always be true?)
         if(callTable.width() < $(this).width()) {
+            //This call is off the screen to the left
             if(fromLeft < 0) {
-                console.log("inner if")
-                callTable.css('marginLeft', -fromLeft)
-                button.css('marginLeft', -fromLeft)
+                callTable.animate({marginLeft: callTableMarL-fromLeft}, 'slow')
+                button.animate({marginLeft: callTableMarL-fromLeft}, 'slow')
             }
-
+            //This screen is to the right of the left edge of the screen
+            //And not aligned with its left edge
+            else if (fromLeft > 0 && callTableMarL > 0) {
+                callTable.animate({marginLeft: 3}, 'slow')
+                button.animate({marginLeft: 3}, 'slow')
+            }
         }
-
     })
-    
-        
 }
-
-/*
-function refocusScreen() {
-    console.log("i need a body")
-}
-*/
 
 //sets up js stuff
 $(document).ready(function () {
@@ -292,9 +295,9 @@ $(document).ready(function () {
         bodies.append(exp)
     }
 
-    // ----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     //                                      EVENTS
-    // ----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     function expandCodePane() {
         setCodePaneWidth(50)
@@ -332,6 +335,21 @@ $(document).ready(function () {
                           scrollLeft: pos.left-(width/2)+pane.scrollLeft()}, 
                           'slow');
     }
+    
+
+    $(".callTable").hover(function() {
+        //margin originally at 3px
+        //default position is 3 px to the right of the left edge of the screen
+        var fromLeft = $(this).position().left 
+                        + toInt($(this).css('marginLeft'))
+                        - $("div#tracerWrapper").scrollLeft()
+                        - 6
+
+        console.log("Position: " + $(this).position().left)
+        console.log("leftMargin: " + toInt($(this).css('marginLeft')))
+        console.log("scrollLeft: " + $("div#tracerWrapper").scrollLeft())
+        console.log("From Left: " + fromLeft)
+        })
 
     $("td.name").click(function () {
         var target = $(this)
@@ -394,7 +412,7 @@ $(document).ready(function () {
         thisCall = $(this).parents(".call").first()
         toggleCall(thisCall)
         if (thisCall.data("expanded")) {
-            console.log(thisCall)
+            //console.log(thisCall)
             var offset = thisCall.offset()
             var wrapperOffset = bodyWrapper.offset()
             var tracerOffset = bodies.offset()
