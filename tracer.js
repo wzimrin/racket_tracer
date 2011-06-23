@@ -245,8 +245,9 @@ function refocusScreen()
         if(callTable.width() < $(this).width()) {
             //This call is off the screen to the left
             if(fromLeft < 0) {
-                callTable.animate({marginLeft: callTableMarL-fromLeft}, 'slow')
-                button.animate({marginLeft: callTableMarL-fromLeft}, 'slow')
+                var shiftBy = Math.min(callTableMarL-fromLeft, /*right edges aligned*/)
+                callTable.animate({marginLeft: shiftBy}, 'slow')
+                button.animate({marginLeft: shiftBy}, 'slow')
             }
             //This screen is to the right of the left edge of the screen
             //And not aligned with its left edge
