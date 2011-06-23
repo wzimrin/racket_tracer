@@ -281,7 +281,7 @@ $(document).ready(function () {
     downScroll.addClass('scrollButton')
 
     var codePane = $("#codePane")
-    codePane.text(code) // change to code after merge FA
+    codePane.text(code)
     var codePaneWidth = 300;
 
 

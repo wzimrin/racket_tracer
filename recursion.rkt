@@ -45,7 +45,7 @@
                        (< (get-min r) (get-min l)))
                    (make-bhnode (get-min r)
            
-                     l
+                                l
                                 (insert-merge x (bhnode-left r) (bhnode-right r)))]))
           (define (left-most h);gets the left-most value (the only one we can easily remove)
             (let ([l (bhnode-left h)]);go left until l is empty, then return the value
