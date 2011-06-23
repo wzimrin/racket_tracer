@@ -40,3 +40,9 @@
 - ability to expand arguments from shrunken call - lack confusing
 - expand arguments is first thing - separate expansion of args and expansion
 expansion
+
+:%s/foo/bar/gc
+
+gg beginning of document
+SHIFT g end of doc
+
