@@ -235,8 +235,18 @@ function makeCall(traceNode, parent) {
 //----- CREATING PAGE -----
 
 $(document).ready(function () {
-    //alert(jQuery.browser)
-    //alert($.browser)
+    /*$.browser.each(function(i, val) {
+      console.log(i + val)
+    })*/
+    //OS        Browser     Version         Rendering Engine Version Number
+    //Linux     Chrome      11.0.696.71     534.24
+    //          Firefox     3.0.6           1.9.0.19
+    //Windows   Chrome      12.0742.100     534.30
+    //          Firefox                     1.9.2.12
+
+    supportedBrowsers = ["534.24", "1.9.0.19"]
+    console.log($.browser)
+    console.log($.browser.version)
     
     var tabs = $("#tabbar")
     var bodyWrapper = $("#tracerWrapper")
