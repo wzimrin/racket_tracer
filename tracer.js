@@ -1,12 +1,30 @@
 //William Zimrin and Jeanette Miranda
 //tracer.js	6/02/2011
 
-function highlightSpan(el,idx,span) {
+//----- GENERAL HELPERS -----
+
+function toInt(cssString) {
+    return parseInt(cssString.substring(0, cssString.length - 2))
+}
+
+//creates a dom element of the type tag
+function element(tag) {
+    return $("<"+tag+'/>')
+}
+
+//----- CODE PANE HELPERS -----
+
+function clearHighlight(el) {
     if (el.data("text")) {
         el.empty()
         el.text(el.data("text"))
         el.data("text",false)
     }
+}
+
+//Highlight the span of text beginning at idx in el
+function highlightSpan(el,idx,span) {
+    clearHighlight(el)
     var text = el.text()
     var startIdx = idx-1
     var endIdx = idx+span-1
@@ -21,133 +39,78 @@ function highlightSpan(el,idx,span) {
     el.append(beginText,hi,endText)
 }
 
-function toInt(cssString)
-{
-    return parseInt(cssString.substring(0, cssString.length - 2))
-}
+//----- EXPANDABLE HELPERS -----
 
-function findPosX(obj) {
-    var curleft = 0;
-    if(obj.offsetParent)
-        while(1) 
-        {
-          curleft += obj.offsetLeft;
-          if(!obj.offsetParent)
-            break;
-          obj = obj.offsetParent;
-        }
-    else if(obj.x)
-        curleft += obj.x;
-    return curleft;
-}
-
-function findPosY(obj) {
-    var curtop = 0;
-    if(obj.offsetParent)
-        while(1)
-        {
-          curtop += obj.offsetTop;
-          if(!obj.offsetParent)
-            break;
-          obj = obj.offsetParent;
-        }
-    else if(obj.y)
-        curtop += obj.y;
-    return curtop;
-}
-
-
-//creates a dom element of the type tag
-function element(tag) {
-    return $("<"+tag+'/>')
-}
-
-//makes an expandable show the correct text (as determined by html.data("expanded"))
+//Choose to display the full or short version of an expandable argument
 function updateExpandable(html) {
-    var expanded = html.data("expanded")
-    if (expanded)
+    if (html.data("expanded"))
         html.text(html.data("full"))
     else
         html.text(html.data("short"))
 }
 
-//makes an expandable expand/collapse
+//Toggle between the full and short version of an expandable argument
 function toggleExpandable(html) {
     html.data("expanded",!html.data("expanded"))
     updateExpandable(html)
 }
 
-//Helper to make an callTable cell -- used for formals, actuals, and results
-//Will check to see if two forms are the same, and if they are, will not make
-//expandable/collapsible
-//takes the short form, the full form, and the class to apply to the td
-function makeCell(formShort, formFull, literalForm, cssClass) {
-    var TD = element('td')
-    TD.addClass(cssClass)
-    TD.addClass("cell")
+//----- CALL TABLE HELPERS -----
+
+//Makes a cell on the call table, either an actual or a result
+function makeCell(formShort, formFull, cssClass) {
+    var TD = element("td")
+    TD.addClass(cssClass + " cell")
 
     var div = element("div")
+    //If a shortened form exists form exists
     if (formShort != formFull) {
         div.addClass("expandable")
-        div.data("short",formShort)
-        div.data("full",formFull)
-        div.data("expanded", false)
+        div.data({short: formShort, full: formFull, expanded: false})
         updateExpandable(div)
     }
     else {
-        div.text(formShort)
-    }
-    if (literalForm){
-        div.addClass("literal")
-        div.data("literal",literalForm)
+        div.text(formFull)
     }
     TD.append(div)
     return TD
 }
 
-//Makes the call table: function name, formals, actuals and result in table form
+//Formats function name, actuals and result into table form
 function makeCallTable(node) {
-    var row = element('tr')
     var table = element("table")
+    table.addClass("callTable")
+    var row = element("tr")
 
     //Function name
-    var nameTD = element('td')
-    nameTD.attr("rowspan")
+    var nameTD = element("td")
     nameTD.text(node.name)
-    nameTD.addClass("name")
-    nameTD.addClass("cell")
-    nameTD.data("idx",node.idx)
-    nameTD.data("span",node.span)
-    nameTD.data("linum",node.linum)
+    nameTD.addClass("name cell")
+    nameTD.data({idx: node.idx, span: node.span, linum: node.linum})
     row.append(nameTD)
 
     //Formals and actuals
     for (var i = 0; i < node.actuals.length; i++) {
         //Display in collapsed form if actualsExpanded is undefined or false
-        var actual = makeCell(node.actualsShort[i],node.actuals[i],node.formals[i],"arg")
-       /* if()
-            actual.css('background', 'red')
-        else
-            actual.css('background', 'blue')*/
+        var actual = makeCell(node.actualsShort[i],node.actuals[i],"arg")
         row.append(actual)
     }
 
     //Arrow
     var arrow = element('td')
     arrow.html("&rarr;")
-    arrow.addClass("arrow")
-    arrow.addClass("cell")
+    arrow.addClass("arrow cell")
     row.append(arrow)
 
     //Result
     resultTD = makeCell(node.resultShort,node.result,false,"result")
-    
     row.append(resultTD)
 
     table.append(row)
-    table.addClass("callTable")
     return table
 }
+
+//----- VISIBILITY HELPERS -----
 
 //sets whether obj is hidden
 function setHide(obj,hidden,animate) {
@@ -157,77 +120,29 @@ function setHide(obj,hidden,animate) {
         obj.show(animate)
 }
 
-//makes a call display the appropriate amount of stuff,
-//as determined by html.data("expanded"))
+//Makes a call display the appropriate amount of info
 function updateCall(html,animate) {
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var button = html.data("button")
+    
     for (var i = 0; i < hidable.length; i++) {
         setHide(hidable[i],!expanded,animate)
     }
-    if (expanded) {
+    
+    if (expanded) 
         button.text("-")
-    } else {
-        button.text("+")
-    }        
+    else 
+        button.text("+")        
 }
 
-//expands/collapses a call
+//Expand/collapses a call
 function toggleCall(html,animate) {
     html.data("expanded",!html.data("expanded"))
     updateCall(html,animate)
 }
 
-//Makes an expandedCall: delete button, function, formals, actuals and result
-//All in their appropriate expanded or unexpanded form
-function makeCall(traceNode, parent) {
-    parent = $(parent)
-
-    var div = element("div")
-    if (parent.hasClass("background1"))
-        div.addClass("background2")
-    else
-        div.addClass("background1")
-    div.addClass("call")
-    
-    var upperTable = makeCallTable(traceNode)
-
-    var button = element("div")
-    button.text("-")
-    button.addClass("button")
-
-    var hidable = []
-    
-    var lowerDiv = element("div")
-    lowerDiv.addClass("childTableParent")
-    var lowerTable = element('table')
-    hidable.push(lowerDiv)
-    lowerTable.addClass("childTable")
-    var lowerRow = element('tr');
-    lowerTable.append(lowerRow)
-
-    for (var i = 0; i < traceNode.children.length; i++) {
-        var cell = element('td')
-        collapsedDiv = makeCall(traceNode.children[i],div);
-        cell.append(collapsedDiv)
-
-        lowerRow.append(cell);
-    }
-    
-    lowerDiv.append(lowerTable)
-    div.append(upperTable)
-    if (traceNode.children.length!=0)
-        div.append(button)
-    div.append(lowerDiv)
-    div.data("expanded",false)
-    div.data("hidable",hidable)
-    div.data("button",button)
-
-    updateCall(div)
-    return div
-}
-
+//Bring parent calls with on scroll
 function refocusScreen()
 {
     //Find all visible calls
@@ -248,16 +163,17 @@ function refocusScreen()
         if(callTable.width() < $(this).width()) {
             //This call is off the screen to the left
             if(fromLeft < 0) {
+                //Want a maximum margin with right edge of callTable aligned
+                //to right edge of call
                 var shiftBy = Math.min($(this).width()-callTable.width(), 
                                         callTableMarL-fromLeft)
-                //if(-fromLeft > $(this).width() - callTable.width())
-                  //  shiftBy = callTableMarL-($(this).width()-callTable.width())
                 callTable.css('marginLeft', shiftBy)
                 button.css('marginLeft', shiftBy)
             }
             //This call is to the right of the left edge of the screen
             //And not aligned with its left edge
             else if (fromLeft > 0 && callTableMarL > 0) {
+                //Want a minimum margin of 3
                 callTable.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
                 button.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
             }
@@ -265,25 +181,72 @@ function refocusScreen()
     })
 }
 
-//sets up js stuff
+//----- BUILDING CALLS -----
+
+//Makes an expandedCall: delete button, function, formals, actuals and result
+//All in their appropriate expanded or unexpanded form
+function makeCall(traceNode, parent) {
+    parent = $(parent)
+
+    var call = element("div")
+    if (parent.hasClass("background1"))
+        call.addClass("background2")
+    else
+        call.addClass("background1")
+    call.addClass("call")
+    
+    var callTable = makeCallTable(traceNode)
+
+    var button = element("div")
+    button.text("-")
+    button.addClass("button")
+
+    var hidable = []
+    
+    var lowerDiv = element("div")
+    lowerDiv.addClass("childTableParent")
+    var childTable = element('table')
+    hidable.push(lowerDiv)
+    childTable.addClass("childTable")
+    var lowerRow = element('tr');
+    childTable.append(lowerRow)
+
+    for (var i = 0; i < traceNode.children.length; i++) {
+        var cell = element('td')
+        collapsedDiv = makeCall(traceNode.children[i],call);
+        cell.append(collapsedDiv)
+
+        lowerRow.append(cell);
+    }
+    
+    lowerDiv.append(childTable)
+    call.append(callTable)
+    if (traceNode.children.length!=0)
+        call.append(button)
+    call.append(lowerDiv)
+    call.data("expanded",false)
+    call.data("hidable",hidable)
+    call.data("button",button)
+
+    updateCall(call)
+    return call
+}
+
+//----- CREATING PAGE -----
+
 $(document).ready(function () {
+    //alert(jQuery.browser)
+    //alert($.browser)
+    
     var tabs = $("#tabbar")
     var bodyWrapper = $("#tracerWrapper")
     var bodies = $("#tracer")
-    //bodyWrapper.append(bodies)
-    var leftScroll = $("#leftScroll")
-    leftScroll.addClass('scrollButton')
-    var rightScroll = $("#rightScroll")
-    rightScroll.addClass('scrollButton')
-    var upScroll = $("#upScroll")
-    upScroll.addClass('scrollButton')
-    var downScroll = $("#downScroll")
-    downScroll.addClass('scrollButton')
 
     var codePane = $("#codePane")
+    var codePaneWrapper = $("#codePaneWrapper")
+    var codePaneButton = $("#codePaneButton")
     codePane.text(code)
-    var codePaneWidth = 300;
-
+    var codePaneWidth
 
     var ul = element("ul")
     ul.addClass("tabs")
@@ -305,49 +268,69 @@ $(document).ready(function () {
     // -------------------------------------------------------------------------
     //                                      EVENTS
     // -------------------------------------------------------------------------
-
-    function expandCodePane() {
-        setCodePaneWidth(50)
-    }
     
+
+    //Set the width of the code pane to a new value and animate
     function setCodePaneWidth(newWidth) {
         if (codePaneWidth != newWidth) {
             codePaneWidth = newWidth
-            $("div#codePane").animate({"width":newWidth+"%"},
-                                      {duration:'slow'})
-            
-            $("div#tracerWrapper").animate({"width":(100-newWidth)+"%"},
-                                           {duration:'slow'})
+            codePaneWrapper.animate({"width":newWidth+"%"}, "slow")
+            bodyWrapper.animate({"width":(100-newWidth)+"%"},
+                                           "slow")
         }
     }
-    
-    $("div#codePane").click(function () {
-        if (codePaneWidth==50)
-            setCodePaneWidth(10)
-        else
-            setCodePaneWidth(50)
-    })
-    
-    setCodePaneWidth(10)
-    
-    function showSpan() {
-        var pane = $("div#codePane")
-        var span = pane.find("span")
-        var pos = span.position()
-        var height = pane.height()
-        var width = pane.width()
-        if (pos.top < 0 || pos.top > (height-span.height()) 
-            || pos.left < 0 || pos.left > (width - span.width()))
-            pane.animate({scrollTop: pos.top-(height/2)+pane.scrollTop(),
-                          scrollLeft: pos.left-(width/2)+pane.scrollLeft()}, 
-                          'slow');
+
+    var collapsedCodePaneWidth = 10
+    var expandedCodePaneWidth = 50
+    //Expand the code pane
+    function expandCodePane() {
+        setCodePaneWidth(expandedCodePaneWidth)
+        codePaneButton.html("&raquo;")
+    }
+    //Collapse the code pane
+    function collapseCodePane() {
+        setCodePaneWidth(collapsedCodePaneWidth)
+        codePaneButton.html("&laquo;")
     }
     
+    //Expand and collapse codePane on click 
+    codePaneButton.click(function () {
+        if (codePaneWidth==expandedCodePaneWidth)
+            collapseCodePane()
+        else
+            expandCodePane()
+    })
+    
+    //Begin with a collapsed code pane
+    collapseCodePane()
+    
+    //Animate to move to new highlighted code if necessary
+    function showSpan() {
+        var span = codePane.find("span")
+        var pos = span.position()
+        var height = codePane.height()
+        var width = codePane.width()
+        //If new span is off the displayed portion of the code
+        codePane.animate({scrollTop: pos.top-(height/2)+codePane.scrollTop(),
+                          scrollLeft: pos.left-(width/2)+codePane.scrollLeft()}, 
+                         'slow');
+    }
+
+    var lastFunctionHighlighted;
+    
+    //Function names on click
     $("td.name").click(function () {
-        var target = $(this)
-        highlightSpan($("div#codePane"),target.data("idx"),target.data("span"))
-        expandCodePane()
-        showSpan()
+        if (lastFunctionHighlighted == this) {
+            lastFunctionHighlighted = false;
+            clearHighlight(codePane)
+            collapseCodePane()
+        } else {
+            var target = $(this)
+            highlightSpan(codePane,target.data("idx"),target.data("span"))
+            expandCodePane()
+            showSpan()
+            lastFunctionHighlighted = this;
+        }
     })
     
     //makes the expand/collapse buttons work
@@ -384,14 +367,15 @@ $(document).ready(function () {
 
     first.trigger("click")
     
-    function setColumnHeight() {
+    function setContentHeight() {
         $(".column").height($(window).height()-$("div#tabbar").height()
                             -2*parseInt($(document.body).css("margin-top")))
+        codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true))
     }
 
-    setColumnHeight()
+    setContentHeight()
     
-    $(window).resize(setColumnHeight)
+    $(window).resize(setContentHeight)
     
     bodies.mousedown(function (event) {
         var oldX=event.pageX
@@ -404,7 +388,6 @@ $(document).ready(function () {
             var newTime = new Date().getTime()
             //if (newTime-20>=oldTime) {
             //oldTime = newTime
-            console.log(newTime)
             var newX = event.pageX
             var newY = event.pageY
             bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
