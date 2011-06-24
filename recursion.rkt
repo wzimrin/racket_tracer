@@ -16,8 +16,13 @@
          ;we are inserting into an empty heap
          (make-bhnode y (insert x r) l)))]))
 
-(define (make-heap ns)
+#;(define (make-heap ns)
   (foldl (lambda (x h) (insert x h)) empty ns))
+(define (make-heap ns)
+  (if (empty? ns)
+      empty
+      (insert (first ns)
+              (make-heap (rest ns)))))
  
 (define get-min bhnode-value)
 

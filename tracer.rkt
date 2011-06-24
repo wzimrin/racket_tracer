@@ -6,7 +6,7 @@
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let local define-struct]])
 (require test-engine/racket-tests)
-
+(require syntax-color/scheme-lexer)
 (require racket/pretty)
 (require net/sendurl)
 (require [for-syntax racket/port])
@@ -233,12 +233,31 @@
 ; affects the call record!
 
 (define-syntax-rule (trace->json)
+  (local [(define (range start end)
+            (build-list (- end start) (lambda (x) (+ start x))))
+          (define (lex-port p)
+            (let-values ([(str type junk start end) (scheme-lexer p)])
+              (if (eq? type 'eof)
+                  empty
+                  (cons (list type start end)
+                        (lex-port p)))))
+          (define (colors src)
+            (foldl (lambda (vals hsh)
+                     (foldl (lambda (num hsh)
+                              (hash-set hsh (first vals)
+                                        (cons num
+                                              (hash-ref hsh (first vals) empty))))
+                            hsh
+                            (range (second vals)
+                                   (third vals))))
+                   (hash)
+                   (lex-port (open-input-string src))))]
     (with-output-to-file "tree-of-trace.js"
       (lambda ()
         (display (format "var theTrace = ~a\nvar code = ~S"
                          (node->json (current-call))
                          (unbox src))))
-    #:exists 'replace))
+      #:exists 'replace)))
 
 (define-for-syntax (print-expanded d)
   (printf "~a\n"
