@@ -9,6 +9,16 @@
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
 (require net/sendurl)
+(require [only-in planet/resolver
+                  resolve-planet-path])
+(require [only-in planet/config
+                  PLANET-DIR])
+(require [only-in racket/runtime-path
+                  define-runtime-path])
+(require [only-in web-server/templates
+                  include-template])
+(require syntax/toplevel)
+
 (require [for-syntax racket/port])
 (require net/base64)
 
@@ -312,16 +322,28 @@
                                    (third vals))))
                    (hash)
                    (lex-port (open-input-string src))))]
-    (with-output-to-file "tree-of-trace.js"
-      (lambda ()
-        (display (format "var theTrace = ~a\nvar code = ~S"
+    (format "var theTrace = ~a\nvar code = ~S"
                          (node->json (current-call))
                          (unbox src))))
-      #:exists 'replace)))
+
 
 (define-for-syntax (print-expanded d)
   (printf "~a\n"
           (syntax->datum (local-expand d 'module (list)))))
+
+(define (page json)
+    (let ([tracerCSS 
+           (port->string (open-input-file (resolve-planet-path 
+                                           '(planet tracer/tracer/tracer.css))))]
+          [jQuery 
+           (port->string (open-input-file (resolve-planet-path
+                                           '(planet tracer/tracer/jquery.js))))]
+          [tracerJS 
+           (port->string (open-input-file (resolve-planet-path
+                                           '(planet tracer/tracer/tracer.js))))]
+          [treeOfTrace json])
+      (include-template "index.html")))
+
 
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
@@ -332,8 +354,6 @@
         body ...
         (run-tests)
         (display-results)
-        (trace->json)
-        (external-browser 'firefox)
-        (send-url "index.html")
-        (external-browser 'google-chrome)
-        (send-url "index.html"))]))
+        (send-url/contents (page (trace->json))))]))
+
+
