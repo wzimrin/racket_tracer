@@ -68,20 +68,6 @@
                   (bhnode-left new-h)
                   (bhnode-right new-h))])))
 
-(define (food a b c)
-  (remove-min a))
-
-(define (munchies a b c)
-  (if (= a 0)
-      c
-      (munchies 0 b c)))
-
-(munchies 1 2 3)
-
-(food (make-heap (list 3 1 4 1 5 9 2 6 5))
-      (make-heap (make-list 5 5))
-      (make-heap (build-list 10 (lambda(x) (* x x)))))
-
 (define heap (make-heap (list 8 4 3 9 1 6 12 14)))
 (check-expect (remove-min heap) (make-heap (list 8 4 3 9 6 12 14)))
 (check-expect (get-min heap) 1)

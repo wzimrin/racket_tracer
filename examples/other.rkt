@@ -1,7 +1,38 @@
-#lang s-exp "tracer.rkt"
+#lang planet tracer/tracer
 
+(define (fib x)
+  (if (< x 2)
+      x
+      (+ (fib (- x 1))
+         (fib (- x 2)))))
 
-(require net/sendurl)
+(define (add x y)
+  (+ x y))
+
+(define (squared x)
+  (* x x))
+
+(define (dist x1 y1 x2 y2)
+  (sqrt (add (squared (- x1 x2))
+             (squared (- y1 y2)))))
+
+(define (close-enough? x y)
+  (< (dist x y 0 0) 4))
+
+(define (all-close-enough? xs)
+  (andmap (lambda (x)
+            (close-enough? (first x) (second x)))
+          xs))
+
+(fib 10)
+
+(close-enough? 3 3)
+
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
+
+(check-expect (fib 5) (+ (fib 4) (fib 2)))
+(check-expect (fib 5) (+ (fib 4) (fib 3)))
+(check-expect (fib 5) 1)
 
 (define-struct dir (name dirs files))
 (define-struct file (name size content))
