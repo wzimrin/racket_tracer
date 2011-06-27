@@ -354,6 +354,7 @@
         body ...
         (run-tests)
         (display-results)
+        (external-browser 'firefox)
         (send-url/contents (page (trace->json))))]))
 
 
