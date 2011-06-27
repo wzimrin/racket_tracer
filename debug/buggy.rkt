@@ -1,4 +1,4 @@
-#lang s-exp "tracer.rkt"
+#lang planet tracer/tracer
 
 (define (split str)
   (local [(define (iter remaining current-word found-words)

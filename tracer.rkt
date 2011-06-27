@@ -6,19 +6,22 @@
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let local define-struct]])
 (require test-engine/racket-tests)
-
+(require syntax-color/scheme-lexer)
 (require racket/pretty)
 (require net/sendurl)
 (require [for-syntax racket/port])
+(require net/base64)
 
-(provide let local define let*)
+(provide let local let*)
 
 (provide [rename-out (app-recorder #%app)
-                     (check-expect-recorder check-expect)])
+                     (check-expect-recorder check-expect)
+                     (custom-define define)
+                     (custom-lambda lambda)])
 ;(provide app-recorder)
 (provide [all-from-out lang/htdp-intermediate-lambda])
 (provide [rename-out #;(isl:define define)
-                     (isl:lambda lambda)
+                     #;(isl:lambda lambda)
                      (isl:require require)
                      (ds-recorder define-struct)
                      #;(isl:let let)])
@@ -29,6 +32,16 @@
 
 ;the actual struct that stores our data
 (struct node (name formal result actual kids linum idx span) #:mutable #:transparent)
+
+(struct wrapper (value id) #:transparent)
+
+(define (unwrap x)
+  (if (wrapper? x)
+      (wrapper-value x)
+      x))
+
+(define (wrap x)
+  (wrapper x (gensym "value")))
 
 (define src (box ""))
 
@@ -43,6 +56,10 @@
 
 ;the current definition we are in
 (define current-call (make-parameter (create-node 'top-level empty empty 0 0 0)))
+
+(define current-linum (make-parameter 0))
+(define current-idx (make-parameter 0))
+(define current-span (make-parameter 0))
 
 ;a boxed list of all functions that define-struct has defined in this namespace
 (define ds-fun-names (box empty))
@@ -95,6 +112,7 @@
                                                   (map node-result
                                                        (node-kids parent-node))))
                                   (set-node-result! parent-node #f)
+                                  (set-node-kids! parent-node (reverse (node-kids parent-node)))
                                   (add-kid (current-call) parent-node))
                                 (node-result actual-node))
                               (let ([expected-node (create-node 'expected (list 'expectedStx)
@@ -108,14 +126,46 @@
                                     (set-node-result! expected-node result)
                                     result)))))])))
 
+(define-syntax (custom-lambda e)
+  (syntax-case e ()
+    [(_ args body)
+     (with-syntax ([lambda 'lambda])
+       #'(custom-lambda lambda args body))]
+    [(_ name (arg-expr ...) body)
+     #'(lambda (arg-expr ...)
+         (let ([n (create-node 'name empty (list arg-expr ...)
+                               (current-linum) (current-idx) (current-span))])
+           (add-kid (current-call) n)
+           (parameterize ([current-call n])
+             (let ([result body])
+               (set-node-result! n result)
+               result))))]))
+
+(define-syntax (custom-define e)
+  (syntax-case e ()
+    [(_ (fun-expr arg-expr ...) body)
+     #'(define fun-expr
+         (custom-lambda fun-expr (arg-expr ...) body))]
+    [(_ fun-expr (lambda arg-exprs body))
+     #'(custom-define (fun-expr arg-exprs) body)]
+    [(_ id val)
+     #'(define id val)]))
+
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)
   (syntax-case e ()
-    [(_ fun-expr arg-expr ...) 
+    [(_ fun-expr arg-expr ...)
+     (with-syntax ([linum (syntax-line e)]
+                   [idx (syntax-position e)]
+                   [span (syntax-span e)])
+       #'(parameterize ([current-linum linum]
+                        [current-idx idx]
+                        [current-span span])
+           (#%app fun-expr arg-expr ...)))
      ;ensure that fun-expr is a function
-     (identifier? #'fun-expr) 
+     #;(identifier? #'fun-expr) 
      ;gets where fun-expr was defined
-     (let* ([binding (identifier-binding #'fun-expr)];get the binding
+     #;(let* ([binding (identifier-binding #'fun-expr)];get the binding
             ;if vals = 'lexical, fun-expr was locally defined
             ;if vals = '(#f #f), fun-expr was a top-level definition in this module
             ;if vals = anything else, fun-expr was bound somewhere else
@@ -148,7 +198,7 @@
                    (begin
                      ;adds n to current-call's kids 
                      (add-kid (current-call) n)
-                     ;evaluate fun-expr and its args
+                     ;evaluate fun-expr and its planet tracer/tracerargs
                      (let* ([fun fun-expr]
                             [args (list arg-expr ...)])
                        ;set current-call to n while you evaluate (fun-expr . args)
@@ -174,9 +224,19 @@
 (define-syntax-rule (show-trace)
   (print-right (current-call)))
 
+#;(define (get-base64 img)
+  (base64-encode (convert img 'png-bytes)))
+
+#;(define (json-image img)
+  (string-append "data:image/png;charset=utf-8;base64,"
+                 (bytes->string/utf-8 (get-base64 img))))
+
 (define (format-nicely x depth width literal)
   ;print the result string readably
-  (format "~S"
+  (if (image? x)
+      #;(json-image x)
+      x
+      (format "~S"
           (let [(p (open-output-string "out"))]
             ;set columns and depth
             (parameterize [(pretty-print-columns width)
@@ -186,7 +246,7 @@
                    pretty-print
                    pretty-display) x p))
             ;return what was printed
-            (get-output-string p))))
+            (get-output-string p)))))
 
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
@@ -233,12 +293,31 @@
 ; affects the call record!
 
 (define-syntax-rule (trace->json)
+  (local [#;(define (range start end)
+            (build-list (- end start) (lambda (x) (+ start x))))
+          #;(define (lex-port p)
+            (let-values ([(str type junk start end) (scheme-lexer p)])
+              (if (eq? type 'eof)
+                  empty
+                  (cons (list type start end)
+                        (lex-port p)))))
+          #;(define (colors src)
+            (foldl (lambda (vals hsh)
+                     (foldl (lambda (num hsh)
+                              (hash-set hsh (first vals)
+                                        (cons num
+                                              (hash-ref hsh (first vals) empty))))
+                            hsh
+                            (range (second vals)
+                                   (third vals))))
+                   (hash)
+                   (lex-port (open-input-string src))))]
     (with-output-to-file "tree-of-trace.js"
       (lambda ()
         (display (format "var theTrace = ~a\nvar code = ~S"
                          (node->json (current-call))
                          (unbox src))))
-    #:exists 'replace))
+      #:exists 'replace)))
 
 (define-for-syntax (print-expanded d)
   (printf "~a\n"
