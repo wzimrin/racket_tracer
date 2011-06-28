@@ -19,7 +19,7 @@ The tab bar along the top displays the top level function calls. The body of the
              (gamma 3)
              (delta 3)]
 
-The trace of this code would generate two top level calls - gamma and delta. Both of this calls would have foo and bar as children at the same level. 
+The trace of this code would generate two top level calls - gamma and delta. Both of this calls would have alpha and beta as children at the same level. 
 
 
                              
