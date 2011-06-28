@@ -14,8 +14,8 @@ The tab bar along the top displays the top level function calls. The body of the
 
 @racketblock[(define (alpha a) (+ a a))
              (define (beta b) (* b 2))
-             (define (gamma c) (+ (foo c) (bar c)))
-             (define (delta d) (+ (foo (bar d))))
+             (define (gamma c) (+ (alpha c) (beta c)))
+             (define (delta d) (+ (alpha (beta d))))
              (gamma 3)
              (delta 3)]
 
