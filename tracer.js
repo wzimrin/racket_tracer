@@ -215,7 +215,6 @@ function makeCall(traceNode, parent) {
         var cell = element('td')
         collapsedDiv = makeCall(traceNode.children[i],call);
         cell.append(collapsedDiv)
-
         lowerRow.append(cell);
     }
     
@@ -235,19 +234,11 @@ function makeCall(traceNode, parent) {
 //----- CREATING PAGE -----
 
 $(document).ready(function () {
-    /*$.browser.each(function(i, val) {
-      console.log(i + val)
-    })*/
-    //OS        Browser     Version         Rendering Engine Version Number
-    //Linux     Chrome      11.0.696.71     534.24
-    //          Firefox     3.0.6           1.9.0.19
-    //Windows   Chrome      12.0742.100     534.30
-    //          Firefox                     1.9.2.12
+    //Check for browser compatibility
+    if(!($.browser.webkit || $.browser.mozilla)) {
+        alert("The Tracer has not been tested on your browser and may have compatibility issues. We suggest using Firefox, Chrome or Safari.")
+    }
 
-    supportedBrowsers = ["534.24", "1.9.0.19"]
-    console.log($.browser)
-    console.log($.browser.version)
-    
     var tabs = $("#tabbar")
     var bodyWrapper = $("#tracerWrapper")
     var bodies = $("#tracer")
@@ -323,7 +314,7 @@ $(document).ready(function () {
         //If new span is off the displayed portion of the code
         codePane.animate({scrollTop: pos.top-(height/2)+codePane.scrollTop(),
                           scrollLeft: pos.left-(width/2)+codePane.scrollLeft()}, 
-                         'slow');
+                         'slow')
     }
 
     var lastFunctionHighlighted;
@@ -370,7 +361,6 @@ $(document).ready(function () {
         oldPicked.addClass("other")
         target.addClass("picked")
         target.removeClass("other")
-        //target.removeClass("hover")
         $(bodyWrapper).scrollLeft(0)
         refocusScreen()
     })
@@ -390,14 +380,11 @@ $(document).ready(function () {
     bodies.mousedown(function (event) {
         var oldX=event.pageX
         var oldY=event.pageY
-        //var oldTime=new Date().getTime()
         var body = $(document.body)
         body.addClass("dragging")
 
         function moveHandler(event) {
             var newTime = new Date().getTime()
-            //if (newTime-20>=oldTime) {
-            //oldTime = newTime
             var newX = event.pageX
             var newY = event.pageY
             bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
@@ -405,7 +392,6 @@ $(document).ready(function () {
             oldX=newX
             oldY=newY
             return false
-            //}
         }
         function endHandler(event) {
             var newX = event.pageX
