@@ -1,5 +1,6 @@
 #lang planet tracer/tracer
 
+;takes a string and splits it into words, separated by one or more spaces
 (define (split str)
   (local [(define (iter remaining current-word found-words)
             (cond
@@ -21,6 +22,11 @@
                          found-words))]))]
     (iter (string->list str) empty empty)))
 
+#|
+takes an object (generally a string) and an a-list (a list of lists, with the first element 
+of the sublist being a key and the second element of the sublist being its value) (basically, 
+a low tech map), and increments the value corresponding to the object
+|#
 (define (add word store)
   (cond
     [(empty? store)
@@ -32,6 +38,7 @@
      (cons (first store)
            (add word (rest store)))]))
 
+;counts how many times a word appears in a string
 (define (count-words string)
   (local [(define (iter words store)
             (if (empty? words)
