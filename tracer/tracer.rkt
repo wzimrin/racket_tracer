@@ -165,62 +165,10 @@
 (define-syntax (app-recorder e)
   (syntax-case e ()
     [(_ fun-expr arg-expr ...)
-     (with-syntax ([linum (syntax-line e)]
-                   [idx (syntax-position e)]
-                   [span (syntax-span e)])
-       #'(parameterize ([current-linum linum]
-                        [current-idx idx]
-                        [current-span span])
-           (#%app fun-expr arg-expr ...)))
-     ;ensure that fun-expr is a function
-     #;(identifier? #'fun-expr) 
-     ;gets where fun-expr was defined
-     #;(let* ([binding (identifier-binding #'fun-expr)];get the binding
-            ;if vals = 'lexical, fun-expr was locally defined
-            ;if vals = '(#f #f), fun-expr was a top-level definition in this module
-            ;if vals = anything else, fun-expr was bound somewhere else
-            [vals (if (list? binding)
-                      ;if the binding is a list, we want to split the first element
-                      (call-with-values
-                       (lambda ()
-                         (module-path-index-split (car binding)))
-                       list)
-                      ;otherwise, return it
-                      binding)]
-            [linum (syntax-line e)]
-            [idx (syntax-position e)]
-            [span (syntax-span e)])
-       ;we want to potentially trace fun-expr if it was bound in the file
-       (with-syntax ([linum linum]
-                     [idx idx]
-                     [span span])
-         (if (or (equal? vals 'lexical)
-               (equal? vals '(#f #f)))
-           ;we also need to check at runtime if fun-expr was defined by define-struct
-           #`(if (or (member 'fun-expr (unbox ds-fun-names))
-                     (struct-accessor-procedure? fun-expr))
-                 ;if not a function you want to trace, leave as is
-                 (#%app fun-expr arg-expr ...)
-                 ;otherwise trace
-                 (let ([n (create-node 'fun-expr '(arg-expr ...)
-                                       "nothing here yet!"
-                                       linum idx span)])
-                   (begin
-                     ;adds n to current-call's kids 
-                     (add-kid (current-call) n)
-                     ;evaluate fun-expr and its planet tracer/tracerargs
-                     (let* ([fun fun-expr]
-                            [args (list arg-expr ...)])
-                       ;set current-call to n while you evaluate (fun-expr . args)
-                       (parameterize ([current-call n])
-                         (begin
-                           ;set the actuals, run the function, and set the result
-                           (set-node-actual! n args)
-                           (let ([v (#%app apply fun args)])
-                             (begin
-                               (set-node-result! n v)
-                               v))))))))
-           #'(#%app fun-expr arg-expr ...))))]))
+     #'(parameterize ([current-linum (syntax-line e)]
+                      [current-idx (syntax-position e)]
+                      [current-span (syntax-span e)])
+         (#%app fun-expr arg-expr ...))]))
 
 (define (print-right t)
   (node (node-formal t)
@@ -304,27 +252,27 @@
 
 (define-syntax-rule (trace->json)
   (local [#;(define (range start end)
-            (build-list (- end start) (lambda (x) (+ start x))))
+              (build-list (- end start) (lambda (x) (+ start x))))
           #;(define (lex-port p)
-            (let-values ([(str type junk start end) (scheme-lexer p)])
-              (if (eq? type 'eof)
-                  empty
-                  (cons (list type start end)
-                        (lex-port p)))))
+              (let-values ([(str type junk start end) (scheme-lexer p)])
+                (if (eq? type 'eof)
+                    empty
+                    (cons (list type start end)
+                          (lex-port p)))))
           #;(define (colors src)
-            (foldl (lambda (vals hsh)
-                     (foldl (lambda (num hsh)
-                              (hash-set hsh (first vals)
-                                        (cons num
-                                              (hash-ref hsh (first vals) empty))))
-                            hsh
-                            (range (second vals)
-                                   (third vals))))
-                   (hash)
-                   (lex-port (open-input-string src))))]
+              (foldl (lambda (vals hsh)
+                       (foldl (lambda (num hsh)
+                                (hash-set hsh (first vals)
+                                          (cons num
+                                                (hash-ref hsh (first vals) empty))))
+                              hsh
+                              (range (second vals)
+                                     (third vals))))
+                     (hash)
+                     (lex-port (open-input-string src))))]
     (format "var theTrace = ~a\nvar code = ~S"
-                         (node->json (current-call))
-                         (unbox src))))
+            (node->json (current-call))
+            (unbox src))))
 
 
 (define-for-syntax (print-expanded d)
