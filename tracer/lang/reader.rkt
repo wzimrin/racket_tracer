@@ -6,7 +6,9 @@
          [port-text (port->string in)]
          [in (open-input-string port-text)])
     (port-count-lines! in)
-    (let* ([mod (rd (relocate-input-port in 2 1 offset))]
+    (define reloc-in (relocate-input-port in 1 1 offset))
+    (port-count-lines! reloc-in)
+    (let* ([mod (rd reloc-in)]
            [mod  (if stx? mod (datum->syntax #f mod))]
            [r (with-syntax ([port-text port-text])
                 (syntax-case mod ()
