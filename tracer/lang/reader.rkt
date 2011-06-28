@@ -1,5 +1,5 @@
 #lang s-exp syntax/module-reader
--ignored-
+(planet tracer/tracer/tracer)
 #:wrapper2
 (lambda (in rd stx?)
   (let* ([offset (+ (file-position in) 1)]
@@ -12,12 +12,9 @@
            [mod  (if stx? mod (datum->syntax #f mod))]
            [r (with-syntax ([port-text port-text])
                 (syntax-case mod ()
-                  [(module name lang* (wrapper body ...))
+                  [(module name lang* (modbegin . body))
                    (syntax/loc mod
-                     (module name (planet tracer/tracer/tracer)
-                       (wrapper
-                        port-text
-                        body ...)))]))])
+                     (module name lang* (modbegin port-text . body)))]))])
       (if stx? r (syntax->datum r)))))
 
 (require racket/port)
