@@ -2,7 +2,10 @@
 -ignored-
 #:wrapper2
 (lambda (in rd stx?)
-  (let* ([port-text (port->string in)]
+  (let* ([port-text (port->string (relocate-input-port in
+                                                       1
+                                                       0
+                                                       0))]
          [in (open-input-string port-text)])
     (port-count-lines! in)
     (let* ([mod  (rd in)]
