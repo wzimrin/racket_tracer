@@ -4,15 +4,25 @@
 
 @title{Tracer}
 
+The Tracer creates a graphical representation of a program as the evaluation tree. It is a tool for debugging code, as well as a teaching aid. By looking at the output at each level, it is possible to quickly narrow down what function is generating incorrect input. Currently, the tracer lang uses the semantics of intermediate-student-with-lambda.  
+
 @section{Getting Started}
 
 To use the Tracer, set your language to #lang planet tracer/tracer. When you run your code, your preferred browser (as selected in Dr Racket under Edit, Preferences, Browser) will open up with the trace. 
 
-The tab bar along the top displays the top level function calls. The body of the page shows the trace for a single top level function call. 
+The tab bar along the top displays the top level function calls. The body of the page shows the trace for a single top level function call. Consider the code below:
 
-@racketblock[(define (foo a) (+ a a))
-         (define (bar b) (* b 2))
-         (foo (bar 3))]
+@racketblock[(define (alpha a) (+ a a))
+             (define (beta b) (* b 2))
+             (define (gamma c) (+ (foo c) (bar c)))
+             (define (delta d) (+ (foo (bar d))))
+             (gamma 3)
+             (delta 3)]
+
+The trace of this code would generate two top level calls - gamma and delta. Both of this calls would have foo and bar as children at the same level. 
+
+
+                             
 
 
 

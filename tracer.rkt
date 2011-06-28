@@ -354,7 +354,6 @@
         body ...
         (run-tests)
         (display-results)
-        (external-browser 'konqueror)
         (send-url/contents (page (trace->json))))]))
 
 
