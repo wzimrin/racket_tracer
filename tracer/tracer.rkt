@@ -24,6 +24,7 @@
 (require [for-syntax racket/port])
 (require net/base64)
 (require file/convertible)
+(require mzlib/pconvert)
 
 (require (planet dherman/json:3:0))
 
@@ -201,18 +202,14 @@
 
 (define (format-nicely x depth width literal)
   ;print the result string readably
-  (displayln x)
-  (displayln (image? x))
   (if (image? x)
       (json-image x)
       (let [(p (open-output-string "out"))]
         ;set columns and depth
         (parameterize [(pretty-print-columns width)
-                       (pretty-print-depth depth)]
-          ;choose whether you want x printed readably or for viewing
-          ((if literal
-               pretty-print
-               pretty-display) x p))
+                       (pretty-print-depth depth)
+                       (constructor-style-printing #t)]
+          (pretty-write (print-convert x) p))
         ;return what was printed
         (hasheq 'type "value"
                 'value (get-output-string p)))))
@@ -229,15 +226,15 @@
             'formals
             (format-list (node-formal t) #f #f)
             'formalsShort
-            (format-list (node-formal t) 4 #f)
+            (format-list (node-formal t) 2 #f)
             'actuals
             (format-list (node-actual t) #f #t)
             'actualsShort
-            (format-list (node-actual t) 4 #t)
+            (format-list (node-actual t) 2 #t)
             'result
             (format-nicely (node-result t) #f 40 #t)
             'resultShort
-            (format-nicely (node-result t) 4 40 #t)
+            (format-nicely (node-result t) 2 40 #t)
             'linum
             (node-linum t)
             'idx
