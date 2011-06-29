@@ -8,15 +8,15 @@
 (require test-engine/racket-tests)
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
-(require net/sendurl)
+(require [only-in net/sendurl
+                  send-url/contents])
 (require [only-in planet/resolver
                   resolve-planet-path])
-(require [only-in planet/config
-                  PLANET-DIR])
-(require [only-in racket/runtime-path
-                  define-runtime-path])
 (require [only-in web-server/templates
                   include-template])
+
+(require [only-in racket/gui
+                  message-box])
 (require syntax/toplevel)
 
 (require [for-syntax racket/port])
@@ -293,6 +293,12 @@
         body ...
         (run-tests)
         (display-results)
-        (send-url/contents (page (trace->json offset))))]))
+        (begin
+          ;If empty trace generate error message
+          (if (equal? empty (node-kids (current-call)))
+              (message-box "Error" 
+                           "This file cannot be traced because none of functions defined within it are called. " #f '(ok stop))
+               (send-url/contents (page (trace->json offset)))))
+       )]))
 
 

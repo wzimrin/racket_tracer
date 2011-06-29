@@ -247,6 +247,7 @@ $(document).ready(function () {
     var ul = element("ul")
     ul.addClass("tabs")
     tabs.append(ul)
+
     var first = false
     for (var i = 0; i < theTrace.children.length; i++) {
         var li = element("li")
