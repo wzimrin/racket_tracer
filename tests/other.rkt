@@ -62,7 +62,7 @@
 
 ;Consumes: a directory
 ;Produces: number of files in this directory and subdirectories
-(: how-many (dir -> Number))
+;(: how-many (dir -> Number))
 (define (how-many d)
   (cond
     ;No more directories - number of files in this directory
