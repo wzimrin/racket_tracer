@@ -1,8 +1,34 @@
 
 
 ***** CURRENT ISSUES*****
+- planet load line
+- documented examples in planet runnable (fixed but not loaded to planet)
+- (define (foo x) x) --> visual glitch (eric)
+- source code appears on left before jumping to right (chrome) (eric)
+- dragability not discoverable and jerky (eric)
+- dragging sluggish (eric)
+- easy way to expand/contract code window (eric)
+- whole top bar of code window is clickable (eric)
+- keep track of what was clicked on highlight --> some way to tie function that you clicked to highlight in code
+- double click to expand or collapse code pane (anywhere on the page)
+- margin for the code (guillaume)
+- larger target for the close bar of code pane (guillaume)
+- click on argument and highlight arguments (guillaume)
+- some way to get to definition of a function (guillaume)
+- code-paste a test case for nodes i have identified are bad (guillaume)
+- show all check-expects, failed in red (guillaume)
+- display of check expects. arrow to false is confusing. (guillaume)
+- scroll code with mouse drag (guillaume)
+- wrap long lines in the code (guillaume)
+- scroll with arrows (guillaume)
+- highlighting source location of a lambda on click (guillaume)
+- context of lst in lambda (guillaume)
+- color of code highlight, red means error (guillaume)
+- deleting temp files that are generated (guillaume)
+- not opening a new tab each time (guillaume)
+- documentation --> evaluation tree = false (shriram)
+- whether or not function clicked on in tabbar should open code pane and highlight (danny)
 - language level printer
-- behavior when nothing in the file to trace
 - double check browser compatibility error message
 - function in map --> display name as function name not lambda (guillame)
 - ordering of actual and expected in check expects
@@ -44,6 +70,7 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- behavior when nothing in the file to trace (6/29)
 - Bug with hover remaining blue too long
 - danny's pull request
 - Call table
