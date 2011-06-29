@@ -1,10 +1,10 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local define-struct check-expect let*])
+                    #%app define lambda require #%module-begin let local define-struct check-expect let* image?])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
-                             define lambda require let local define-struct]])
+                             define lambda require let local define-struct image?]])
 (require test-engine/racket-tests)
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
@@ -14,6 +14,8 @@
                   resolve-planet-path])
 (require [only-in web-server/templates
                   include-template])
+(require [only-in 2htdp/image
+                  image?])
 
 (require [only-in racket/gui
                   message-box])
@@ -21,6 +23,7 @@
 
 (require [for-syntax racket/port])
 (require net/base64)
+(require file/convertible)
 
 (require (planet dherman/json:3:0))
 
@@ -36,6 +39,7 @@
                      #;(isl:lambda lambda)
                      (isl:require require)
                      (ds-recorder define-struct)
+                     (isl:image? image?)
                      #;(isl:let let)])
 
 ;(provide struct-accessor-procedure?)
@@ -187,18 +191,20 @@
 (define-syntax-rule (show-trace)
   (print-right (current-call)))
 
-#;(define (get-base64 img)
-    (base64-encode (convert img 'png-bytes)))
+(define (get-base64 img)
+  (base64-encode (convert img 'png-bytes)))
 
-#;(define (json-image img)
-    (string-append "data:image/png;charset=utf-8;base64,"
-                   (bytes->string/utf-8 (get-base64 img))))
+(define (json-image img)
+  (hasheq 'type "image"
+          'src (string-append "data:image/png;charset=utf-8;base64,"
+                              (bytes->string/utf-8 (get-base64 img)))))
 
 (define (format-nicely x depth width literal)
   ;print the result string readably
+  (displayln x)
+  (displayln (image? x))
   (if (image? x)
-      #;(json-image x)
-      x
+      (json-image x)
       (let [(p (open-output-string "out"))]
         ;set columns and depth
         (parameterize [(pretty-print-columns width)
@@ -208,7 +214,8 @@
                pretty-print
                pretty-display) x p))
         ;return what was printed
-        (get-output-string p))))
+        (hasheq 'type "value"
+                'value (get-output-string p)))))
 
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 

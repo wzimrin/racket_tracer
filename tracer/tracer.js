@@ -50,14 +50,20 @@ function makeCell(formShort, formFull, cssClass) {
     TD.addClass(cssClass + " cell")
 
     var div = element("div")
-    //If a shortened form exists form exists
-    if (formShort != formFull) {
-        div.addClass("expandable")
-        div.data({short: formShort, full: formFull, expanded: false})
-        updateExpandable(div)
-    }
-    else {
-        div.text(formFull)
+    if (formFull.type=="image") {
+        var el = element("img")
+        el.attr("src",formFull.src)
+        div.append(el)
+    } else {
+        //If a shortened form exists form exists
+        if (formShort != formFull) {
+            div.addClass("expandable")
+            div.data({short: formShort.value, full: formFull.value, expanded: false})
+            updateExpandable(div)
+        }
+        else {
+            div.text(formFull.value)
+        }
     }
     TD.append(div)
     return TD
