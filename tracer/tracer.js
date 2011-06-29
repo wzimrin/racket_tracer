@@ -194,6 +194,12 @@ function makeCall(traceNode, parent) {
     button.text("-")
     button.addClass("button")
 
+    var bodyButton = element("div")
+    bodyButton.text("body")
+    bodyButton.addClass("body-button")
+    bodyButton.data({idx:traceNode.srcIdx,
+                     span:traceNode.srcSpan})
+
     var hidable = []
     
     var lowerDiv = element("div")
@@ -213,6 +219,7 @@ function makeCall(traceNode, parent) {
     
     lowerDiv.append(childTable)
     call.append(callTable)
+    call.append(bodyButton)
     if (traceNode.children.length!=0)
         call.append(button)
     call.append(lowerDiv)
@@ -322,13 +329,16 @@ $(document).ready(function () {
     var lastFunctionHighlighted;
     
     //Function names on click
-    $("td.name").click(function () {
+    $("td.name").add($("div.body-button")).click(function () {
         if (lastFunctionHighlighted == this) {
             lastFunctionHighlighted = false;
+            $(".lastHighlighted").removeClass("lastHighlighted")
             clearHighlight(codePane)
             collapseCodePane()
         } else {
             var target = $(this)
+            $(".lastHighlighted").removeClass("lastHighlighted")
+            target.addClass("lastHighlighted")
             highlightSpan(codePane,target.data("idx"),target.data("span"))
             expandCodePane()
             showSpan()

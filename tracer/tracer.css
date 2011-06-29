@@ -180,6 +180,10 @@ div#codePane {
     background: #FF0;
 }
 
+.lastHighlighted {
+    background: #ff0;
+}
+
 span.error {
     color: #FF0000;
 }
