@@ -44,3 +44,19 @@
             (string-append s " " next-item)
             (string-append " " next-item s))
         s)))
+
+#|
+
+
+(define p (open-output-string "hi"))
+(let ([orig (port-write-handler p)])
+  (port-write-handler 
+   p 
+   (lambda(val port [depth 0]) (orig "world" port))))
+  
+(write "cat" p)
+;(write
+
+(displayln (get-output-string p))
+
+|#
