@@ -15,28 +15,15 @@ function element(tag) {
 //----- CODE PANE HELPERS -----
 
 function clearHighlight(el) {
-    if (el.data("text")) {
-        el.empty()
-        el.text(el.data("text"))
-        el.data("text",false)
-    }
+    $(".highlight").children().unwrap()
 }
 
 //Highlight the span of text beginning at idx in el
 function highlightSpan(el,idx,span) {
     clearHighlight(el)
-    var text = el.text()
-    var startIdx = idx-1
-    var endIdx = idx+span-1
-    var beginText = text.substring(0,startIdx)
-    var highlightedText = text.substring(startIdx,endIdx)
-    var endText = text.substring(endIdx)
-    el.data("text",text)
-    el.empty()
     var hi = element("span")
     hi.addClass("highlight")
-    hi.text(highlightedText)
-    el.append(beginText,hi,endText)
+    el.children().slice(idx-codeOffset,span+idx-codeOffset).wrapAll(hi)
 }
 
 //----- EXPANDABLE HELPERS -----
@@ -246,7 +233,15 @@ $(document).ready(function () {
     var codePane = $("#codePane")
     var codePaneWrapper = $("#codePaneWrapper")
     var codePaneButton = $("#codePaneButton")
-    codePane.text(code)
+    for (var i = 0; i < code.length; i++) {
+        for (var j = 0; j < code[i].text.length; j++) {
+            var el = element("span")
+            el.text(code[i].text[j])
+            el.addClass(code[i].type)
+            el.addClass("codeChar")
+            codePane.append(el)
+        }
+    }
     var codePaneWidth
 
     var ul = element("ul")
@@ -307,7 +302,7 @@ $(document).ready(function () {
     
     //Animate to move to new highlighted code if necessary
     function showSpan() {
-        var span = codePane.find("span")
+        var span = codePane.find(".highlight")
         var pos = span.position()
         var height = codePane.height()
         var width = codePane.width()

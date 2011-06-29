@@ -1,5 +1,5 @@
 #lang planet tracer/tracer
-
+;foo
 (define-struct bhnode (value left right))
 
 (define (insert x h)
