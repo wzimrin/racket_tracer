@@ -1,10 +1,10 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local define-struct check-expect let* image?])
+                    #%app define lambda require #%module-begin let local check-expect let* image?])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
-                             define lambda require let local define-struct image?]])
+                             define lambda require let local image?]])
 (require test-engine/racket-tests)
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
@@ -39,7 +39,7 @@
 (provide [rename-out #;(isl:define define)
                      #;(isl:lambda lambda)
                      (isl:require require)
-                     (ds-recorder define-struct)
+                     ;(ds-recorder define-struct)
                      (isl:image? image?)
                      #;(isl:let let)])
 
@@ -48,7 +48,7 @@
 (provide show-trace trace->json #%module-begin)
 
 ;the actual struct that stores our data
-(struct node (name formal result actual kids linum idx span) #:mutable #:transparent)
+(struct node (name formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
 
 (struct wrapper (value id) #:transparent)
 
@@ -64,48 +64,19 @@
 
 ;creates a node with no result or children
 ;takes a name, a formals list, and an actuals list
-(define (create-node n f a l i s)
-  (node n f 'no-result a empty l i s))
+(define (create-node n f a l i s s-i s-s)
+  (node n f 'no-result a empty l i s s-i s-s))
 
 ;adds a kid k to node n
 (define (add-kid n k)
   (set-node-kids! n (cons k (node-kids n))))
 
 ;the current definition we are in
-(define current-call (make-parameter (create-node 'top-level empty empty 0 0 0)))
+(define current-call (make-parameter (create-node 'top-level empty empty 0 0 0 0 0)))
 
 (define current-linum (make-parameter 0))
 (define current-idx (make-parameter 0))
 (define current-span (make-parameter 0))
-
-;a boxed list of all functions that define-struct has defined in this namespace
-(define ds-fun-names (box empty))
-
-;adds one define-struct worth of names to ds-fun-names,
-;given the name of the struct and its fields
-(define (register-ds name fields)
-  (let* ([name-s (symbol->string name)]
-         [name-s-d (string-append name-s
-                                 "-")])
-    (set-box! ds-fun-names
-              (append
-               ;make-struct and struct?
-               (map string->symbol (list (string-append "make-" name-s)
-                                         (string-append name-s "?")))
-               ;struct-field
-               (map (lambda (field)
-                      (string->symbol 
-                       (string-append name-s-d
-                                      (symbol->string field))))
-                    fields)
-               (unbox ds-fun-names)))))
-
-;macro redefinition of define-struct that calls isl:define struct and register-ds
-(define-syntax (ds-recorder e)
-  (syntax-case e ()
-    [(define-struct name fields)
-     #'(begin (isl:define-struct name fields)
-              (register-ds 'name 'fields))]))
 
 (define-syntax (check-expect-recorder e)
   (with-syntax ([linum (syntax-line e)]
@@ -116,11 +87,11 @@
                 [expected 'expected])
     (syntax-case e ()
       [(_ actualStx expectedStx)
-       #`(begin (define parent-node (create-node 'ce empty empty linum idx span))
+       #`(begin (define parent-node (create-node 'ce empty empty linum idx span idx span))
                 (check-expect (let ([actual-node (create-node 'actual (list 'actualStx)
                                                               empty
                                                               #,(syntax-line #'actualStx)
-                                                              #,(syntax-position #'actualStx)
+                                                              #,(syntax-span #'actualStx)
                                                               #,(syntax-span #'actualStx))])
                                 (add-kid parent-node actual-node)
                                 (parameterize ([current-call actual-node])
@@ -136,6 +107,8 @@
                                                                 empty
                                                                 #,(syntax-line #'expectedStx)
                                                                 #,(syntax-position #'expectedStx)
+                                                                #,(syntax-span #'expectedStx)
+                                                                #,(syntax-position #'expectedStx)
                                                                 #,(syntax-span #'expectedStx))])
                                 (add-kid parent-node expected-node)
                                 (parameterize ([current-call expected-node])
@@ -149,9 +122,11 @@
      (with-syntax ([lambda 'lambda])
        #'(custom-lambda lambda args body))]
     [(_ name (arg-expr ...) body)
-     #'(lambda (arg-expr ...)
+     #`(lambda (arg-expr ...)
          (let ([n (create-node 'name empty (list arg-expr ...)
-                               (current-linum) (current-idx) (current-span))])
+                               (current-linum) (current-idx) (current-span)
+                               #,(syntax-position #'body)
+                               #,(syntax-span #'body))])
            (add-kid (current-call) n)
            (parameterize ([current-call n])
              (let ([result body])
@@ -241,6 +216,10 @@
             (node-idx t)
             'span
             (node-span t)
+            'srcIdx
+            (node-src-idx t)
+            'srcSpan
+            (node-src-span t)
             'children
             (map node->json (reverse (node-kids t))))))
     
