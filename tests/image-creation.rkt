@@ -5,4 +5,6 @@
 (define (circ r)
   (circle r "outline" "red"))
 
-(circ 35)
+(define (id x) x)
+
+(id (circ 35))

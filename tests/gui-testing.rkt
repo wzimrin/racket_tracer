@@ -42,12 +42,12 @@ To-Add
                   "hooray"
                   (make-list 20 2)
                   false
-                  (λ(y) (* y y))))
+                  (lambda (y) (* y y))))
 
 ;Long function name for call not at top level
 (define (foo-top-level list-length)
-  (map (λ(x) (a-very-long-function-name x)) 
-     (build-list list-length (λ(n) (* n 2)))))
+  (map (lambda (x) (a-very-long-function-name x)) 
+     (build-list list-length (lambda (n) (* n 2)))))
 
 ;Large data structure
 (define-struct bhnode (value left right))
@@ -79,7 +79,7 @@ To-Add
                 "hooray" 
                 (make-list 20 2)
                 true
-                (λ(a b c d) (+ a (* c d) (* b b))))
+                (lambda (a b c d) (+ a (* c d) (* b b))))
 
 (foo-arg 5)
 
@@ -97,9 +97,5 @@ To-Add
                  (make-heap (make-list 10 4)))
                                                          
 ;Long function names at top level
-(map (λ(x) (a-very-long-function-name x)) 
-     (build-list 10 (λ(n) (* n 2))))
-
-
-
-
+(map (λ (x) (a-very-long-function-name x)) 
+     (build-list 10 (lambda (n) (* n 2))))

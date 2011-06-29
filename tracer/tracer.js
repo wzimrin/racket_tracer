@@ -56,7 +56,7 @@ function makeCell(formShort, formFull, cssClass) {
         div.append(el)
     } else {
         //If a shortened form exists form exists
-        if (formShort != formFull) {
+        if (formShort.value != formFull.value) {
             div.addClass("expandable")
             div.data({short: formShort.value, full: formFull.value, expanded: false})
             updateExpandable(div)

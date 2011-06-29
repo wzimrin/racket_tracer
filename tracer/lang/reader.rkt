@@ -3,7 +3,7 @@
 #:wrapper2
 (lambda (in rd stx?)
   (let* ([offset (+ (file-position in) 1)]
-         [port-text (port->string in)]
+         [port-text (regexp-replace "λ" (port->string in) "lambda")]
          [in (open-input-string port-text)])
     (port-count-lines! in)
     (define reloc-in (relocate-input-port in 1 1 offset))
