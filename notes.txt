@@ -4,7 +4,6 @@
 - language level printer
 - behavior when nothing in the file to trace
 - double check browser compatibility error message
-- danny's pull request
 - function in map --> display name as function name not lambda (guillame)
 - ordering of actual and expected in check expects
 - ability to scroll off top and bottom of code pane
@@ -46,6 +45,7 @@
 
 ***** FIXED ISSUES *****
 - Bug with hover remaining blue too long
+- danny's pull request
 - Call table
     - Rearrange call table to be vertical rather than horizontal. See how we like it
     - Coloring of arguments or some other separation between them
