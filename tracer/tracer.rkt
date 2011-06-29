@@ -277,8 +277,9 @@
   (printf "~a\n"
           (syntax->datum (local-expand d 'module (list)))))
 
-(define (page json)
-    (let ([tracerCSS 
+(define (page name json)
+    (let ([title (string-append name " Trace")]
+           [tracerCSS 
            (port->string (open-input-file (resolve-planet-path 
                                            '(planet tracer/tracer/tracer.css))))]
           [jQuery 
@@ -294,18 +295,19 @@
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
   (syntax-case stx ()
-    [(_ source offset body ...)
+    [(_ name source offset body ...)
      #`(#%plain-module-begin
         (set-box! src source)
         body ...
         (run-tests)
         (display-results)
         (begin
+          (displayln 'name)
           ;If empty trace generate error message
           (if (equal? empty (node-kids (current-call)))
               (message-box "Error" 
                            "This file cannot be traced because none of functions defined within it are called. " #f '(ok stop))
-               (send-url/contents (page (trace->json offset)))))
+               (send-url/contents (page name (trace->json offset)))))
        )]))
 
 
