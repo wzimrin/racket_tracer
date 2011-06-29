@@ -10,11 +10,12 @@
     (port-count-lines! reloc-in)
     (let* ([mod (rd reloc-in)]
            [mod  (if stx? mod (datum->syntax #f mod))]
-           [r (with-syntax ([port-text port-text])
+           [r (with-syntax ([port-text port-text]
+                            [offset offset])
                 (syntax-case mod ()
                   [(module name lang* (modbegin . body))
                    (syntax/loc mod
-                     (module name lang* (modbegin port-text . body)))]))])
+                     (module name lang* (modbegin port-text offset . body)))]))])
       (if stx? r (syntax->datum r)))))
 
 (require racket/port)

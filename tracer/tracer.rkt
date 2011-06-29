@@ -22,6 +22,8 @@
 (require [for-syntax racket/port])
 (require net/base64)
 
+(require (planet dherman/json:3:0))
+
 (provide let local let*)
 
 (provide [rename-out (app-recorder #%app)
@@ -168,59 +170,10 @@
      (with-syntax ([linum (syntax-line e)]
                    [idx (syntax-position e)]
                    [span (syntax-span e)])
-       #'(parameterize ([current-linum linum]
-                        [current-idx idx]
-                        [current-span span])
-           (#%app fun-expr arg-expr ...)))
-     ;ensure that fun-expr is a function
-     #;(identifier? #'fun-expr) 
-     ;gets where fun-expr was defined
-     #;(let* ([binding (identifier-binding #'fun-expr)];get the binding
-            ;if vals = 'lexical, fun-expr was locally defined
-            ;if vals = '(#f #f), fun-expr was a top-level definition in this module
-            ;if vals = anything else, fun-expr was bound somewhere else
-            [vals (if (list? binding)
-                      ;if the binding is a list, we want to split the first element
-                      (call-with-values
-                       (lambda ()
-                         (module-path-index-split (car binding)))
-                       list)
-                      ;otherwise, return it
-                      binding)]
-            [linum (syntax-line e)]
-            [idx (syntax-position e)]
-            [span (syntax-span e)])
-       ;we want to potentially trace fun-expr if it was bound in the file
-       (with-syntax ([linum linum]
-                     [idx idx]
-                     [span span])
-         (if (or (equal? vals 'lexical)
-               (equal? vals '(#f #f)))
-           ;we also need to check at runtime if fun-expr was defined by define-struct
-           #`(if (or (member 'fun-expr (unbox ds-fun-names))
-                     (struct-accessor-procedure? fun-expr))
-                 ;if not a function you want to trace, leave as is
-                 (#%app fun-expr arg-expr ...)
-                 ;otherwise trace
-                 (let ([n (create-node 'fun-expr '(arg-expr ...)
-                                       "nothing here yet!"
-                                       linum idx span)])
-                   (begin
-                     ;adds n to current-call's kids 
-                     (add-kid (current-call) n)
-                     ;evaluate fun-expr and its planet tracer/tracerargs
-                     (let* ([fun fun-expr]
-                            [args (list arg-expr ...)])
-                       ;set current-call to n while you evaluate (fun-expr . args)
-                       (parameterize ([current-call n])
-                         (begin
-                           ;set the actuals, run the function, and set the result
-                           (set-node-actual! n args)
-                           (let ([v (#%app apply fun args)])
-                             (begin
-                               (set-node-result! n v)
-                               v))))))))
-           #'(#%app fun-expr arg-expr ...))))]))
+     #'(parameterize ([current-linum linum]
+                      [current-idx idx]
+                      [current-span span])
+         (#%app fun-expr arg-expr ...)))]))
 
 (define (print-right t)
   (node (node-formal t)
@@ -235,96 +188,82 @@
   (print-right (current-call)))
 
 #;(define (get-base64 img)
-  (base64-encode (convert img 'png-bytes)))
+    (base64-encode (convert img 'png-bytes)))
 
 #;(define (json-image img)
-  (string-append "data:image/png;charset=utf-8;base64,"
-                 (bytes->string/utf-8 (get-base64 img))))
+    (string-append "data:image/png;charset=utf-8;base64,"
+                   (bytes->string/utf-8 (get-base64 img))))
 
 (define (format-nicely x depth width literal)
   ;print the result string readably
   (if (image? x)
       #;(json-image x)
       x
-      (format "~S"
-          (let [(p (open-output-string "out"))]
-            ;set columns and depth
-            (parameterize [(pretty-print-columns width)
-                           (pretty-print-depth depth)]
-              ;choose whether you want x printed readably or for viewing
-              ((if literal
-                   pretty-print
-                   pretty-display) x p))
-            ;return what was printed
-            (get-output-string p)))))
+      (let [(p (open-output-string "out"))]
+        ;set columns and depth
+        (parameterize [(pretty-print-columns width)
+                       (pretty-print-depth depth)]
+          ;choose whether you want x printed readably or for viewing
+          ((if literal
+               pretty-print
+               pretty-display) x p))
+        ;return what was printed
+        (get-output-string p))))
 
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
   ;javascript list
   (local [(define (format-list lst depth literal)
-            (string-append "["
-                           (string-join (map (lambda (x)
-                                               (format-nicely x depth 40 literal))
-                                             lst)
-                                        ",")
-                           "]"))]
-    (format "{name: \"~a\",
-            formals: ~a,
-            formalsShort: ~a,
-            actuals: ~a,
-            actualsShort: ~a,
-            result: ~a,
-            resultShort: ~a,
-            linum: ~a,
-            idx: ~a,
-            span: ~a,
-            children: [~a]}"
-            (node-name t)
+            (map (lambda (x)
+                   (format-nicely x depth 40 literal))
+                 lst))]
+    (hasheq 'name
+            (format "~a" (node-name t))
+            'formals
             (format-list (node-formal t) #f #f)
+            'formalsShort
             (format-list (node-formal t) 4 #f)
+            'actuals
             (format-list (node-actual t) #f #t)
+            'actualsShort
             (format-list (node-actual t) 4 #t)
+            'result
             (format-nicely (node-result t) #f 40 #t)
+            'resultShort
             (format-nicely (node-result t) 4 40 #t)
+            'linum
             (node-linum t)
+            'idx
             (node-idx t)
+            'span
             (node-span t)
-            (if (empty? (node-kids t))
-                ""
-                (local ([define (loop k)
-                          (if (empty? (rest k))
-                              (first k)
-                              (string-append (first k)
-                                             ","
-                                             (loop (rest k))))])
-                  (loop (map node->json (reverse (node-kids t)))))))))
+            'children
+            (map node->json (reverse (node-kids t))))))
+    
 
 ; Why is this a macro and not a function?  Because make it a function
 ; affects the call record!
 
-(define-syntax-rule (trace->json)
-  (local [#;(define (range start end)
-            (build-list (- end start) (lambda (x) (+ start x))))
-          #;(define (lex-port p)
-            (let-values ([(str type junk start end) (scheme-lexer p)])
-              (if (eq? type 'eof)
-                  empty
-                  (cons (list type start end)
-                        (lex-port p)))))
-          #;(define (colors src)
-            (foldl (lambda (vals hsh)
-                     (foldl (lambda (num hsh)
-                              (hash-set hsh (first vals)
-                                        (cons num
-                                              (hash-ref hsh (first vals) empty))))
-                            hsh
-                            (range (second vals)
-                                   (third vals))))
-                   (hash)
-                   (lex-port (open-input-string src))))]
-    (format "var theTrace = ~a\nvar code = ~S"
-                         (node->json (current-call))
-                         (unbox src))))
+(define (range start end)
+  (build-list (- end start) (lambda (x) (+ start x))))
+
+(define (lex-port p actual)
+  (let-values ([(str type junk start end) (scheme-lexer p)])
+    (if (eq? type 'eof)
+        empty
+        (cons (list type (substring actual (sub1 start) (sub1 end)))
+              (lex-port p actual)))))
+
+(define-syntax-rule (trace->json offset)
+  (local [(define (colors src)
+            (map (lambda (lst)
+                   (hasheq 'type (format "~a" (first lst))
+                           'text (format "~a" (second lst))))
+                 (lex-port (open-input-string src) src)))]
+    (format "var theTrace = ~a\nvar code = ~a\nvar codeOffset = ~a"
+            (jsexpr->json (node->json (current-call)))
+            (jsexpr->json (colors (unbox src)))
+            offset)))
 
 
 (define-for-syntax (print-expanded d)
@@ -348,12 +287,12 @@
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
   (syntax-case stx ()
-    [(_ source body ...)
+    [(_ source offset body ...)
      #`(#%plain-module-begin
         (set-box! src source)
         body ...
         (run-tests)
         (display-results)
-        (send-url/contents (page (trace->json))))]))
+        (send-url/contents (page (trace->json offset))))]))
 
 

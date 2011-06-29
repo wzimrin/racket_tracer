@@ -177,7 +177,35 @@ div#codePane {
 }
 
 .highlight {
-    background: #A00;
+    background: #FF0;
+}
+
+span.error {
+    color: #FF0000;
+}
+
+span.comment {
+    color: #f99428;
+}
+
+span.sexp-comment {
+    color: #f99428;
+}
+
+span.constant {
+    color: #3cc239;
+}
+
+span.string {
+    color: #33ae33;
+}
+
+span.parenthesis {
+    color: #97452b;
+}
+
+span.symbol {
+    color: #6666ff;
 }
 
 div#codePaneButton {
