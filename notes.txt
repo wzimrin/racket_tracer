@@ -39,7 +39,6 @@
 - testing with large images (equal vs eq? on images)
 - test with images
 - data uri schemes (or not)... but someway to display images on tracer
-- warning on unsupported/untested browsers
 - graduated set of demos
 - plumbing for wescheme
 - plumbing for dr racket
@@ -72,6 +71,8 @@
 - margin for the code (guillaume)
 - keep track of what was clicked on highlight --> some way to tie function that you clicked to highlight in code
 - dragability discoverable
+- title for page (6/29)
+- warning on unsupported/untested browsers (6/28)
 - behavior when nothing in the file to trace (6/29)
 - Bug with hover remaining blue too long
 - danny's pull request

@@ -175,15 +175,59 @@
           'src (string-append "data:image/png;charset=utf-8;base64,"
                               (bytes->string/utf-8 (get-base64 img)))))
 
+
+(define (print-list lst)
+  (let* ([ppl (pretty-format lst (pretty-print-columns))]
+         [lines (length (regexp-match* "\n" ppl))]
+         [lists (length (regexp-match* "list" ppl))])
+    (if (= lines lists)
+        (begin 
+          (displayln "one line per list")
+          ppl)
+        ;need to split into two lines
+        (let*-values ([(l-beg l-end-rev) (split-list lst)])
+          (plh l-beg l-end-rev "(list" ")")))))
+
+(define (split-list lst)
+  (let ([left (ceiling (/ (length lst) 2))]
+        [right (floor (/ (length lst) 2))])
+    (values (drop-right lst left)
+            (reverse (take-right lst right)))))
+
+(define (plh fwd rev s-fwd s-rev)
+  (cond
+    [(and (empty? fwd) (empty? rev))
+     (string-append s-fwd "...\n      ..." s-rev)]
+    [(empty? fwd) (plh fwd (rest rev) s-fwd (add-item s-rev rev))]
+    [(empty? rev) (plh (rest fwd) rev (add-item s-fwd fwd) s-rev)]
+    ;both have elements left
+    [(and (cons? fwd) (cons? rev))
+     (plh (rest fwd)
+          (rest rev)
+          (add-item fwd s-fwd true)
+          (add-item rev s-rev false))]
+    ))
+
+(define (add-item lst s fwd)
+  (let ([next-item (pretty-format (first lst) (pretty-print-columns))])
+    (if (< (+ (string-length s)
+              (string-length next-item)
+              (if fwd 0 6))
+           (pretty-print-columns))
+        (if fwd 
+            (string-append s " " next-item)
+            (string-append " " next-item s))
+        s)))
+           
 (define (format-nicely x depth width literal)
   ;print the result string readably
   (if (image? x)
       (json-image x)
-      (let [(p (open-output-string "out"))]
+      (let* ([p (open-output-string "out")])
         ;set columns and depth
-        (parameterize [(pretty-print-columns width)
-                       (pretty-print-depth depth)
-                       (constructor-style-printing #t)]
+        (parameterize ([pretty-print-columns width]
+                       [pretty-print-depth depth]
+                       [constructor-style-printing #t])
           (pretty-write (print-convert x) p))
         ;return what was printed
         (hasheq 'type "value"
@@ -277,13 +321,24 @@
         body ...
         (run-tests)
         (display-results)
-        (begin
-          (displayln 'name)
-          ;If empty trace generate error message
-          (if (equal? empty (node-kids (current-call)))
-              (message-box "Error" 
-                           "This file cannot be traced because none of functions defined within it are called. " #f '(ok stop))
-               (send-url/contents (page name (trace->json offset)))))
-       )]))
+        ;If empty trace generate error message
+        (if (equal? empty (node-kids (current-call)))
+            (message-box "Error" 
+                         "This file cannot be traced because none of functions defined within it are called. " #f '(ok stop))
+            (send-url/contents (page name (trace->json offset)))))]))
 
-
+#;(port-write-handler 
+         p
+         (lambda (val port [depth 0])
+           (begin
+             (displayln "pph lambda")
+           (if (and (cons? val)
+                    (equal? 'list (first val)))
+               (begin
+                 (displayln "pph lambda true if")
+                 (displayln val)
+                 (display (print-list(rest val)) p))
+               (begin
+                 (displayln "pph lambda false if")
+                 (displayln val)
+               (pretty-write val p))))))
