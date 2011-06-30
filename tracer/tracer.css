@@ -20,7 +20,7 @@ body {
 }
 
 body.dragging {
-    cursor: move;
+    cursor: pointer;
 }
 
 div#middle .column {
@@ -42,6 +42,7 @@ div#tracer {
     top:0px;
     left:0px; 
     white-space: nowrap;
+    cursor: pointer;
 }
 
 div.call {
@@ -174,6 +175,7 @@ div#codePane {
     white-space: pre;
     overflow:auto;
     font-size: 13px;
+    padding:3px;
 }
 
 .highlight {

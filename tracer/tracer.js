@@ -310,6 +310,11 @@ $(document).ready(function () {
         else
             expandCodePane()
     })
+
+    codePane.dblclick(function () {
+        codePaneButton.click()
+        return false;
+    })
     
     //Begin with a collapsed code pane
     collapseCodePane()
@@ -382,8 +387,13 @@ $(document).ready(function () {
     function setContentHeight() {
         $(".column").height($(window).height()-$("div#tabbar").height()
                             -2*parseInt($(document.body).css("margin-top")))
-        codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true))
     }
+
+    codePaneWrapper.resize(function () {
+        codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
+                        +codePane.height()-codePane.outerHeight(true))
+        codePane.width(codePaneWrapper.width()+codePane.width()-codePane.outerWidth(true))
+    })
 
     setContentHeight()
     

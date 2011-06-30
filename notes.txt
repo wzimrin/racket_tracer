@@ -1,20 +1,18 @@
 
 
 ***** CURRENT ISSUES*****
+- prettify jump-to-definition
 - planet load line
 - documented examples in planet runnable (fixed but not loaded to planet)
 - (define (foo x) x) --> visual glitch (eric)
 - source code appears on left before jumping to right (chrome) (eric)
-- dragability not discoverable and jerky (eric)
+- dragability jerky (eric)
 - dragging sluggish (eric)
 - easy way to expand/contract code window (eric)
-- whole top bar of code window is clickable (eric)
-- keep track of what was clicked on highlight --> some way to tie function that you clicked to highlight in code
+- show whole top bar of code window is clickable (eric)
 - double click to expand or collapse code pane (anywhere on the page)
-- margin for the code (guillaume)
 - larger target for the close bar of code pane (guillaume)
 - click on argument and highlight arguments (guillaume)
-- some way to get to definition of a function (guillaume)
 - code-paste a test case for nodes i have identified are bad (guillaume)
 - show all check-expects, failed in red (guillaume)
 - display of check expects. arrow to false is confusing. (guillaume)
@@ -46,7 +44,6 @@
 - plumbing for wescheme
 - plumbing for dr racket
 - why line paper
-- If tree of traces is empty don't open index.html --> message to the user
 - Contracts
 - Expand collapse --> up down arrows?
 - testing with bootstrap code
@@ -70,6 +67,11 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- If tree of traces is empty don't open index.html --> message to the user
+- some way to get to definition of a function (guillaume)
+- margin for the code (guillaume)
+- keep track of what was clicked on highlight --> some way to tie function that you clicked to highlight in code
+- dragability discoverable
 - behavior when nothing in the file to trace (6/29)
 - Bug with hover remaining blue too long
 - danny's pull request
