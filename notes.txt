@@ -1,6 +1,13 @@
 
 
 ***** CURRENT ISSUES*****
+- pretty up body button
+- don't lose the body button
+- make the body word a body button
+- fib or fac demos in addition to factorial demo
+- push to planet
+- heap demo (large deeply nested data structures)
+
 - prettify jump-to-definition
 - planet load line
 - documented examples in planet runnable (fixed but not loaded to planet)

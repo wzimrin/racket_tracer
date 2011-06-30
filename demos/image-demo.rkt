@@ -57,7 +57,7 @@
                   (add-line canvas
                             (first p1) (second p1)
                             (first p2) (second p2)
-                            "red")
+                            "red")                              
                   (draw-fractal (draw-fractal (draw-fractal (draw-fractal canvas 
                                                                           new-depth p1 mid1)
                                                             new-depth mid2 p2)
