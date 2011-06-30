@@ -5,10 +5,11 @@
            
 (define (print-list lst)
   (let* ([ppl (pretty-format lst (pretty-print-columns))]
-        [lines (length (regexp-match* "\n" ppl))])
-    (if (= lines 1)
+        [lines (length (regexp-match* "\n" ppl))]
+        [lists (length (regexp-match* "list" ppl))])
+    (if (= lines lists)
         (begin 
-          (displayln "lines are 1")
+          (displayln "one line per list")
           ppl)
         ;need to split into two lines
         (let*-values ([(l-beg l-end-rev) (split-list lst)])

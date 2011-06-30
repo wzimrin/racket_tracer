@@ -177,11 +177,12 @@
 
 
 (define (print-list lst)
-  (let* ([ppl (pretty-write lst (pretty-print-columns))]
-         [lines (length (regexp-match* "\n" ppl))])
-    (if (= lines 1)
+  (let* ([ppl (pretty-format lst (pretty-print-columns))]
+         [lines (length (regexp-match* "\n" ppl))]
+         [lists (length (regexp-match* "list" ppl))])
+    (if (= lines lists)
         (begin 
-          (displayln "lines are 1")
+          (displayln "one line per list")
           ppl)
         ;need to split into two lines
         (let*-values ([(l-beg l-end-rev) (split-list lst)])
@@ -222,19 +223,7 @@
   ;print the result string readably
   (if (image? x)
       (json-image x)
-      (let* ([p (open-output-string "out")]
-             [orig (port-print-handler p)])
-        (port-write-handler 
-         p
-         (lambda (val port [depth 0])
-           (begin
-             (displayln "pph lambda")
-           (if (and (cons? val)
-                    (equal? 'list (first val)))
-               (begin
-                 (displayln "pph lambda true if")
-                 (display (print-list(rest val)) p))
-               (orig val p)))))
+      (let* ([p (open-output-string "out")])
         ;set columns and depth
         (parameterize ([pretty-print-columns width]
                        [pretty-print-depth depth]
@@ -341,4 +330,18 @@
                (send-url/contents (page name (trace->json offset)))))
        )]))
 
-
+#;(port-write-handler 
+         p
+         (lambda (val port [depth 0])
+           (begin
+             (displayln "pph lambda")
+           (if (and (cons? val)
+                    (equal? 'list (first val)))
+               (begin
+                 (displayln "pph lambda true if")
+                 (displayln val)
+                 (display (print-list(rest val)) p))
+               (begin
+                 (displayln "pph lambda false if")
+                 (displayln val)
+               (pretty-write val p))))))

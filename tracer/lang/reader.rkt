@@ -10,7 +10,9 @@
     (port-count-lines! reloc-in)
     (let*-values ([(mod) (rd reloc-in)]
                   [(mod)  (if stx? mod (datum->syntax #f mod))]
-                  [(path fileName c) (split-path (syntax-source mod))]
+                  [(path fileName c) (if (path-string? (syntax-source mod))
+                                         ((split-path (syntax-source mod))
+                                         (values "blah" mod "blah2")]
                   [(r) (with-syntax ([port-text port-text]
                                      [offset offset]
                                      [fileName fileName])
