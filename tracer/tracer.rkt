@@ -1,7 +1,7 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local check-expect let* image?])
+                    #%app define lambda require #%module-begin let local check-expect let* letrec image?])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let local image?]])
@@ -28,7 +28,7 @@
 
 (require (planet dherman/json:3:0))
 
-(provide let local let*)
+(provide let local let* letrec)
 
 (provide [rename-out (app-recorder #%app)
                      (check-expect-recorder check-expect)
@@ -91,7 +91,9 @@
                 (check-expect (let ([actual-node (create-node 'actual (list 'actualStx)
                                                               empty
                                                               #,(syntax-line #'actualStx)
+                                                              #,(syntax-position #'actualStx)
                                                               #,(syntax-span #'actualStx)
+                                                              #,(syntax-position #'actualStx)
                                                               #,(syntax-span #'actualStx))])
                                 (add-kid parent-node actual-node)
                                 (parameterize ([current-call actual-node])
