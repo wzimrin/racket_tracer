@@ -321,14 +321,11 @@
         body ...
         (run-tests)
         (display-results)
-        (begin
-          (displayln 'name)
-          ;If empty trace generate error message
-          (if (equal? empty (node-kids (current-call)))
-              (message-box "Error" 
-                           "This file cannot be traced because none of functions defined within it are called. " #f '(ok stop))
-               (send-url/contents (page name (trace->json offset)))))
-       )]))
+        ;If empty trace generate error message
+        (if (equal? empty (node-kids (current-call)))
+            (message-box "Error" 
+                         "This file cannot be traced because none of functions defined within it are called. " #f '(ok stop))
+            (send-url/contents (page name (trace->json offset)))))]))
 
 #;(port-write-handler 
          p
