@@ -353,7 +353,7 @@ $(document).ready(function () {
     var lastFunctionHighlighted;
     
     //Function names on click
-    $("td.name").add($("td.body-button")).click(function () {
+    $("td.name").add($("td.body-button")).bind('click', function () {
         if (lastFunctionHighlighted == this) {
             lastFunctionHighlighted = false;
             $(".lastHighlighted").removeClass("lastHighlighted")
@@ -369,6 +369,10 @@ $(document).ready(function () {
             lastFunctionHighlighted = this;
         }
     })
+    
+    /*.dblclick(function() { 
+        console.log('dblclick')
+        $(this).click()})*/
     
     //makes the expand/collapse buttons work
     $('.ec-button').bind('click',function(event) {
