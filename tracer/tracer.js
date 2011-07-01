@@ -294,12 +294,16 @@ $(document).ready(function () {
     //                                      EVENTS
     // -------------------------------------------------------------------------
     
-
+    function setCodePaneWidth() {
+        codePane.width(codePaneWrapper.width()+codePane.width()-codePane.outerWidth(true))
+    }
+    
     //Set the width of the code pane to a new value and animate
-    function setCodePaneWidth(newWidth) {
+    function setCodePaneWrapperWidth(newWidth) {
         if (codePaneWidth != newWidth) {
             codePaneWidth = newWidth
-            codePaneWrapper.animate({"width":newWidth+"%"}, "slow")
+            codePaneWrapper.animate({"width":newWidth+"%"},
+                                    {duration:"slow",step:setCodePaneWidth})
             bodyWrapper.animate({"width":(100-newWidth)+"%"},
                                            "slow")
         }
@@ -309,12 +313,12 @@ $(document).ready(function () {
     var expandedCodePaneWidth = 50
     //Expand the code pane
     function expandCodePane() {
-        setCodePaneWidth(expandedCodePaneWidth)
+        setCodePaneWrapperWidth(expandedCodePaneWidth)
         codePaneButton.html("&raquo;")
     }
     //Collapse the code pane
     function collapseCodePane() {
-        setCodePaneWidth(collapsedCodePaneWidth)
+        setCodePaneWrapperWidth(collapsedCodePaneWidth)
         codePaneButton.html("&laquo;")
     }
     
@@ -400,20 +404,17 @@ $(document).ready(function () {
 
     first.trigger("click")
     
-    function setContentHeight() {
-        $(".column").height($(window).height()-$("div#tabbar").height()
+    function setContentSize() {
+        $(".column").height($(window).height()-$("div#tabbar").outerHeight()
                             -2*parseInt($(document.body).css("margin-top")))
-    }
-
-    codePaneWrapper.resize(function () {
         codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
                         +codePane.height()-codePane.outerHeight(true))
-        codePane.width(codePaneWrapper.width()+codePane.width()-codePane.outerWidth(true))
-    })
+        setCodePaneWidth()
+    }
 
-    setContentHeight()
+    setContentSize()
     
-    $(window).resize(setContentHeight)
+    $(window).resize(setContentSize)
     
     bodies.mousedown(function (event) {
         var oldX=event.pageX
