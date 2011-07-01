@@ -397,6 +397,7 @@ $(document).ready(function () {
         target.addClass("picked")
         target.removeClass("other")
         $(bodyWrapper).scrollLeft(0)
+        $(".lastHighlighted").removeClass("lastHighlighted")
         clearHighlight(codePane)
         collapseCodePane()
         refocusScreen()
