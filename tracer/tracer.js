@@ -144,7 +144,8 @@ function refocusScreen()
     //Check the alignment of each visible call
     visibleCalls.each(function(index) {
         var callTable = $(this).children(".callTable").first()
-        var button = $(this).children(".button").first()
+        var buttonRow = $(this).children(".buttonTable").first()
+        //var bodyButton = $(this).children(".body-button").first()
         var callTableMarL = toInt(callTable.css('marginLeft'))
         var fromLeft = $(this).position().left
                         + toInt($(this).css('marginLeft'))
@@ -161,14 +162,17 @@ function refocusScreen()
                 var shiftBy = Math.min($(this).width()-callTable.width(), 
                                         callTableMarL-fromLeft)
                 callTable.css('marginLeft', shiftBy)
-                button.css('marginLeft', shiftBy)
+                buttonRow.css('marginLeft', shiftBy)
+                //bodyButton.css('marginLeft', shiftBy)
             }
             //This call is to the right of the left edge of the screen
             //And not aligned with its left edge
             else if (fromLeft > 0 && callTableMarL > 0) {
                 //Want a minimum margin of 3
-                callTable.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
-                button.css('marginLeft', Math.max(3, callTableMarL-fromLeft))
+                var shiftBy = Math.max(3, callTableMarL-fromLeft)
+                callTable.css('marginLeft', shiftBy)
+                buttonRow.css('marginLeft', shiftBy)
+                //bodyButton.css('marginLeft', shiftBy)
             }
         }
     })
@@ -190,15 +194,19 @@ function makeCall(traceNode, parent) {
     
     var callTable = makeCallTable(traceNode)
 
-    var button = element("div")
+    var button = element("td")
     button.text("-")
-    button.addClass("button")
+    button.addClass("button ec-button")
 
-    var bodyButton = element("div")
-    bodyButton.text("body")
-    bodyButton.addClass("body-button")
+    var bodyButton = element("td")
+    bodyButton.text("(define (f a)\n   ...\n   ...)")
+    bodyButton.addClass("body-button button")
     bodyButton.data({idx:traceNode.srcIdx,
                      span:traceNode.srcSpan})
+
+    var buttonTable = element("table")
+    buttonTable.addClass("buttonTable")
+    var buttonRow = element("tr")
 
     var hidable = []
     
@@ -219,9 +227,16 @@ function makeCall(traceNode, parent) {
     
     lowerDiv.append(childTable)
     call.append(callTable)
-    call.append(bodyButton)
     if (traceNode.children.length!=0)
-        call.append(button)
+        buttonRow.append(button)
+    
+    //The source position and span of check-expect, actual and expected are set to 
+    //0 for identification. Don't have a definition/body for any of these.
+    if(traceNode.srcIdx != 0 && traceNode.srcSpan != 0)
+        buttonRow.append(bodyButton)
+    
+    buttonTable.append(buttonRow)
+    call.append(buttonTable)
     call.append(lowerDiv)
     call.data("expanded",false)
     call.data("hidable",hidable)
@@ -334,7 +349,7 @@ $(document).ready(function () {
     var lastFunctionHighlighted;
     
     //Function names on click
-    $("td.name").add($("div.body-button")).click(function () {
+    $("td.name").add($("td.body-button")).click(function () {
         if (lastFunctionHighlighted == this) {
             lastFunctionHighlighted = false;
             $(".lastHighlighted").removeClass("lastHighlighted")
@@ -352,13 +367,12 @@ $(document).ready(function () {
     })
     
     //makes the expand/collapse buttons work
-    $('.button').bind('click',function(event) {
+    $('.ec-button').bind('click',function(event) {
         thisCall = $(this).parents(".call").first()
         toggleCall(thisCall,"fast")
     })
 
     bodyWrapper.scroll(refocusScreen)
-
     //makes the expandables expand/collapse appropriately
     //and highlight on hover
     $(".expandable").bind("click",function (event) {//expand/collapse
@@ -379,6 +393,8 @@ $(document).ready(function () {
         target.addClass("picked")
         target.removeClass("other")
         $(bodyWrapper).scrollLeft(0)
+        clearHighlight(codePane)
+        collapseCodePane()
         refocusScreen()
     })
 

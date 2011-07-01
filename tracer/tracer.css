@@ -28,6 +28,20 @@ div#middle .column {
     position: relative;
 }
 
+.superparent {
+    overflow-x: visible;
+    width: auto;
+    float: left;
+}
+
+.childTable > tbody > tr > td {
+    vertical-align: top;
+}
+
+.childTableParent {
+    overflow:hidden;
+}
+
 /* Trace */
 
 div#tracerWrapper {
@@ -71,29 +85,37 @@ div.call {
 .background2>table>tbody>tr>td.arg {
     background: #e7ebef; }
 
+td.button {
+    color:white;
+    background:black;
+    vertical-align: middle;
+
+    border: 2px solid black;
+    border-radius: 2px;
+    -moz-border-radius: 2 px;
+
+    font-weight: bold;
+}
+
+td.body-button {
+    font-size: 6px;
+    text-align: left;
+    white-space: pre;
+    float: left;
+}
+
 /* Expand/collapse button */
 
-div.button {
-    color: white;
-    background: black;
-    vertical-align: middle;
-   
-    border: 3px solid black;
-    border-radius: 2px;
-    -moz-border-radius: 2px;
-    
-    font-weight: bold;
+td.ec-button {
     font-size: 15px;
     text-align: center;
 
-    width: 50px;
-    height: 15px;
+    width: 35px;
 }
 
-div.button:hover {
+td.button:hover {
     border-color: gray;
 }
-
 
 /* Call Table */
 
@@ -183,7 +205,16 @@ div#codePane {
 }
 
 .lastHighlighted {
-    background: #ff0;
+    background: #ff0 !important;
+}
+
+.body-button.lastHighlighted {
+    border-color: #ff0 !important;
+    color: black !important;
+}
+
+.body-button.lastHighlighted:hover {
+    border-color: #ffbf80 !important;
 }
 
 span.error {
@@ -220,33 +251,10 @@ div#codePaneButton {
 
 div#codePaneButton:hover {
     font-weight:bold;
-}
-
-/* Scroll Buttons */
-
-div.scrollButton {
-    font-size: 32px;
-    opacity: .3;
-}
-
-div.scrollButton:hover {
-    opacity: 1;
+    background: #e7ebef;
 }
 
 div.expandable:hover {
     font-weight: bold;
 }
 
-.superparent {
-    overflow-x: visible;
-    width: auto;
-    float: left;
-}
-
-.childTable > tbody > tr > td {
-    vertical-align: top;
-}
-
-.childTableParent {
-    overflow:hidden;
-}

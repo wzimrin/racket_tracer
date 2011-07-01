@@ -87,14 +87,14 @@
                 [expected 'expected])
     (syntax-case e ()
       [(_ actualStx expectedStx)
-       #`(begin (define parent-node (create-node 'ce empty empty linum idx span idx span))
+       #`(begin (define parent-node (create-node 'ce empty empty linum idx span 0 0))
                 (check-expect (let ([actual-node (create-node 'actual (list 'actualStx)
                                                               empty
                                                               #,(syntax-line #'actualStx)
                                                               #,(syntax-position #'actualStx)
                                                               #,(syntax-span #'actualStx)
-                                                              #,(syntax-position #'actualStx)
-                                                              #,(syntax-span #'actualStx))])
+                                                              0
+                                                              0)])
                                 (add-kid parent-node actual-node)
                                 (parameterize ([current-call actual-node])
                                   (set-node-result! actual-node actualStx))
@@ -110,8 +110,8 @@
                                                                 #,(syntax-line #'expectedStx)
                                                                 #,(syntax-position #'expectedStx)
                                                                 #,(syntax-span #'expectedStx)
-                                                                #,(syntax-position #'expectedStx)
-                                                                #,(syntax-span #'expectedStx))])
+                                                                0
+                                                                0)])
                                 (add-kid parent-node expected-node)
                                 (parameterize ([current-call expected-node])
                                   (let [(result expectedStx)]
