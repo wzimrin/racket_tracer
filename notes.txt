@@ -1,24 +1,15 @@
 
 
 ***** CURRENT ISSUES*****
-- pretty up body button
-- don't lose the body button
-- make the body word a body button
 - fib or fac demos in addition to factorial demo
 - push to planet
 - heap demo (large deeply nested data structures)
-
-- prettify jump-to-definition
 - planet load line
 - documented examples in planet runnable (fixed but not loaded to planet)
 - (define (foo x) x) --> visual glitch (eric)
 - source code appears on left before jumping to right (chrome) (eric)
 - dragability jerky (eric)
 - dragging sluggish (eric)
-- easy way to expand/contract code window (eric)
-- show whole top bar of code window is clickable (eric)
-- double click to expand or collapse code pane (anywhere on the page)
-- larger target for the close bar of code pane (guillaume)
 - click on argument and highlight arguments (guillaume)
 - code-paste a test case for nodes i have identified are bad (guillaume)
 - show all check-expects, failed in red (guillaume)
@@ -34,7 +25,6 @@
 - documentation --> evaluation tree = false (shriram)
 - whether or not function clicked on in tabbar should open code pane and highlight (danny)
 - language level printer
-- double check browser compatibility error message
 - function in map --> display name as function name not lambda (guillame)
 - ordering of actual and expected in check expects
 - ability to scroll off top and bottom of code pane
@@ -73,11 +63,17 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
-- If tree of traces is empty don't open index.html --> message to the user
-- some way to get to definition of a function (guillaume)
-- margin for the code (guillaume)
-- keep track of what was clicked on highlight --> some way to tie function that you clicked to highlight in code
-- dragability discoverable
+- fixed jump to definition of check expects. (7/1)
+- double click to expand or collapse code pane (anywhere on the page) (6/29)
+- show whole top bar of code window is clickable (eric)(7/1)
+- pretty up body button (7/1)
+- make the body word a body button (7/1)
+- don't lose the body button (7/1)
+- If tree of traces is empty don't open index.html --> message to the user (6/29)
+- some way to get to definition of a function (guillaume) (6/29)
+- margin for the code (guillaume) (6/29)
+- keep track of what was clicked on highlight --> some way to tie function that you clicked to highlight in code (6/29)
+- dragability discoverable (6/29)
 - title for page (6/29)
 - warning on unsupported/untested browsers (6/28)
 - behavior when nothing in the file to trace (6/29)
