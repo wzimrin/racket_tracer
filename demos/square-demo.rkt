@@ -1,5 +1,7 @@
 #lang planet tracer/tracer:1:1
 
+(require htdp/image)
+
 (define (make-webbed-square steps side helper)
   (helper
    0 0 side side
