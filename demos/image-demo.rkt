@@ -68,3 +68,4 @@
                   (list 0 0) (list side 0))))
 
 (make-fractal 3 80)
+
