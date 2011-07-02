@@ -1,5 +1,5 @@
 #lang planet tracer/tracer:1:1
-;foo
+
 (define-struct bhnode (value left right))
 
 (define (insert x h)
@@ -19,32 +19,28 @@
 (define (make-heap ns)
   (foldl insert empty ns))
  
-(define get-min bhnode-value)
-
 (define (remove-min h)
-  
   (local [;makes a new tree from x and the l and r subtrees
           (define (insert-merge x l r)
             ;easy, since no structure changes - simply move values around
             (cond [(andmap 
                     (lambda (y)
-                      ;if x is less than the get-min of all existing subtrees
+                      ;if x is less than the bhnode-value of all existing subtrees
                       (or (not (bhnode? y))
-                          (< x (get-min y))))
+                          (< x (bhnode-value y))))
                     (list l r))
                    ;we can simply put x here - it is a valid tree
                    (make-bhnode x l r)]
                   [;if r is empty or if l is less than r
                    (or (not (bhnode? r))
-                       (< (get-min l) (get-min r)))
+                       (< (bhnode-value l) (bhnode-value r)))
                    ;insert it into l and use l as the new min of the tree
-                   (make-bhnode (get-min l)
+                   (make-bhnode (bhnode-value l)
                                 (insert-merge x (bhnode-left l) (bhnode-right l));we don't insert it into 
                                 r)];r if r is empty because we don't want to change the structure
                   [(or (not (bhnode? l));proceed as above, with l and r flipped
-                       (< (get-min r) (get-min l)))
-                   (make-bhnode (get-min r)
-           
+                       (< (bhnode-value r) (bhnode-value l)))
+                   (make-bhnode (bhnode-value r)
                                 l
                                 (insert-merge x (bhnode-left r) (bhnode-right r)))]))
           (define (left-most h);gets the left-most value (the only one we can easily remove)
@@ -68,7 +64,4 @@
                   (bhnode-left new-h)
                   (bhnode-right new-h))])))
 
-(define heap (make-heap (list 8 4 3 9 1 6 12 14)))
-(check-expect (remove-min heap) (make-heap (list 8 4 3 9 6 12 14)))
-(check-expect (get-min heap) 1)
-(check-expect (map (lambda (x) (add1 x)) (list 1 2 3)) (list 1 2 3))
+(remove-min (make-heap (list 8 4 3 9 1 6 12 14)))

@@ -1,4 +1,4 @@
-#lang planet tracer/tracer
+#lang planet tracer/tracer:1:1
 
 #|
 Shows how check expects are displayed.  Check expects that pass are uninteresting,
