@@ -1,4 +1,4 @@
-#lang planet tracer/tracer
+#lang planet tracer/tracer:1:1
 
 (require 2htdp/image)
 
