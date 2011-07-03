@@ -98,7 +98,7 @@ td.button {
 }
 
 td.body-button {
-    font-size: 6px;
+    /*font-size: px;*/
     text-align: left;
     white-space: pre;
     float: left;

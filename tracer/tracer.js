@@ -199,7 +199,7 @@ function makeCall(traceNode, parent) {
     button.addClass("button ec-button")
 
     var bodyButton = element("td")
-    bodyButton.text("(define (f a)\n   ...\n   ...)")
+    bodyButton.text("Jump to definition")
     bodyButton.addClass("body-button button")
     bodyButton.data({idx:traceNode.srcIdx,
                      span:traceNode.srcSpan})
