@@ -146,7 +146,7 @@ function refocusScreen()
     //Check the alignment of each visible call
     visibleCalls.each(function(index) {
         var callTable = $(this).children(".callTable").first()
-        var buttonRow = $(this).children(".buttonTable").first()
+        var buttonRow = $(this).children(".button")
         //var bodyButton = $(this).children(".body-button").first()
         var callTableMarL = toInt(callTable.css('marginLeft'))
         var fromLeft = $(this).position().left
@@ -196,19 +196,15 @@ function makeCall(traceNode, parent) {
     
     var callTable = makeCallTable(traceNode)
 
-    var button = element("td")
+    var button = element("div")
     button.html("&uArr;")
     button.addClass("button ec-button")
 
-    var bodyButton = element("td")
-    bodyButton.text("Jump to definition")
+    var bodyButton = element("div")
+    bodyButton.text("Highlight Definition")
     bodyButton.addClass("body-button button")
     bodyButton.data({idx:traceNode.srcIdx,
                      span:traceNode.srcSpan})
-
-    var buttonTable = element("table")
-    buttonTable.addClass("buttonTable")
-    var buttonRow = element("tr")
 
     var hidable = []
     
@@ -229,16 +225,14 @@ function makeCall(traceNode, parent) {
     
     lowerDiv.append(childTable)
     call.append(callTable)
+    if(traceNode.srcIdx != 0 && traceNode.srcSpan != 0)
+        call.append(bodyButton)
     if (traceNode.children.length!=0)
-        buttonRow.append(button)
+        call.append(button)
     
     //The source position and span of check-expect, actual and expected are set to 
     //0 for identification. Don't have a definition/body for any of these.
-    if(traceNode.srcIdx != 0 && traceNode.srcSpan != 0)
-        buttonRow.append(bodyButton)
     
-    buttonTable.append(buttonRow)
-    call.append(buttonTable)
     call.append(lowerDiv)
     call.data("expanded",false)
     call.data("hidable",hidable)
@@ -355,7 +349,7 @@ $(document).ready(function () {
     var lastFunctionHighlighted;
     
     //Function names on click
-    $("td.name").add($("td.body-button")).bind('click', function () {
+    $("td.name").add($(".body-button")).bind('click', function () {
         if (lastFunctionHighlighted == this) {
             lastFunctionHighlighted = false;
             $(".lastHighlighted").removeClass("lastHighlighted")

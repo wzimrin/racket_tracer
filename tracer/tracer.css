@@ -85,7 +85,7 @@ div.call {
 .background2>table>tbody>tr>td.arg {
     background: #e7ebef; }
 
-td.button {
+.button {
     color:white;
     background:black;
     vertical-align: middle;
@@ -94,23 +94,32 @@ td.button {
     border-radius: 2px;
     -moz-border-radius: 2 px;
 
-    font-weight: bold;
+    float: top;
+    margin: 3px;
+
+    width:auto;
 }
 
-td.body-button {
+.body-button {
     /*font-size: px;*/
     text-align: left;
-    white-space: pre;
-    float: left;
+    width: 75px;
+    text-align: center;
+    white-space:normal;
+}
+
+.body-button:hover {
+    font-weight: bold;
 }
 
 /* Expand/collapse button */
 
-td.ec-button {
-    font-size: 15px;
+.ec-button {
+    font-size: 21px;
+    font-weight: bold;
     text-align: center;
-    padding-top: 5px;
-    width: 25px;
+    width: 28px;
+    height: 28px;
 }
 
 td.button:hover {
@@ -230,7 +239,7 @@ span.sexp-comment {
 }
 
 span.constant {
-    color: #3cc239;
+    color: #5ce259;
 }
 
 span.string {
@@ -238,11 +247,11 @@ span.string {
 }
 
 span.parenthesis {
-    color: #97452b;
+    color: #b7654b;
 }
 
 span.symbol {
-    color: #6666ff;
+    color: #7788ff;
 }
 
 div#codePaneButton {
