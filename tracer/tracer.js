@@ -124,9 +124,11 @@ function updateCall(html,animate) {
     }
     
     if (expanded) 
-        button.text("-")
+        button.html("&uArr;")
+	    //button.text("-")
     else 
-        button.text("+")        
+	button.html("&dArr;")
+        //button.text("+")        
 }
 
 //Expand/collapses a call
@@ -195,7 +197,7 @@ function makeCall(traceNode, parent) {
     var callTable = makeCallTable(traceNode)
 
     var button = element("td")
-    button.text("-")
+    button.html("&uArr;")
     button.addClass("button ec-button")
 
     var bodyButton = element("td")
