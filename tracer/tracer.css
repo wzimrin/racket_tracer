@@ -19,8 +19,8 @@ body {
     font-family: "dejavu sans mono","courier new","courier","monospace";
 }
 
-body.dragging {
-    cursor: pointer;
+.dragging {
+    cursor: move !important;
 }
 
 div#middle .column {

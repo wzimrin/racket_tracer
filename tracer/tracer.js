@@ -299,13 +299,13 @@ $(document).ready(function () {
     }
     
     //Set the width of the code pane to a new value and animate
-    function setCodePaneWrapperWidth(newWidth) {
+    function setCodePaneWrapperWidth(newWidth,speed) {
         if (codePaneWidth != newWidth) {
             codePaneWidth = newWidth
             codePaneWrapper.animate({"width":newWidth+"%"},
-                                    {duration:"slow",step:setCodePaneWidth})
+                                    {duration:speed,step:setCodePaneWidth})
             bodyWrapper.animate({"width":(100-newWidth)+"%"},
-                                           "slow")
+                                           speed)
         }
     }
 
@@ -313,12 +313,12 @@ $(document).ready(function () {
     var expandedCodePaneWidth = 50
     //Expand the code pane
     function expandCodePane() {
-        setCodePaneWrapperWidth(expandedCodePaneWidth)
+        setCodePaneWrapperWidth(expandedCodePaneWidth,"slow")
         codePaneButton.html("&raquo;")
     }
     //Collapse the code pane
     function collapseCodePane() {
-        setCodePaneWrapperWidth(collapsedCodePaneWidth)
+        setCodePaneWrapperWidth(collapsedCodePaneWidth,"fast")
         codePaneButton.html("&laquo;")
     }
     
@@ -426,6 +426,7 @@ $(document).ready(function () {
         var oldY=event.pageY
         var body = $(document.body)
         body.addClass("dragging")
+        bodies.addClass("dragging")
 
         function moveHandler(event) {
             var newTime = new Date().getTime()
@@ -445,7 +446,7 @@ $(document).ready(function () {
             body.unbind("mousemove",moveHandler)
             body.unbind("mouseup",endHandler)
             body.unbind("mouseleave",endHandler)
-            body.removeClass("dragging")
+            $(".dragging").removeClass("dragging")
             return false
         }
         
