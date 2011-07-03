@@ -121,14 +121,15 @@
 (define-syntax (custom-lambda e)
   (syntax-case e ()
     [(_ args body)
-     (with-syntax ([lambda 'lambda])
-       #'(custom-lambda lambda args body))]
-    [(_ name (arg-expr ...) body)
+     (with-syntax ([lambda 'lambda]
+                   [e e])
+       #'(custom-lambda lambda e args body))]
+    [(_ name orig (arg-expr ...) body)
      #`(lambda (arg-expr ...)
          (let ([n (create-node 'name empty (list arg-expr ...)
                                (current-linum) (current-idx) (current-span)
-                               #,(syntax-position #'body)
-                               #,(syntax-span #'body))])
+                               #,(syntax-position #'orig)
+                               #,(syntax-span #'orig))])
            (add-kid (current-call) n)
            (parameterize ([current-call n])
              (let ([result body])
@@ -136,12 +137,13 @@
                result))))]))
 
 (define-syntax (custom-define e)
-  (syntax-case e ()
+  (syntax-case e (lambda)
     [(_ (fun-expr arg-expr ...) body)
-     #'(define fun-expr
-         (custom-lambda fun-expr (arg-expr ...) body))]
-    [(_ fun-expr (lambda arg-exprs body))
-     #'(custom-define (fun-expr arg-exprs) body)]
+     (with-syntax ([e e])
+       #'(define fun-expr
+           (custom-lambda fun-expr e (arg-expr ...) body)))]
+    [(_ fun-expr (lambda (arg-expr ...) body))
+     #'(custom-define (fun-expr arg-expr ...) body)]
     [(_ id val)
      #'(define id val)]))
 
