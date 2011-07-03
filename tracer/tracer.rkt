@@ -326,7 +326,9 @@
         ;If empty trace generate error message
         (if (equal? empty (node-kids (current-call)))
             (message-box "Error" 
-                         "This file cannot be traced because none of functions defined within it are called. " #f '(ok stop))
+                         "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
+                         #f 
+                         '(ok stop))
             (send-url/contents (page name (trace->json offset)))))]))
 
 #;(port-write-handler 
