@@ -58,7 +58,6 @@ div#tracer {
     white-space: nowrap;
     cursor: pointer;
 }
-
 div.call {
     margin: 3px;
     vertical-align: top;
@@ -108,10 +107,6 @@ div.call {
     white-space:normal;
 }
 
-.body-button:hover {
-    font-weight: bold;
-}
-
 /* Expand/collapse button */
 
 .ec-button {
@@ -159,7 +154,7 @@ td.arg.cell {
     vertical-align: middle;
 }
 
-td.name:hover {
+.hasSource:hover {
     font-weight:bold;
 }
 

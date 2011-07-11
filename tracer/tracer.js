@@ -80,6 +80,8 @@ function makeCallTable(node) {
     nameTD.text(node.name)
     nameTD.addClass("name cell")
     nameTD.data({idx: node.idx, span: node.span, linum: node.linum})
+    if(!(node.idx == 0 && node.span == 0))
+        nameTD.addClass("hasSource")
     row.append(nameTD)
 
     //Formals and actuals
@@ -203,8 +205,13 @@ function makeCall(traceNode, parent) {
     var bodyButton = element("div")
     bodyButton.text("Highlight Definition")
     bodyButton.addClass("body-button button")
-    bodyButton.data({idx:traceNode.srcIdx,
+    if(!(traceNode.srcIdx == 0 && traceNode.srcSpan == 0)) {
+        bodyButton.addClass("hasSource")
+        bodyButton.data({idx:traceNode.srcIdx,
                      span:traceNode.srcSpan})
+        }
+    
+
 
     var hidable = []
     
@@ -225,7 +232,7 @@ function makeCall(traceNode, parent) {
     
     lowerDiv.append(childTable)
     call.append(callTable)
-    if(traceNode.srcIdx != 0 && traceNode.srcSpan != 0)
+    if(bodyButton.hasClass("hasSource")) 
         call.append(bodyButton)
     if (traceNode.children.length!=0)
         call.append(button)
@@ -337,6 +344,7 @@ $(document).ready(function () {
     //Animate to move to new highlighted code if necessary
     function showSpan() {
         var span = codePane.find(".highlight")
+        console.log(span)
         var pos = span.position()
         var height = codePane.height()
         var width = codePane.width()
@@ -349,7 +357,7 @@ $(document).ready(function () {
     var lastFunctionHighlighted;
     
     //Function names on click
-    $("td.name").add($(".body-button")).bind('click', function () {
+    $(".hasSource").bind('click', function () {
         if (lastFunctionHighlighted == this) {
             lastFunctionHighlighted = false;
             $(".lastHighlighted").removeClass("lastHighlighted")
@@ -359,6 +367,8 @@ $(document).ready(function () {
             var target = $(this)
             $(".lastHighlighted").removeClass("lastHighlighted")
             target.addClass("lastHighlighted")
+            console.log("Target Data")
+            console.log(target.data("idx"))
             highlightSpan(codePane,target.data("idx"),target.data("span"))
             expandCodePane()
             showSpan()
