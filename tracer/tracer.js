@@ -372,7 +372,9 @@ $(document).ready(function () {
             console.log(target.data("idx"))
             highlightSpan(codePane,target.data("idx"),target.data("span"))
             expandCodePane()
+            console.log("after expand before show")
             showSpan()
+            console.log("after showSpan")
             lastFunctionHighlighted = this;
         }
     })

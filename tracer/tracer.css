@@ -255,6 +255,7 @@ span.symbol {
 
 div#codePaneButton {
     font-size: 24px;
+    background: white;
 }
 
 div#codePaneButton:hover {
