@@ -77,6 +77,8 @@
 (define current-linum (make-parameter 0))
 (define current-idx (make-parameter 0))
 (define current-span (make-parameter 0))
+(define current-fun (make-parameter #f))
+(define current-app-call (make-parameter empty))
 
 (define-syntax (check-expect-recorder e)
   (with-syntax ([linum (syntax-line e)]
@@ -118,6 +120,25 @@
                                     (set-node-result! expected-node result)
                                     result)))))])))
 
+(define-for-syntax (lambda-body args body name orig fun)
+  #`(let* ([app-call? (eq? #,fun (current-fun))]
+           [n (if app-call?
+                  (struct-copy node (current-app-call)
+                               [src-idx #,(syntax-position orig)]
+                               [src-span #,(syntax-span orig)])
+                  (create-node '#,name empty #,args
+                               0 0 0
+                               #,(syntax-position orig)
+                               #,(syntax-span orig)))]
+           [parent (if app-call?
+                       (current-call)
+                       (current-app-call))])
+      (add-kid parent n)
+      (parameterize ([current-call n])
+        (let ([result #,body])
+          (set-node-result! n result)
+          result))))
+
 (define-syntax (custom-lambda e)
   (syntax-case e ()
     [(_ args body)
@@ -125,23 +146,16 @@
                    [e e])
        #'(custom-lambda lambda e args body))]
     [(_ name orig (arg-expr ...) body)
-     #`(lambda (arg-expr ...)
-         (let ([n (create-node 'name empty (list arg-expr ...)
-                               (current-linum) (current-idx) (current-span)
-                               #,(syntax-position #'orig)
-                               #,(syntax-span #'orig))])
-           (add-kid (current-call) n)
-           (parameterize ([current-call n])
-             (let ([result body])
-               (set-node-result! n result)
-               result))))]))
+     (let ([sym (gensym)])
+       #`(letrec ([#,sym (lambda (arg-expr ...)
+                           #,(lambda-body #'(list arg-expr ...) #'body #'name #'orig sym))])
+           #,sym))]))
 
 (define-syntax (custom-define e)
   (syntax-case e (lambda)
     [(_ (fun-expr arg-expr ...) body)
-     (with-syntax ([e e])
-       #'(define fun-expr
-           (custom-lambda fun-expr e (arg-expr ...) body)))]
+     #`(define (fun-expr arg-expr ...)
+         #,(lambda-body #'(list arg-expr ...) #'body #'fun-expr e #'fun-expr))]
     [(_ fun-expr (lambda (arg-expr ...) body))
      #'(custom-define (fun-expr arg-expr ...) body)]
     [(_ id val)
@@ -154,10 +168,20 @@
      (with-syntax ([linum (syntax-line e)]
                    [idx (syntax-position e)]
                    [span (syntax-span e)])
-     #'(parameterize ([current-linum linum]
-                      [current-idx idx]
-                      [current-span span])
-         (#%app fun-expr arg-expr ...)))]))
+     #'(let* ([fun fun-expr]
+              [args (list arg-expr ...)]
+              [n (create-node 'fun-expr empty args
+                              linum idx span 0 0)]
+              [result (parameterize ([current-linum linum]
+                                     [current-idx idx]
+                                     [current-span span]
+                                     [current-fun fun]
+                                     [current-app-call n])
+                        (apply fun args))])
+         (when (not (empty? (node-kids n)))
+           (set-node-result! n result)
+           (add-kid (current-call) n))
+         result))]))
 
 (define (print-right t)
   (node (node-formal t)
