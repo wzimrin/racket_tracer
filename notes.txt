@@ -1,59 +1,44 @@
-
-
 ***** CURRENT ISSUES*****
-- fib or fac demos in addition to factorial demo
-- push to planet
-- heap demo (large deeply nested data structures)
-- planet load line
-- documented examples in planet runnable (fixed but not loaded to planet)
-- (define (foo x) x) --> visual glitch (eric)
-- source code appears on left before jumping to right (chrome) (eric)
-- dragability jerky (eric)
-- dragging sluggish (eric)
-- click on argument and highlight arguments (guillaume)
-- code-paste a test case for nodes i have identified are bad (guillaume)
-- show all check-expects, failed in red (guillaume)
-- display of check expects. arrow to false is confusing. (guillaume)
-- scroll code with mouse drag (guillaume)
-- wrap long lines in the code (guillaume)
-- scroll with arrows (guillaume)
-- highlighting source location of a lambda on click (guillaume)
+- (7/11) Write up
+    - Data flow
+- Bugs from emails
+- (this week) HOF
+- Printing
+    - function in map --> display name as function name not lambda (guillame)
+    - Dealing with large flat data structures
+- Language levels
+    - Printing
+    - Error checking
+    - How we do let, define etc
+- Check expect
+    - show all check-expects, failed in red (guillaume)
+    - Marking correct check expects
+    - Display of check expect traces
+- GUI
+    - (this week) scroll with arrows (guillaume)
+    - (define (foo x) x) --> visual glitch (eric)
+    - source code appears on left before jumping to right (chrome) (eric)
+    - click on argument and highlight arguments (guillaume)
+- Images
+    - (this week) Images in source code
+- Integration
+    - wescheme (not our issue?)
+    - dr racket (tool --> .plt)
+- Testing
+    - (this week) bootstrap
+    - (7/11) world
+    - (this week) multiple files
 - context of lst in lambda (guillaume)
-- color of code highlight, red means error (guillaume)
 - deleting temp files that are generated (guillaume)
-- not opening a new tab each time (guillaume)
-- documentation --> evaluation tree = false (shriram)
-- whether or not function clicked on in tabbar should open code pane and highlight (danny)
-- language level printer
-- function in map --> display name as function name not lambda (guillame)
-- ordering of actual and expected in check expects
-- ability to scroll off top and bottom of code pane
-- what happens when you error
 - not dying on contracts (vs skipping contracts)
-- multiple files
-- language level sensitive printing (and other issues)
-- display of correct check expects --> highlight subfunctions that are the same
-- testing with large images (equal vs eq? on images)
-- test with images
-- data uri schemes (or not)... but someway to display images on tracer
-- graduated set of demos
-- plumbing for wescheme
-- plumbing for dr racket
-- why line paper
-- Contracts
-- Expand collapse --> up down arrows?
-- testing with bootstrap code
 
 ***** WISHLIST *****
-- Tracing failed check expects
-- Dr Racket highlighting syntax / Correspondence between input/output and code
+- world film strip GUI
+- Play button to animate order of calls in syntax highlights
+- code-paste a test case for nodes i have identified are bad (guillaume)
 - Tracing errors
 - Actual formals
 - Matching parentheses on display on hover(?)
-- Bad printing - use *sl printing - constructor-syntax
-    - Differing syntax on lists at top level. Fix: printer from language level, clear 
-      one is from code other is actual.
-    - Dealing with large flat data structures
 
 ***** THINK ABOUT *****
 - Other arguments de-expand when you shift your focus
@@ -63,7 +48,24 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- whether or not function clicked on in tabbar should open code pane and highlight (danny)
+- documentation --> evaluation tree = false (shriram)
+- images in output
+- color of code highlight, red means error (guillaume)
+- graduated set of demos
+- why line paper
+- Expand collapse --> up down arrows?
+- Tracing failed check expects
+- Dr Racket highlighting syntax / Correspondence between input/output and code
+- ordering of actual and expected in check expects
+- scroll code with mouse drag (guillaume)
+- highlighting source location of a lambda on click (guillaume)
 - fixed jump to definition of check expects. (7/1)
+- fib or fac demos in addition to factorial demo (early 7)
+- push to planet (early 7)
+- heap demo (large deeply nested data structures) (early 7)
+- planet load line (early 7)
+- documented examples in planet runnable (fixed but not loaded to planet) (early 7)
 - double click to expand or collapse code pane (anywhere on the page) (6/29)
 - show whole top bar of code window is clickable (eric)(7/1)
 - pretty up body button (7/1)
