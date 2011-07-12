@@ -416,11 +416,12 @@ $(document).ready(function () {
     setContentSize()
     
     $(window).resize(setContentSize)
-    
-    bodies.mousedown(function (event) {
+
+    function dragHandler(event) {
         var oldX=event.pageX
         var oldY=event.pageY
         var body = $(document.body)
+        var target = $(this)
         body.addClass("dragging")
         bodies.addClass("dragging")
 
@@ -445,11 +446,16 @@ $(document).ready(function () {
             $(".dragging").removeClass("dragging")
             return false
         }
-        
+        bodies.unbind("mousedown",dragHandler)
+        target.mousedown()
+        target.mouseup()
+        bodies.mousedown(dragHandler)
         body.mousemove(moveHandler)
         body.mouseup(endHandler)
         body.mouseleave(endHandler)
         return false
-    })
+    }
+    
+    bodies.mousedown(dragHandler)
 })
 
