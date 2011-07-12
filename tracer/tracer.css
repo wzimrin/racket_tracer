@@ -24,9 +24,10 @@ body {
 }
 
 div#middle .column {
-    float: right;
+    /*float: right;*/
     position: relative;
 }
+
 
 .superparent {
     overflow-x: visible;
@@ -194,6 +195,7 @@ ul.tabs > li.other:hover {
 /* Code Pane */
 
 div#codePaneWrapper {
+    float: right;
     background: black;
 }
 
