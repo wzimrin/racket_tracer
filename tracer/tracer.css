@@ -24,7 +24,7 @@ body {
 }
 
 div#middle .column {
-    float: left;
+    float: right;
     position: relative;
 }
 
@@ -193,6 +193,10 @@ ul.tabs > li.other:hover {
 
 /* Code Pane */
 
+div#codePaneWrapper {
+    background: black;
+}
+
 div#codePane {
     width: 100%;
     background: black;
@@ -261,4 +265,9 @@ div#codePaneButton:hover {
 div.expandable:hover {
     font-weight: bold;
 }
+
+.hidden {
+    display: none
+}
+
 

@@ -1,4 +1,5 @@
 ***** CURRENT ISSUES*****
+- currently able to click on calls without source location
 - (7/11) Write up
     - Data flow
 - Bugs from emails
@@ -15,6 +16,7 @@
     - Marking correct check expects
     - Display of check expect traces
 - GUI
+    - clickable when can't drag (display still too small)
     - (this week) scroll with arrows (guillaume)
     - (define (foo x) x) --> visual glitch (eric)
     - source code appears on left before jumping to right (chrome) (eric)
@@ -34,6 +36,10 @@
 
 ***** WISHLIST *****
 - world film strip GUI
+    - What if there's no to-draw --> major change to GUI
+    - how do you display stop-when?
+    - which worlds do you display?
+    - is the focus the drawn world? Or the world itself?
 - Play button to animate order of calls in syntax highlights
 - code-paste a test case for nodes i have identified are bad (guillaume)
 - Tracing errors

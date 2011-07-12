@@ -127,10 +127,8 @@ function updateCall(html,animate) {
     
     if (expanded) 
         button.html("&uArr;")
-	    //button.text("-")
     else 
-	button.html("&dArr;")
-        //button.text("+")        
+        button.html("&dArr;")
 }
 
 //Expand/collapses a call
@@ -297,16 +295,21 @@ $(document).ready(function () {
     //                                      EVENTS
     // -------------------------------------------------------------------------
     
+    var hideAnimateDuration = 200
     function setCodePaneWidth() {
         codePane.width(codePaneWrapper.width()+codePane.width()-codePane.outerWidth(true))
     }
     
     //Set the width of the code pane to a new value and animate
-    function setCodePaneWrapperWidth(newWidth,speed) {
+    function setCodePaneWrapperWidth(newWidth,speed, arrow) {
         if (codePaneWidth != newWidth) {
             codePaneWidth = newWidth
             codePaneWrapper.animate({"width":newWidth+"%"},
-                                    {duration:speed,step:setCodePaneWidth})
+                                    {duration:speed, 
+                                    complete: function() {
+                                        setCodePaneWidth()
+                                        codePane.removeClass("hidden")
+                                        codePaneButton.html(arrow)}})
             bodyWrapper.animate({"width":(100-newWidth)+"%"},
                                            speed)
         }
@@ -316,13 +319,13 @@ $(document).ready(function () {
     var expandedCodePaneWidth = 50
     //Expand the code pane
     function expandCodePane() {
-        setCodePaneWrapperWidth(expandedCodePaneWidth,"slow")
-        codePaneButton.html("&raquo;")
+        codePane.addClass("hidden")
+        setCodePaneWrapperWidth(expandedCodePaneWidth,"slow", "&raquo;")
     }
     //Collapse the code pane
     function collapseCodePane() {
-        setCodePaneWrapperWidth(collapsedCodePaneWidth,"fast")
-        codePaneButton.html("&laquo;")
+        codePane.addClass("hidden")
+        setCodePaneWrapperWidth(collapsedCodePaneWidth,"fast", "&laquo")
     }
     
     //Expand and collapse codePane on click 
@@ -338,8 +341,6 @@ $(document).ready(function () {
         return false;
     })
     
-    //Begin with a collapsed code pane
-    collapseCodePane()
     
     //Animate to move to new highlighted code if necessary
     function showSpan() {
@@ -375,10 +376,6 @@ $(document).ready(function () {
             lastFunctionHighlighted = this;
         }
     })
-    
-    /*.dblclick(function() { 
-        console.log('dblclick')
-        $(this).click()})*/
     
     //makes the expand/collapse buttons work
     $('.ec-button').bind('click',function(event) {
@@ -416,15 +413,24 @@ $(document).ready(function () {
     first.trigger("click")
     
     function setContentSize() {
+        
         $(".column").height($(window).height()-$("div#tabbar").outerHeight()
                             -2*parseInt($(document.body).css("margin-top")))
-        codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
-                        +codePane.height()-codePane.outerHeight(true))
+        
+        console.log(codePane)
+       codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)+codePane.height()-codePane.outerHeight(true))
         setCodePaneWidth()
+        console.log("code pane height: " + codePane.height())
     }
 
+
+    console.log("codePane height before: " + codePane.height())
     setContentSize()
-    
+    console.log("codePane height after: " + codePane.height())
+    console.log(codePane)
+   $(window).trigger("resize") 
+    //Begin with a collapsed code pane
+    //collapseCodePane()
     $(window).resize(setContentSize)
     
     bodies.mousedown(function (event) {
