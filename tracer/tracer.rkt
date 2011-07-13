@@ -143,13 +143,9 @@
 (define-syntax (custom-lambda e)
   (syntax-case e ()
     [(_ args body)
-     (with-syntax ([lambda 'lambda]
-                   [e e])
-       #'(custom-lambda lambda e args body))]
-    [(_ name orig (arg-expr ...) body)
      (let ([sym (gensym)])
-       #`(letrec ([#,sym (lambda (arg-expr ...)
-                           #,(lambda-body #'(list arg-expr ...) #'body #'name #'orig sym))])
+       #`(letrec ([#,sym (lambda args
+                                    #,(lambda-body #'(list . args) #'body #'lambda e sym))])
            (procedure-rename #,sym 'lambda)))]))
 
 (define-syntax (custom-define e)
