@@ -257,7 +257,9 @@
         (parameterize ([pretty-print-columns width]
                        [pretty-print-depth depth]
                        [constructor-style-printing #t])
-          (pretty-write (print-convert x) p))
+          (if (procedure? x)
+              (display (object-name x) p)            
+              (pretty-write (print-convert x) p)))
         ;return what was printed
         (hasheq 'type "value"
                 'value (get-output-string p)))))
