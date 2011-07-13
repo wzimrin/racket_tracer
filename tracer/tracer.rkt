@@ -1,7 +1,7 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local check-expect let* letrec image?])
+                    #%app define lambda require #%module-begin let local check-expect let* letrec image? λ])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
                              define lambda require let local image?]])
@@ -33,7 +33,8 @@
 (provide [rename-out (app-recorder #%app)
                      (check-expect-recorder check-expect)
                      (custom-define define)
-                     (custom-lambda lambda)])
+                     (custom-lambda lambda)
+                     (custom-lambda λ)])
 ;(provide app-recorder)
 (provide [all-from-out lang/htdp-intermediate-lambda])
 (provide [rename-out #;(isl:define define)
