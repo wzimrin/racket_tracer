@@ -78,12 +78,22 @@ div.call {
     border-color: white;
 }
 
+.passed-ce {
+    background: #9e9 !important;
+    border-color: #9e9 !important;
+}
+
 .background1>table>tbody>tr>td.arg {
     background: #f6f8f9;
 }
 
 .background2>table>tbody>tr>td.arg {
-    background: #e7ebef; }
+    background: #e7ebef;
+}
+
+.passed-ce>table>tbody>tr>td.arg {
+    background: #cfc;
+}
 
 .button {
     color:white;

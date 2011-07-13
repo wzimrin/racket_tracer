@@ -192,6 +192,8 @@ function makeCall(traceNode, parent) {
         call.addClass("background2")
     else
         call.addClass("background1")
+    if (traceNode.passedCe)
+        call.addClass("passed-ce")
     call.addClass("call")
     
     var callTable = makeCallTable(traceNode)
@@ -263,11 +265,21 @@ $(document).ready(function () {
     var codePaneWrapper = $("#codePaneWrapper")
     var codePaneButton = $("#codePaneButton")
     for (var i = 0; i < code.length; i++) {
-        for (var j = 0; j < code[i].text.length; j++) {
-            var el = element("span")
-            el.text(code[i].text[j])
+        if (code[i].text) {
+            for (var j = 0; j < code[i].text.length; j++) {
+                var el = element("span")
+                el.text(code[i].text[j])
+                el.addClass(code[i].type)
+                el.addClass("codeChar")
+                el.addClass("codeElem")
+                codePane.append(el)
+            }
+        } else {
+            var el = element("img")
+            el.attr("src",code[i].src)
             el.addClass(code[i].type)
-            el.addClass("codeChar")
+            el.addClass("codeImg")
+            el.addClass("codeElem")
             codePane.append(el)
         }
     }

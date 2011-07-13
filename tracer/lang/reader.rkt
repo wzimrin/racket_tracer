@@ -4,7 +4,9 @@
 (lambda (in rd stx?)
   (let*-values ([(offset) (+ (file-position in) 1)]
                 [(in in-copy) (clone-port in)]
-                [(port-text) (port->flattened-string in-copy)])
+                [(port-text) 
+                 (port->list read-char-or-special in-copy)
+                 #;(port->flattened-string in-copy)])
     (port-count-lines! in)
     (let ([reloc-in (relocate-input-port in 1 1 offset)])
       (port-count-lines! reloc-in)
@@ -23,7 +25,7 @@
                      (syntax/loc mod
                        ;added name after modbeg
                        (module name lang* (modbegin filename
-                                                    port-text
+                                                    'port-text
                                                     offset . body)))]))])
         (if stx? r (syntax->datum r))))))
 

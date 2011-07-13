@@ -1,10 +1,11 @@
 #lang racket
 
 (require [except-in lang/htdp-intermediate-lambda
-                    #%app define lambda require #%module-begin let local check-expect let* letrec image? λ])
+                    #%app define lambda require #%module-begin let local
+                    check-expect let* letrec image? λ and or if])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
-                             define lambda require let local image?]])
+                             define lambda require let local image? and or if]])
 (require test-engine/racket-tests)
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
@@ -40,6 +41,9 @@
 (provide [rename-out #;(isl:define define)
                      #;(isl:lambda lambda)
                      (isl:require require)
+                     (isl:and and)
+                     (isl:or or)
+                     (isl:if if)
                      ;(ds-recorder define-struct)
                      (isl:image? image?)
                      #;(isl:let let)])
@@ -99,9 +103,7 @@
     (syntax-case e ()
       [(_ actualStx expectedStx)
        #`(begin 
-           (displayln "break2")
            (define parent-node (create-node 'ce #f empty empty linum idx span 0 0))
-           (displayln "break3")
            (check-expect 
             (let ([actual-node (create-node 'actual 
                                             #f
@@ -113,11 +115,9 @@
                                             0
                                             0)])
               (add-kid parent-node actual-node)
-              (displayln "break4")
               (parameterize ([current-call actual-node])
                 (set-node-result! actual-node actualStx))
               ;Check if actual and expected are the same
-              (displayln "break5")
               (if (apply equal?
                          (map node-result
                               (node-kids parent-node)))
@@ -129,11 +129,9 @@
                                [ret #`(add-to-hash correct-ce-hash
                                                    #,key
                                                    (list (node-result actual-node) . #,args))])
-                          (displayln "break11")
                           ret)))
                   ;When ce is false, create a ce node
                   (begin
-                    (displayln "break6")
                     (set-node-result! parent-node #f)
                     (set-node-kids! parent-node (reverse (node-kids parent-node)))
                     (add-kid (current-call) parent-node)))
@@ -147,14 +145,10 @@
                                               #,(syntax-span #'expectedStx)
                                               0
                                               0)])
-              (displayln "break7")
               (add-kid parent-node expected-node)
-              (displayln "break9")
               (parameterize ([current-call expected-node])
-                (displayln "break10")
                 (let [(result expectedStx)]
                   (set-node-result! expected-node result)
-                  (displayln "break8")
                   result)))))])))
 
 (define-for-syntax (lambda-body args body name orig fun)
@@ -231,10 +225,13 @@
 (define (get-base64 img)
   (base64-encode (convert img 'png-bytes)))
 
+(define (uri-string img)
+  (string-append "data:image/png;charset=utf-8;base64,"
+                 (bytes->string/utf-8 (get-base64 img))))
+
 (define (json-image img)
   (hasheq 'type "image"
-          'src (string-append "data:image/png;charset=utf-8;base64,"
-                              (bytes->string/utf-8 (get-base64 img)))))
+          'src (uri-string img)))
 
 
 (define (print-list lst)
@@ -335,7 +332,7 @@
             (node-src-span t)
             'children
             (map node->json (reverse (node-kids t)))
-            'passed-ce
+            'passedCe
             (is-passed-ce? t))))
     
 
@@ -347,21 +344,45 @@
 
 (define (lex-port p actual)
   (let-values ([(str type junk start end) (scheme-lexer p)])
+    #|(printf "~S~n" str)
+    (displayln start)
+    (displayln end)
+    (printf "~S~n" actual)
+    (displayln (first actual))
+    (displayln "------------")|#
     (if (eq? type 'eof)
         empty
-        (cons (list type (substring actual (sub1 start) (sub1 end)))
-              (lex-port p actual)))))
+        (cons (list type (take actual (- end start)));(substring actual (sub1 start) (sub1 end)))
+              (lex-port p (drop actual (- end start)))))))
+
+(define (colors src)
+  (apply append
+         (map (lambda (lst)
+                (let ([type (format "~a" (first lst))])
+                  (if (andmap char? (second lst))
+                      (list (hasheq 'type type
+                                    'text (list->string (second lst))))
+                      (map (lambda (val)
+                             (if (image? val)
+                                 (hasheq 'type type
+                                         'src (uri-string val))
+                                 (hasheq 'type type
+                                         'text (format "~a" val))))
+                           (second lst)))))
+              (lex-port (let-values ([(in out) (make-pipe-with-specials)])
+                          (for ([x src])
+                            (if (char? x)
+                                (display x out)
+                                (write-special x out)))
+                          (close-output-port out)
+                          in)
+                        src))))
 
 (define-syntax-rule (trace->json offset)
-  (local [(define (colors src)
-            (map (lambda (lst)
-                   (hasheq 'type (format "~a" (first lst))
-                           'text (format "~a" (second lst))))
-                 (lex-port (open-input-string src) src)))]
-    (format "var theTrace = ~a\nvar code = ~a\nvar codeOffset = ~a"
-            (jsexpr->json (node->json (current-call)))
-            (jsexpr->json (colors (unbox src)))
-            offset)))
+  (format "var theTrace = ~a\nvar code = ~a\nvar codeOffset = ~a"
+          (jsexpr->json (node->json (current-call)))
+          (jsexpr->json (colors (unbox src)))
+          offset))
 
 
 (define-for-syntax (print-expanded d)

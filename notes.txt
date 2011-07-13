@@ -1,6 +1,4 @@
 ***** CURRENT ISSUES*****
-- (7/11) Write up
-    - Data flow
 - Bugs from emails
 - Printing
     - Name of node from application of function that was an argument (a-func vs. my-add example)
@@ -50,6 +48,7 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- Data flow (7/13)
 - function in map --> display name as function name not lambda (guillame)(7/13)
 - (this week) scroll with arrows (guillaume)
 - (7/11) world (7/12)
