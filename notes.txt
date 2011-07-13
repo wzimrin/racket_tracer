@@ -1,11 +1,9 @@
 ***** CURRENT ISSUES*****
-- currently able to click on calls without source location
 - (7/11) Write up
     - Data flow
 - Bugs from emails
-- (this week) HOF
 - Printing
-    - function in map --> display name as function name not lambda (guillame)
+    - Name of node from application of function that was an argument (a-func vs. my-add example)
     - Dealing with large flat data structures
 - Language levels
     - Printing
@@ -17,7 +15,6 @@
     - Display of check expect traces
 - GUI
     - clickable when can't drag (display still too small)
-    - (this week) scroll with arrows (guillaume)
     - (define (foo x) x) --> visual glitch (eric)
     - source code appears on left before jumping to right (chrome) (eric)
     - click on argument and highlight arguments (guillaume)
@@ -28,7 +25,6 @@
     - dr racket (tool --> .plt)
 - Testing
     - (this week) bootstrap
-    - (7/11) world
     - (this week) multiple files
 - context of lst in lambda (guillaume)
 - deleting temp files that are generated (guillaume)
@@ -54,6 +50,12 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- function in map --> display name as function name not lambda (guillame)(7/13)
+- (this week) scroll with arrows (guillaume)
+- (7/11) world (7/12)
+- scroll bar stays on right side of screen (7/12)
+- (this week) HOF (7/12)
+- currently able to click on calls without source location (7/12)
 - whether or not function clicked on in tabbar should open code pane and highlight (danny)
 - documentation --> evaluation tree = false (shriram)
 - images in output
