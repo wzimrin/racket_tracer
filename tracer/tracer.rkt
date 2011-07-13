@@ -343,31 +343,41 @@
   (build-list (- end start) (lambda (x) (+ start x))))
 
 (define (lex-port p actual)
-  (let-values ([(str type junk start end) (scheme-lexer p)])
-    #|(printf "~S~n" str)
-    (displayln start)
-    (displayln end)
-    (printf "~S~n" actual)
-    (displayln (first actual))
-    (displayln "------------")|#
+  (let*-values ([(str type junk start end) (scheme-lexer p)]
+                [(span) (and start end
+                             (if (equal? str "λ")
+                                 1
+                                 (- end start)))])
     (if (eq? type 'eof)
         empty
-        (cons (list type (take actual (- end start)));(substring actual (sub1 start) (sub1 end)))
-              (lex-port p (drop actual (- end start)))))))
+        (cons (list type (take actual span))
+              (lex-port p (drop actual span))))))
 
 (define (colors src)
   (apply append
          (map (lambda (lst)
                 (let ([type (format "~a" (first lst))])
-                  (if (andmap char? (second lst))
-                      (list (hasheq 'type type
+                  (if (andmap (lambda (x)
+                                (and (char? x)
+                                     (not (equal? x #\λ))))
+                              (second lst))
+                      (list (hasheq 'type "string"
+                                    'color type
                                     'text (list->string (second lst))))
                       (map (lambda (val)
-                             (if (image? val)
-                                 (hasheq 'type type
-                                         'src (uri-string val))
-                                 (hasheq 'type type
-                                         'text (format "~a" val))))
+                             (cond 
+                               [(image? val)
+                                (hasheq 'type "image"
+                                         'color type
+                                         'src (uri-string val))]
+                               [(equal? val #\λ)
+                                (hasheq 'type "html"
+                                        'color type
+                                        'html "&lambda;")]
+                               [else
+                                (hasheq 'type 'string
+                                        'color type
+                                        'text (format "~a" val))]))
                            (second lst)))))
               (lex-port (let-values ([(in out) (make-pipe-with-specials)])
                           (for ([x src])
@@ -413,7 +423,7 @@
         body ...
         (run-tests)
         (display-results)
-        (display correct-ce-hash)
+        ;(display correct-ce-hash)
         ;If empty trace generate error message
         (if (equal? empty (node-kids (current-call)))
             (message-box "Error" 

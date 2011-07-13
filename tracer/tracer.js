@@ -265,20 +265,27 @@ $(document).ready(function () {
     var codePaneWrapper = $("#codePaneWrapper")
     var codePaneButton = $("#codePaneButton")
     for (var i = 0; i < code.length; i++) {
-        if (code[i].text) {
+        if (code[i].type=="string") {
             for (var j = 0; j < code[i].text.length; j++) {
                 var el = element("span")
                 el.text(code[i].text[j])
-                el.addClass(code[i].type)
+                el.addClass(code[i].color)
                 el.addClass("codeChar")
                 el.addClass("codeElem")
                 codePane.append(el)
             }
-        } else {
+        } else if (code[i].type=="image") {
             var el = element("img")
             el.attr("src",code[i].src)
-            el.addClass(code[i].type)
+            el.addClass(code[i].color)
             el.addClass("codeImg")
+            el.addClass("codeElem")
+            codePane.append(el)
+        } else if (code[i].type=="html") {
+            var el = element("span")
+            el.html(code[i].html)
+            el.addClass(code[i].color)
+            el.addClass("codeChar")
             el.addClass("codeElem")
             codePane.append(el)
         }
