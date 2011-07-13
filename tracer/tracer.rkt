@@ -150,7 +150,7 @@
      (let ([sym (gensym)])
        #`(letrec ([#,sym (lambda (arg-expr ...)
                            #,(lambda-body #'(list arg-expr ...) #'body #'name #'orig sym))])
-           #,sym))]))
+           (procedure-rename #,sym 'lambda)))]))
 
 (define-syntax (custom-define e)
   (syntax-case e (lambda)
