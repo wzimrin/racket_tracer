@@ -47,8 +47,10 @@
 
 (provide show-trace trace->json #%module-begin)
 
+
+
 ;the actual struct that stores our data
-(struct node (name formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
+(struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
 
 (struct wrapper (value id) #:transparent)
 
@@ -64,21 +66,27 @@
 
 ;creates a node with no result or children
 ;takes a name, a formals list, and an actuals list
-(define (create-node n f a l i s s-i s-s)
-  (node n f 'no-result a empty l i s s-i s-s))
+(define (create-node n func f a l i s s-i s-s)
+  (node n func f 'no-result a empty l i s s-i s-s))
 
 ;adds a kid k to node n
 (define (add-kid n k)
   (set-node-kids! n (cons k (node-kids n))))
 
 ;the current definition we are in
-(define current-call (make-parameter (create-node 'top-level empty empty 0 0 0 0 0)))
+(define current-call (make-parameter (create-node 'top-level #f empty empty 0 0 0 0 0)))
 
 (define current-linum (make-parameter 0))
 (define current-idx (make-parameter 0))
 (define current-span (make-parameter 0))
 (define current-fun (make-parameter #f))
 (define current-app-call (make-parameter empty))
+
+(define correct-ce-hash (make-hash))
+
+(define (add-to-hash h key value)
+  (hash-set! h key (set-add (hash-ref h key (set))
+                            value)))
 
 (define-syntax (check-expect-recorder e)
   (with-syntax ([linum (syntax-line e)]
@@ -89,36 +97,64 @@
                 [expected 'expected])
     (syntax-case e ()
       [(_ actualStx expectedStx)
-       #`(begin (define parent-node (create-node 'ce empty empty linum idx span 0 0))
-                (check-expect (let ([actual-node (create-node 'actual (list 'actualStx)
-                                                              empty
-                                                              #,(syntax-line #'actualStx)
-                                                              #,(syntax-position #'actualStx)
-                                                              #,(syntax-span #'actualStx)
-                                                              0
-                                                              0)])
-                                (add-kid parent-node actual-node)
-                                (parameterize ([current-call actual-node])
-                                  (set-node-result! actual-node actualStx))
-                                (when (not (apply equal?
-                                                  (map node-result
-                                                       (node-kids parent-node))))
-                                  (set-node-result! parent-node #f)
-                                  (set-node-kids! parent-node (reverse (node-kids parent-node)))
-                                  (add-kid (current-call) parent-node))
-                                (node-result actual-node))
-                              (let ([expected-node (create-node 'expected (list 'expectedStx)
-                                                                empty
-                                                                #,(syntax-line #'expectedStx)
-                                                                #,(syntax-position #'expectedStx)
-                                                                #,(syntax-span #'expectedStx)
-                                                                0
-                                                                0)])
-                                (add-kid parent-node expected-node)
-                                (parameterize ([current-call expected-node])
-                                  (let [(result expectedStx)]
-                                    (set-node-result! expected-node result)
-                                    result)))))])))
+       #`(begin 
+           (displayln "break2")
+           (define parent-node (create-node 'ce #f empty empty linum idx span 0 0))
+           (displayln "break3")
+           (check-expect 
+            (let ([actual-node (create-node 'actual 
+                                            #f
+                                            (list 'actualStx)
+                                            empty
+                                            #,(syntax-line #'actualStx)
+                                            #,(syntax-position #'actualStx)
+                                            #,(syntax-span #'actualStx)
+                                            0
+                                            0)])
+              (add-kid parent-node actual-node)
+              (displayln "break4")
+              (parameterize ([current-call actual-node])
+                (set-node-result! actual-node actualStx))
+              ;Check if actual and expected are the same
+              (displayln "break5")
+              (if (apply equal?
+                         (map node-result
+                              (node-kids parent-node)))
+                  ;When ce is true, add to hash
+                  #,(let* ([datum (syntax-e #'actualStx)])
+                      (when (pair? datum)
+                        (let* ([key (car datum)]
+                               [args (cdr datum)]
+                               [ret #`(add-to-hash correct-ce-hash
+                                                   #,key
+                                                   (list (node-result actual-node) . #,args))])
+                          (displayln "break11")
+                          ret)))
+                  ;When ce is false, create a ce node
+                  (begin
+                    (displayln "break6")
+                    (set-node-result! parent-node #f)
+                    (set-node-kids! parent-node (reverse (node-kids parent-node)))
+                    (add-kid (current-call) parent-node)))
+              (node-result actual-node))
+            (let ([expected-node (create-node 'expected 
+                                              #f
+                                              (list 'expectedStx)
+                                              empty
+                                              #,(syntax-line #'expectedStx)
+                                              #,(syntax-position #'expectedStx)
+                                              #,(syntax-span #'expectedStx)
+                                              0
+                                              0)])
+              (displayln "break7")
+              (add-kid parent-node expected-node)
+              (displayln "break9")
+              (parameterize ([current-call expected-node])
+                (displayln "break10")
+                (let [(result expectedStx)]
+                  (set-node-result! expected-node result)
+                  (displayln "break8")
+                  result)))))])))
 
 (define-for-syntax (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]
@@ -126,7 +162,7 @@
                   (struct-copy node (current-app-call)
                                [src-idx #,(syntax-position orig)]
                                [src-span #,(syntax-span orig)])
-                  (create-node '#,name empty #,args
+                  (create-node '#,name #,fun empty #,args
                                0 0 0
                                #,(syntax-position orig)
                                #,(syntax-span orig)))]
@@ -144,7 +180,8 @@
     [(_ args body)
      (with-syntax ([lambda 'lambda]
                    [e e])
-       #'(custom-lambda lambda e args body))]
+       #'(custom-lambda lambda e args body)
+       #`(custom-lambda 'lambda e args body))]
     [(_ name orig (arg-expr ...) body)
      (let ([sym (gensym)])
        #`(letrec ([#,sym (lambda (arg-expr ...)
@@ -170,7 +207,7 @@
                    [span (syntax-span e)])
      #'(let* ([fun fun-expr]
               [args (list arg-expr ...)]
-              [n (create-node 'fun-expr empty args
+              [n (create-node 'fun-expr fun empty args
                               linum idx span 0 0)]
               [result (parameterize ([current-linum linum]
                                      [current-idx idx]
@@ -256,12 +293,18 @@
         (parameterize ([pretty-print-columns width]
                        [pretty-print-depth depth]
                        [constructor-style-printing #t])
-          (if (procedure? x)
+          (if (and (procedure? x) (object-name x))
               (display (object-name x) p)            
               (pretty-write (print-convert x) p)))
         ;return what was printed
         (hasheq 'type "value"
                 'value (get-output-string p)))))
+
+(define (is-passed-ce? n)
+  (let* ([key (node-func n)]
+         [exp-val (cons (node-result n) (node-actual n))])
+  (set-member? (hash-ref correct-ce-hash key (set)) 
+               exp-val)))
 
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
@@ -295,7 +338,9 @@
             'srcSpan
             (node-src-span t)
             'children
-            (map node->json (reverse (node-kids t))))))
+            (map node->json (reverse (node-kids t)))
+            'passed-ce
+            (is-passed-ce? t))))
     
 
 ; Why is this a macro and not a function?  Because make it a function
@@ -351,6 +396,7 @@
         body ...
         (run-tests)
         (display-results)
+        (display correct-ce-hash)
         ;If empty trace generate error message
         (if (equal? empty (node-kids (current-call)))
             (message-box "Error" 
@@ -374,3 +420,7 @@
                  (displayln "pph lambda false if")
                  (displayln val)
                (pretty-write val p))))))
+;The code we want the above to evaluate to is
+#;(add-to-hash correct-ce-hash
+               function-name
+               (list (node-result actual-node) (+ sub-arg1 sub-arg2) arg2 arg3))
