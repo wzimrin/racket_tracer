@@ -89,9 +89,11 @@
 
 (define correct-ce-hash (make-hash))
 
-(define (add-to-hash h key value)
-  (hash-set! h key (set-add (hash-ref h key (set))
-                            value)))
+(define (add-to-hash h key idx span)
+  (hash-set! h key (list idx span))) 
+           #|  
+             (set-add (hash-ref h key (set))
+                            (list idx span))))|#
 
 (define-syntax (check-expect-recorder e)
   (with-syntax ([linum (syntax-line e)]
@@ -124,11 +126,12 @@
                   ;When ce is true, add to hash
                   #,(let* ([datum (syntax-e #'actualStx)])
                       (when (pair? datum)
-                        (let* ([key (car datum)]
+                        (let* ([func (car datum)]
                                [args (cdr datum)]
                                [ret #`(add-to-hash correct-ce-hash
-                                                   #,key
-                                                   (list (node-result actual-node) . #,args))])
+                                                   (list #,func (node-result actual-node) (list . #,args))
+                                                   idx
+                                                   span)])
                           ret)))
                   ;When ce is false, create a ce node
                   (begin
@@ -293,11 +296,11 @@
         (hasheq 'type "value"
                 'value (get-output-string p)))))
 
-(define (is-passed-ce? n)
-  (let* ([key (node-func n)]
-         [exp-val (cons (node-result n) (node-actual n))])
-  (set-member? (hash-ref correct-ce-hash key (set)) 
-               exp-val)))
+(define (ce-idx-span n)
+  (let* ([key (list (node-func n) (node-result n)  (node-actual n))]
+         [l (hash-ref correct-ce-hash key (list #f #f))])
+    (values (first l) (second l))))
+
 
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
@@ -306,34 +309,38 @@
             (map (lambda (x)
                    (format-nicely x depth 40 literal))
                  lst))]
-    (hasheq 'name
-            (format "~a" (node-name t))
-            'formals
-            (format-list (node-formal t) #f #f)
-            'formalsShort
-            (format-list (node-formal t) 2 #f)
-            'actuals
-            (format-list (node-actual t) #f #t)
-            'actualsShort
-            (format-list (node-actual t) 2 #t)
-            'result
-            (format-nicely (node-result t) #f 40 #t)
-            'resultShort
-            (format-nicely (node-result t) 2 40 #t)
-            'linum
-            (node-linum t)
-            'idx
-            (node-idx t)
-            'span
-            (node-span t)
-            'srcIdx
-            (node-src-idx t)
-            'srcSpan
-            (node-src-span t)
-            'children
-            (map node->json (reverse (node-kids t)))
-            'passedCe
-            (is-passed-ce? t))))
+    (let-values ([(ce-idx ce-span) (ce-idx-span t)])
+      (hasheq 'name
+              (format "~a" (node-name t))
+              'formals
+              (format-list (node-formal t) #f #f)
+              'formalsShort
+              (format-list (node-formal t) 2 #f)
+              'actuals
+              (format-list (node-actual t) #f #t)
+              'actualsShort
+              (format-list (node-actual t) 2 #t)
+              'result
+              (format-nicely (node-result t) #f 40 #t)
+              'resultShort
+              (format-nicely (node-result t) 2 40 #t)
+              'linum
+              (node-linum t)
+              'idx
+              (node-idx t)
+              'span
+              (node-span t)
+              'srcIdx
+              (node-src-idx t)
+              'srcSpan
+              (node-src-span t)
+              'children
+              (map node->json (reverse (node-kids t)))
+              'ceIdx
+              ce-idx
+              'ceSpan
+              ce-span
+              ))))
     
 
 ; Why is this a macro and not a function?  Because make it a function
@@ -423,7 +430,7 @@
         body ...
         (run-tests)
         (display-results)
-        ;(display correct-ce-hash)
+        (display correct-ce-hash)
         ;If empty trace generate error message
         (if (equal? empty (node-kids (current-call)))
             (message-box "Error" 
