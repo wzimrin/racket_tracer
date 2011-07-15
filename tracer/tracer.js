@@ -120,15 +120,18 @@ function updateCall(html,animate) {
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var button = html.data("button")
+    var icon = html.data("buttonIcon")
     
     for (var i = 0; i < hidable.length; i++) {
         setHide(hidable[i],!expanded,animate)
     }
     
-    if (expanded) 
-        button.html("&uArr;")
+    if (expanded) {
+        console.log(icon)
+        icon.attr("src", upImageSrc)
+    }
     else 
-        button.html("&dArr;")
+        icon.attr("src", downImageSrc)
 }
 
 //Expand/collapses a call
@@ -207,11 +210,16 @@ function makeCall(traceNode, parent) {
     var callTable = makeCallTable(traceNode)
 
     var childrenButton = element('td')
-    childrenButton.html("&uArr;")
+    var upButtonImage = element('img')
+    upButtonImage.attr("src",upImageSrc)
+    childrenButton.append(upButtonImage)
+    //childrenButton.html("&uArr;")
     childrenButton.addClass("button ec-button")
 
     var bodyButton = element('td')
-    bodyButton.text("Highlight Definition")
+    var toDefImage = element('img')
+    toDefImage.attr("src", toDefImageSrc)
+    bodyButton.append(toDefImage)
     bodyButton.addClass("to-src-button button")
     if(!(traceNode.srcIdx == 0 && traceNode.srcSpan == 0)) {
         bodyButton.addClass("hasSource")
@@ -256,6 +264,7 @@ function makeCall(traceNode, parent) {
     call.data("expanded",false)
     call.data("hidable",hidable)
     call.data("button",childrenButton)
+    call.data("buttonIcon", upButtonImage)
 
     updateCall(call)
     return call
