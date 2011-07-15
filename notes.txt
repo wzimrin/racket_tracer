@@ -10,15 +10,12 @@
     - How we do let, define etc
 - Check expect
     - show all check-expects, failed in red (guillaume)
-    - Marking correct check expects
     - Display of check expect traces
 - GUI
     - clickable when can't drag (display still too small)
     - (define (foo x) x) --> visual glitch (eric)
     - source code appears on left before jumping to right (chrome) (eric)
     - click on argument and highlight arguments (guillaume)
-- Images
-    - (this week) Images in source code
 - Integration
     - wescheme (not our issue?)
     - dr racket (tool --> .plt)
@@ -49,6 +46,9 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- Marking correct check expects (7/14)
+- Images
+    - (this week) Images in source code
 - Data flow (7/13)
 - function in map --> display name as function name not lambda (guillame)(7/13)
 - (this week) scroll with arrows (guillaume)

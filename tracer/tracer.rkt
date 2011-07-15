@@ -407,18 +407,19 @@
           (syntax->datum (local-expand d 'module (list)))))
 
 (define (page name json)
-    (let ([title (string-append name " Trace")]
-           [tracerCSS 
-           (port->string (open-input-file (resolve-planet-path 
-                                           '(planet tracer/tracer/tracer.css))))]
-          [jQuery 
-           (port->string (open-input-file (resolve-planet-path
-                                           '(planet tracer/tracer/jquery.js))))]
-          [tracerJS 
-           (port->string (open-input-file (resolve-planet-path
-                                           '(planet tracer/tracer/tracer.js))))]
-          [treeOfTrace json])
-      (include-template "index.html")))
+  (let ([title (string-append name " Trace")]
+        [tracerCSS 
+         (port->string (open-input-file (resolve-planet-path 
+                                         '(planet tracer/tracer/tracer.css))))]
+        ;[upButton 
+        [jQuery 
+         (port->string (open-input-file (resolve-planet-path
+                                         '(planet tracer/tracer/jquery.js))))]
+        [tracerJS 
+         (port->string (open-input-file (resolve-planet-path
+                                         '(planet tracer/tracer/tracer.js))))]
+        [treeOfTrace json])
+    (include-template "index.html")))
 
 
 ;adds trace->json and send-url to the end of the file
