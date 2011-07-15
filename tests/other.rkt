@@ -1,4 +1,4 @@
-#lang planet tracer/tracer
+#lang planet tracer/tracer:1:3
 
 (define (fib x)
   (if (< x 2)

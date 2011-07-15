@@ -78,9 +78,21 @@ div.call {
     border-color: white;
 }
 
-.passed-ce {
-    background: #9e9 !important;
-    border-color: #9e9 !important;
+.passed-ce.background2 {
+    background: #83c363 !important;
+    border-color: #83c363 !important;
+}
+
+.passed-ce.background1 {
+    background: #98dc76;
+    border-color: #98dc76;
+}
+
+.passed-ce.background2>table>tbody>tr>td.arg {
+    background: #98dc76;
+}
+.passed-ce.background1>table>tbody>tr>td.arg {
+    background: #c7f6b0;
 }
 
 .background1>table>tbody>tr>td.arg {
@@ -91,9 +103,6 @@ div.call {
     background: #e7ebef;
 }
 
-.passed-ce>table>tbody>tr>td.arg {
-    background: #cfc;
-}
 
 .button {
     color:white;
@@ -110,8 +119,8 @@ div.call {
     width:auto;
 }
 
-.body-button {
-    /*font-size: px;*/
+.to-src-button {
+    font-size: 12px;
     text-align: left;
     width: 75px;
     text-align: center;
@@ -221,20 +230,19 @@ div#codePane {
 }
 
 .highlight {
-    background: #FF0;
+    background: #ffff9e /*#FF0*/;
 }
 
 .lastHighlighted {
-    background: #ff0 !important;
+    background: #ffff9e /*#FF0*/;
+    border-color: #ffff9e /*#ff0*/;
 }
 
-.body-button.lastHighlighted {
-    border-color: #ff0 !important;
+.to-src-button.lastHighlighted {
     color: black !important;
 }
-
-.body-button.lastHighlighted:hover {
-    border-color: #ffbf80 !important;
+.to-src-button.lastHighlighted:hover {
+    border-color: #ffffdb !important;
 }
 
 span.error {

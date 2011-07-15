@@ -192,19 +192,27 @@ function makeCall(traceNode, parent) {
         call.addClass("background2")
     else
         call.addClass("background1")
-    if (traceNode.passedCe)
+
+    var ceButton;
+    if (traceNode.ceIdx) {
         call.addClass("passed-ce")
+        ceButton = element('td')
+        ceButton.text("CE")
+        ceButton.addClass("button to-src-button hasSource")
+        ceButton.data({idx: traceNode.ceIdx,
+                       span: traceNode.ceSpan})
+    }
     call.addClass("call")
     
     var callTable = makeCallTable(traceNode)
 
-    var button = element("div")
-    button.html("&uArr;")
-    button.addClass("button ec-button")
+    var childrenButton = element('td')
+    childrenButton.html("&uArr;")
+    childrenButton.addClass("button ec-button")
 
-    var bodyButton = element("div")
+    var bodyButton = element('td')
     bodyButton.text("Highlight Definition")
-    bodyButton.addClass("body-button button")
+    bodyButton.addClass("to-src-button button")
     if(!(traceNode.srcIdx == 0 && traceNode.srcSpan == 0)) {
         bodyButton.addClass("hasSource")
         bodyButton.data({idx:traceNode.srcIdx,
@@ -232,10 +240,14 @@ function makeCall(traceNode, parent) {
     
     lowerDiv.append(childTable)
     call.append(callTable)
+    var buttonTable = element('table')
     if(bodyButton.hasClass("hasSource")) 
-        call.append(bodyButton)
+        buttonTable.append(bodyButton)
     if (traceNode.children.length!=0)
-        call.append(button)
+        buttonTable.append(childrenButton)
+    if (traceNode.ceIdx)
+        buttonTable.append(ceButton)
+    call.append(buttonTable)
     
     //The source position and span of check-expect, actual and expected are set to 
     //0 for identification. Don't have a definition/body for any of these.
@@ -243,7 +255,7 @@ function makeCall(traceNode, parent) {
     call.append(lowerDiv)
     call.data("expanded",false)
     call.data("hidable",hidable)
-    call.data("button",button)
+    call.data("button",childrenButton)
 
     updateCall(call)
     return call

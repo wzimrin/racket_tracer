@@ -1,4 +1,5 @@
 ***** CURRENT ISSUES*****
+- Double clicking on code pane highlights a line
 - Bugs from emails
 - Printing
     - Name of node from application of function that was an argument (a-func vs. my-add example)
