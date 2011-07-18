@@ -24,10 +24,8 @@ body {
 }
 
 div#middle .column {
-    /*float: right;*/
     position: relative;
 }
-
 
 .superparent {
     overflow-x: visible;
@@ -35,15 +33,8 @@ div#middle .column {
     float: left;
 }
 
-.childTable > tbody > tr > td {
-    vertical-align: top;
-}
-
-.childTableParent {
-    overflow:hidden;
-}
-
 /* Trace */
+
 
 div#tracerWrapper {
     float: left;
@@ -60,63 +51,78 @@ div#tracer {
     cursor: pointer;
 }
 div.call {
-    margin: 3px;
+    margin: 1px;
     vertical-align: top;
     font-size:12px;
     -moz-border-radius: 3px;
     border-radius: 3px;
     border-style: solid;
+    border-width: 1px;
 }
 
-.background1 {
-    background: #e7ebef; 
-    border-color: #e7ebef;
+.childTD {
+    vertical-align: top
 }
 
-.background2 {
-    background: white;
-    border-color: white;
+.childTableParent {
+    overflow:hidden;
 }
 
-.passed-ce.background2 {
-    background: #83c363 !important;
-    border-color: #83c363 !important;
-}
+/* Background and Arg coloring */
+    .background1 {
+        background: #e7ebef; 
+        border-color: #e7ebef;
+    }
 
-.passed-ce.background1 {
-    background: #98dc76;
-    border-color: #98dc76;
-}
+    .background2 {
+        background: white;
+        border-color: white;
+    }
 
-.passed-ce.background2>table>tbody>tr>td.arg {
-    background: #98dc76;
-}
-.passed-ce.background1>table>tbody>tr>td.arg {
-    background: #c7f6b0;
-}
+    .background1>table>tbody>tr>td.arg {
+        background: #f6f8f9;
+    }
 
-.background1>table>tbody>tr>td.arg {
-    background: #f6f8f9;
-}
+    .background2>table>tbody>tr>td.arg {
+        background: #e7ebef;
+    }
 
-.background2>table>tbody>tr>td.arg {
-    background: #e7ebef;
-}
+/* Passed Check Expects */
+    .passed-ce.background1 {
+        background: #98dc76;
+        border-color: #98dc76;
+    }
 
+    .passed-ce.background2 {
+        background: #83c363 !important;
+        border-color: #83c363 !important;
+    }
+
+    .passed-ce.background1>table>tbody>tr>td.arg {
+        background: #c7f6b0;
+    }
+
+    .passed-ce.background2>table>tbody>tr>td.arg {
+        background: #98dc76;
+    }
+
+/* Buttons */
 
 .button {
-    color:white;
-    background:black;
+    /*color:white;
+    background:black;*/
+    background: pink;
     vertical-align: middle;
 
-    border: 2px solid black;
+    border: 1px solid black;
     border-radius: 2px;
     -moz-border-radius: 2 px;
-
+    padding: 0px;
+    width: 25px;
     float: top;
-    margin: 3px;
+    /*margin: 3px;*/
 
-    width:auto;
+    /*width:auto;*/
 }
 
 .to-src-button {
@@ -128,14 +134,6 @@ div.call {
 
 /* Expand/collapse button */
 
-.ec-button {
-    font-size: 21px;
-    font-weight: bold;
-    text-align: center;
-    width: 28px;
-    height: 28px;
-}
-
 td.button:hover {
     border-color: gray;
 }
@@ -143,7 +141,7 @@ td.button:hover {
 /* Call Table */
 
 .callTable {
-    border-spacing: 5px;
+    border-spacing: 5px 2px;
 }
 
 .callTableShifted {
@@ -157,7 +155,7 @@ td.button:hover {
 
 .arg > div {
     text-align:left;
-    padding: 5px;
+    padding: 3px;
     margin-left:auto;
     margin-right:auto;
     width:auto;
