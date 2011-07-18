@@ -14,7 +14,10 @@
    sodipodi:version="0.32"
    inkscape:version="0.46"
    sodipodi:docname="upImage.svg"
-   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   inkscape:export-filename="/home/jmiranda/tracer/racket_tracer/tracer/upImage.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs2487">
     <inkscape:perspective
@@ -35,14 +38,14 @@
      objecttolerance="10"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
+     inkscape:zoom="19.340355"
      inkscape:cx="375"
-     inkscape:cy="405.71429"
+     inkscape:cy="520"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g3257"
      showgrid="false"
-     inkscape:window-width="641"
-     inkscape:window-height="719"
+     inkscape:window-width="1920"
+     inkscape:window-height="1125"
      inkscape:window-x="0"
      inkscape:window-y="25" />
   <metadata
@@ -65,12 +68,12 @@
        transform="matrix(1,0,0,-1,-151.87475,902.8492)">
       <rect
          transform="scale(1,-1)"
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.76599485;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.75769293;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          id="rect3259"
          width="24.242308"
-         height="24.776453"
-         x="514.7536"
-         y="-382.87524" />
+         height="24.242308"
+         x="514.74945"
+         y="-382.33694" />
       <path
          transform="matrix(8.2773691e-2,0,0,-8.4665617e-2,513.63094,398.95755)"
          d="M 235.53888,401.68887 L 160,401.68887 L 84.46112,401.68887 L 122.23056,336.27028 L 160,270.85169 L 197.76944,336.27028 L 235.53888,401.68887 z"

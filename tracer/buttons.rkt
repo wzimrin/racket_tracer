@@ -54,9 +54,11 @@
             (make-pen foreground-color source-stroke-width
                       "solid" "butt" "miter")))
   
-(define normal-background (square button-size "solid" normal-background-color))
+(define normal-background
+  (crop 0 0 button-size button-size (square button-size "solid" normal-background-color)))
 
-(define highlight-background (square button-size "solid" highlight-background-color))
+(define highlight-background
+  (crop 0 0 button-size button-size (square button-size "solid" highlight-background-color)))
 
 (define normal-up-arrow 
   (overlay (rounded-triangle triangle-size triangle-stroke-width "solid" normal-foreground-color)

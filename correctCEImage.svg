@@ -60,27 +60,23 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <g
-       id="g3263"
-       transform="translate(35.089308,-62.639416)">
-      <rect
-         y="394.04205"
-         x="349.93195"
-         height="24.776234"
-         width="24.243206"
-         id="rect3169"
-         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.76600546;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-      <rect
-         y="398.47046"
-         x="354.26511"
-         height="15.919386"
-         width="15.576902"
-         id="rect2387"
-         style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:2.10771036;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-      <path
-         id="path3197"
-         d="M 357.47145,406.72702 L 361.52537,410.58241 C 361.52537,410.58241 365.90361,401.67218 371.5791,399.1876"
-         style="fill:none;fill-rule:evenodd;stroke:#46bc21;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-    </g>
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.76600546;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect3169"
+       width="24.243206"
+       height="24.776234"
+       x="385.02124"
+       y="331.40265" />
+    <rect
+       style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:2.108;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect2387"
+       width="15.576902"
+       height="15.919386"
+       x="389.3544"
+       y="335.83105" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#46bc21;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 392.56076,344.0876 L 396.61468,347.94299 C 396.61468,347.94299 400.99292,339.03276 406.66841,336.54818"
+       id="path3197" />
   </g>
 </svg>

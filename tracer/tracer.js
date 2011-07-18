@@ -248,6 +248,7 @@ function makeCall(traceNode, parent) {
 
     for (var i = 0; i < traceNode.children.length; i++) {
         var cell = element('td')
+        cell.addClass("childTD")
         collapsedDiv = makeCall(traceNode.children[i],call);
         cell.append(collapsedDiv)
         lowerRow.append(cell);
