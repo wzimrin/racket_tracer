@@ -393,7 +393,9 @@ $(document).ready(function () {
             expandCodePane(function(){})
     })
 
-    codePane.dblclick(function () {
+    codePane.mousedown(false)
+    
+    codePane.click(function () {
         codePaneButton.click()
         return false;
     })
