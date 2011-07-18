@@ -115,6 +115,7 @@ div.call {
 
     float: top;
     margin: 3px;
+    padding: 0;
 
     width:auto;
 }
@@ -127,14 +128,6 @@ div.call {
 }
 
 /* Expand/collapse button */
-
-.ec-button {
-    font-size: 21px;
-    font-weight: bold;
-    text-align: center;
-    width: 28px;
-    height: 28px;
-}
 
 td.button:hover {
     border-color: gray;
