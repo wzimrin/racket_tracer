@@ -120,18 +120,17 @@ function updateCall(html,animate) {
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var button = html.data("button")
-    var icon = html.data("buttonIcon")
+    var buttonImg = button.children("img")
     
     for (var i = 0; i < hidable.length; i++) {
         setHide(hidable[i],!expanded,animate)
     }
     
-    if (expanded) {
-        console.log(icon)
-        icon.attr("src", upImageSrc)
-    }
+    if (expanded) 
+        buttonImg.attr("src", upImageSrc)
     else 
-        icon.attr("src", downImageSrc)
+        buttonImg.attr("src", downImageSrc)
+
 }
 
 //Expand/collapses a call
@@ -183,6 +182,20 @@ function refocusScreen()
     })
 }
 
+function addIcon(container, src, srcSel ) {
+    var icon = element("img")
+    icon.attr("src", src)
+    icon.data("otherSrc", srcSel)
+    container.append(icon)
+}
+
+function swapIcon(img)
+{
+    var src = img.attr("src")
+    img.attr("src", img.data("otherSrc"))
+    img.data("otherSrc", src)
+}
+
 //----- BUILDING CALLS -----
 
 //Makes an expandedCall: delete button, function, formals, actuals and result
@@ -196,11 +209,10 @@ function makeCall(traceNode, parent) {
     else
         call.addClass("background1")
 
-    var ceButton;
+    var ceButton = element("td")
     if (traceNode.ceIdx) {
         call.addClass("passed-ce")
-        ceButton = element('td')
-        ceButton.text("CE")
+        addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
         ceButton.addClass("button to-src-button hasSource")
         ceButton.data({idx: traceNode.ceIdx,
                        span: traceNode.ceSpan})
@@ -209,17 +221,12 @@ function makeCall(traceNode, parent) {
     
     var callTable = makeCallTable(traceNode)
 
-    var childrenButton = element('td')
-    var upButtonImage = element('img')
-    upButtonImage.attr("src",upImageSrc)
-    childrenButton.append(upButtonImage)
-    //childrenButton.html("&uArr;")
+    var childrenButton = element("td")
+    addIcon(childrenButton, upImageSrc, upImageSrc)
     childrenButton.addClass("button ec-button")
 
     var bodyButton = element('td')
-    var toDefImage = element('img')
-    toDefImage.attr("src", toDefImageSrc)
-    bodyButton.append(toDefImage)
+    addIcon(bodyButton, toDefImageSrc, toDefImageSelSrc)
     bodyButton.addClass("to-src-button button")
     if(!(traceNode.srcIdx == 0 && traceNode.srcSpan == 0)) {
         bodyButton.addClass("hasSource")
@@ -264,7 +271,6 @@ function makeCall(traceNode, parent) {
     call.data("expanded",false)
     call.data("hidable",hidable)
     call.data("button",childrenButton)
-    call.data("buttonIcon", upButtonImage)
 
     updateCall(call)
     return call
@@ -395,7 +401,6 @@ $(document).ready(function () {
     //Animate to move to new highlighted code if necessary
     function showSpan() {
         var span = codePane.find(".highlight")
-        console.log(span)
         var pos = span.position()
         var height = codePane.height()
         var width = codePane.width()
@@ -411,20 +416,19 @@ $(document).ready(function () {
     $(".hasSource").bind('click', function () {
         if (lastFunctionHighlighted == this) {
             lastFunctionHighlighted = false;
+            swapIcon($(".lastHighlighted").children("img"))
             $(".lastHighlighted").removeClass("lastHighlighted")
             clearHighlight(codePane)
             collapseCodePane()
         } else {
             var target = $(this)
+            swapIcon($(".lastHighlighted").children("img"))
             $(".lastHighlighted").removeClass("lastHighlighted")
             target.addClass("lastHighlighted")
-            console.log("Target Data")
-            console.log(target.data("idx"))
+            swapIcon(target.children("img"))
             highlightSpan(codePane,target.data("idx"),target.data("span"))
             expandCodePane(showSpan)
-            console.log("after expand before show")
             //showSpan()
-            console.log("after showSpan")
             lastFunctionHighlighted = this;
         }
     })
@@ -456,6 +460,7 @@ $(document).ready(function () {
         target.addClass("picked")
         target.removeClass("other")
         $(bodyWrapper).scrollLeft(0)
+        swapIcon($(".lastHighlighted").children("img"))
         $(".lastHighlighted").removeClass("lastHighlighted")
         clearHighlight(codePane)
         collapseCodePane()
@@ -469,17 +474,12 @@ $(document).ready(function () {
         $(".column").height($(window).height()-$("div#tabbar").outerHeight()
                             -2*parseInt($(document.body).css("margin-top")))
         
-        console.log(codePane)
        codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)+codePane.height()-codePane.outerHeight(true))
         setCodePaneWidth()
-        console.log("code pane height: " + codePane.height())
     }
 
 
-    console.log("codePane height before: " + codePane.height())
     setContentSize()
-    console.log("codePane height after: " + codePane.height())
-    console.log(codePane)
    $(window).trigger("resize") 
     //Begin with a collapsed code pane
     //collapseCodePane()
