@@ -112,21 +112,21 @@ div.call {
 }
 
 .failed-ce.background1 {
-    background: #900;
-    border-color: #900;
+    background: #b00;
+    border-color: #b00;
 }
 
 .failed-ce.background2 {
-    background: #700 !important;
-    border-color: #700 !important;
+    background: #900 !important;
+    border-color: #900 !important;
 }
 
 .failed-ce.background1>table>tbody>tr>td.arg {
-    background: #700;
+    background: #900;
 }
 
 .failed-ce.background2>table>tbody>tr>td.arg {
-    background: #500;
+    background: #700;
 }
 
 

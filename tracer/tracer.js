@@ -240,10 +240,8 @@ function makeCall(traceNode, parent) {
         bodyButton.addClass("hasSource")
         bodyButton.data({idx:traceNode.srcIdx,
                      span:traceNode.srcSpan})
-        }
+    }
     
-
-
     var hidable = []
     
     var lowerDiv = element("div")
