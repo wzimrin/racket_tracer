@@ -186,6 +186,8 @@ function addIcon(container, src, srcSel ) {
     var icon = element("img")
     icon.attr("src", src)
     icon.data("otherSrc", srcSel)
+    //icon.height(imageSize)
+    //icon.width(imageSize)
     container.append(icon)
 }
 
@@ -211,8 +213,14 @@ function makeCall(traceNode, parent) {
 
     var ceButton = element("td")
     if (traceNode.ceIdx) {
-        call.addClass("passed-ce")
-        addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
+        if (traceNode.ceCorrect) {
+            call.addClass("passed-ce")
+            addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
+        }
+        else {
+            call.addClass("failed-ce")
+            addIcon(ceButton, failedCEImageSrc, failedCEImageSelSrc)
+        }
         ceButton.addClass("button to-src-button hasSource")
         ceButton.data({idx: traceNode.ceIdx,
                        span: traceNode.ceSpan})
@@ -348,10 +356,11 @@ $(document).ready(function () {
         if (!first)
             first = li
         li.text("check-expect")
-        li.addClass("other check-expect-top-level toplevel")
+        li.addClass("other check-expect-top-level")
         ul.append(li)
+        console.log("after ul append")
         
-        var ceTable = element("table")
+       /* var ceTable = element("table")
         var firstDiv = element("div")
 
         for(var j = 0; j < ceTrace.children.length; j++) {
@@ -369,16 +378,16 @@ $(document).ready(function () {
             console.log("before first div")
             if(j==0)
                 firstDiv = exp
-        }
-        li.data("child", firstDiv)
-        $("#ceMenu").append(ceTable)
+        }*/
+        //li.data("child", firstDiv)
+        //$("#ceMenu").append(ceTable)
         
 
-        //var exp = makeCall(ceTrace,tabs)
+        var exp = makeCall(ceTrace,tabs)
         //$(exp).css({background: "black"})
-        //exp.addClass("toplevel")
-        //li.data("child",exp)
-        //bodies.append(exp)
+        exp.addClass("toplevel")
+        li.data("child",exp)
+        bodies.append(exp)
     }
 
     // -------------------------------------------------------------------------

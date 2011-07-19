@@ -1,5 +1,5 @@
 /* William Zimrin and Jeanette Miranda
-6/2011
+   6/2011
 
 Whole Page
 Tracer
@@ -86,48 +86,72 @@ div.call {
 }
 
 /* Background and Arg coloring */
-    .background1 {
-        background: #e7ebef; 
-        border-color: #e7ebef;
-    }
+.background1 {
+    background: #e7ebef; 
+    border-color: #e7ebef;
+}
 
-    .background2 {
-        background: white;
-        border-color: white;
-    }
+.background2 {
+    background: white;
+    border-color: white;
+}
 
-    .background1>table>tbody>tr>td.arg {
-        background: #f6f8f9;
-    }
+.background1>table>tbody>tr>td.arg {
+    background: #f6f8f9;
+}
 
-    .background2>table>tbody>tr>td.arg {
-        background: #e7ebef;
-    }
+.background2>table>tbody>tr>td.arg {
+    background: #e7ebef;
+}
 
 /* Passed Check Expects */
-    .passed-ce.background1 {
-        background: #98dc76;
-        border-color: #98dc76;
-    }
+.passed-ce.background1 {
+    background: #98dc76;
+    border-color: #98dc76;
+}
 
-    .passed-ce.background2 {
-        background: #83c363 !important;
-        border-color: #83c363 !important;
-    }
+.passed-ce.background2 {
+    background: #83c363 !important;
+    border-color: #83c363 !important;
+}
 
-    .passed-ce.background1>table>tbody>tr>td.arg {
-        background: #c7f6b0;
-    }
+.passed-ce.background1>table>tbody>tr>td.arg {
+    background: #c7f6b0;
+}
 
-    .passed-ce.background2>table>tbody>tr>td.arg {
-        background: #98dc76;
-    }
+.passed-ce.background2>table>tbody>tr>td.arg {
+    background: #98dc76;
+}
+
+/* Failed Check Expects */
+.failed-ce>table>tbody>tr>td {
+    color: white;
+}
+
+.failed-ce.background1 {
+    background: #900;
+    border-color: #900;
+}
+
+.failed-ce.background2 {
+    background: #700 !important;
+    border-color: #700 !important;
+}
+
+.failed-ce.background1>table>tbody>tr>td.arg {
+    background: #700;
+}
+
+.failed-ce.background2>table>tbody>tr>td.arg {
+    background: #500;
+}
+
 
 /* Buttons */
 
 .button {
     /*color:white;
-    background:black;*/
+      background:black;*/
     background: pink;
     vertical-align: middle;
 
@@ -135,18 +159,8 @@ div.call {
     border-radius: 2px;
     -moz-border-radius: 2 px;
     padding: 0px;
-    width: 25px;
     float: top;
-    /*margin: 3px;*/
-
-    /*width:auto;*/
-}
-
-.to-src-button {
-    font-size: 12px;
-    text-align: left;
-    text-align: center;
-    white-space:normal;
+    padding: 0;
 }
 
 /* Expand/collapse button */
