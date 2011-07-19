@@ -148,13 +148,13 @@ function refocusScreen()
     //Check the alignment of each visible call
     visibleCalls.each(function(index) {
         var callTable = $(this).children(".callTable").first()
-        var buttonRow = $(this).children(".button")
+        var buttonTable = $(this).children(".buttonTable")
         //var bodyButton = $(this).children(".body-button").first()
         var callTableMarL = toInt(callTable.css('marginLeft'))
         var fromLeft = $(this).position().left
                         + toInt($(this).css('marginLeft'))
                         + callTableMarL
-                        - $("div#tracerWrapper").scrollLeft()
+                        - $(wrapper).scrollLeft()
         
         //only move callTables that are less wide than the current width
         //of the call (will this condition always be true?)
@@ -166,7 +166,7 @@ function refocusScreen()
                 var shiftBy = Math.min($(this).width()-callTable.width(), 
                                         callTableMarL-fromLeft)
                 callTable.css('marginLeft', shiftBy)
-                buttonRow.css('marginLeft', shiftBy)
+                buttonTable.css('marginLeft', shiftBy)
                 //bodyButton.css('marginLeft', shiftBy)
             }
             //This call is to the right of the left edge of the screen
@@ -175,7 +175,7 @@ function refocusScreen()
                 //Want a minimum margin of 3
                 var shiftBy = Math.max(3, callTableMarL-fromLeft)
                 callTable.css('marginLeft', shiftBy)
-                buttonRow.css('marginLeft', shiftBy)
+                buttonTable.css('marginLeft', shiftBy)
                 //bodyButton.css('marginLeft', shiftBy)
             }
         }
@@ -257,6 +257,7 @@ function makeCall(traceNode, parent) {
     lowerDiv.append(childTable)
     call.append(callTable)
     var buttonTable = element('table')
+    buttonTable.addClass("buttonTable")
     if(bodyButton.hasClass("hasSource")) 
         buttonTable.append(bodyButton)
     if (traceNode.children.length!=0)
@@ -286,12 +287,16 @@ $(document).ready(function () {
     }
 
     var tabs = $("#tabbar")
-    var bodyWrapper = $("#tracerWrapper")
+    //var bodyWrapper = $("#tracerWrapper")
+    var bodyWrapper = $("#wrapper")
     var bodies = $("#tracer")
+    var tracerWrapper = $("#tracerWrapper")
 
     var codePane = $("#codePane")
     var codePaneWrapper = $("#codePaneWrapper")
     var codePaneButton = $("#codePaneButton")
+
+
     for (var i = 0; i < code.length; i++) {
         if (code[i].type=="string") {
             for (var j = 0; j < code[i].text.length; j++) {
@@ -337,6 +342,44 @@ $(document).ready(function () {
         li.data("child",exp)
         bodies.append(exp)
     }
+    
+    var li = element("li")
+    if (ceTrace.children.length > 0) {
+        if (!first)
+            first = li
+        li.text("check-expect")
+        li.addClass("other check-expect-top-level toplevel")
+        ul.append(li)
+        
+        var ceTable = element("table")
+        var firstDiv = element("div")
+
+        for(var j = 0; j < ceTrace.children.length; j++) {
+            console.log("beginning j for loop")
+            var ceRow = element("tr")
+            ceRow.text(ceTrace.children[j].children[0].name + " "
+                        + ceTrace.children[j].children[1].name)
+            ceRow.addClass("check-expect")
+            console.log("before exp")
+            var exp = makeCall(ceTrace.children[j], tabs)
+            exp.addClass("toplevel")
+            bodies.append(exp)
+            ceTable.append(ceRow)
+            ceRow.data("child", exp)
+            console.log("before first div")
+            if(j==0)
+                firstDiv = exp
+        }
+        li.data("child", firstDiv)
+        $("#ceMenu").append(ceTable)
+        
+
+        //var exp = makeCall(ceTrace,tabs)
+        //$(exp).css({background: "black"})
+        //exp.addClass("toplevel")
+        //li.data("child",exp)
+        //bodies.append(exp)
+    }
 
     // -------------------------------------------------------------------------
     //                                      EVENTS
@@ -357,7 +400,6 @@ $(document).ready(function () {
                                     complete: function() {
                                         setCodePaneWidth()
                                         codePane.removeClass("hidden")
-                                        //codePane.animate({"opacity":1, duration: 100})
                                         codePaneButton.html(arrow)
                                         onComplete()}})
             bodyWrapper.animate({"width":(100-newWidth)+"%"},
@@ -371,16 +413,12 @@ $(document).ready(function () {
     var expandedCodePaneWidth = 50
     //Expand the code pane
     function expandCodePane(onComplete) {
-        //codePane.addClass("hidden")
-        //codePane.animate({"opacity":0, duration: 100})
         setCodePaneWrapperWidth(expandedCodePaneWidth, "slow", "&raquo;", 
                         onComplete)
         //onComplete()
     }
     //Collapse the code pane
     function collapseCodePane() {
-        //codePane.addClass("hidden")
-        //codePane.animate({"opacity":0, duration: 100})
         setCodePaneWrapperWidth(collapsedCodePaneWidth,"fast", "&laquo",
             function(){})
     }
@@ -442,12 +480,21 @@ $(document).ready(function () {
         toggleCall(thisCall,"fast")
     })
 
-    bodyWrapper.scroll(refocusScreen)
+    tracerWrapper.scroll(refocusScreen)
     //makes the expandables expand/collapse appropriately
     //and highlight on hover
     $(".expandable").bind("click",function (event) {//expand/collapse
         toggleExpandable($(this))
     })
+
+    $('.check-expect').bind('click', function(event) {
+        target = $(this)
+        var child = target.data("child")
+        $(".toplevel").hide()
+        child.show()
+        
+    })
+
 
     //makes the tabs switch what is displayed and
     //highlight on hover
@@ -460,9 +507,21 @@ $(document).ready(function () {
         var oldPicked = $("ul.tabs li.picked")
         oldPicked.removeClass("picked")
         oldPicked.addClass("other")
+
+        if(oldPicked.hasClass("check-expect-top-level")) {
+            $("#ceMenu").hide()
+            tracerWrapper.width("100%")
+        }
+        else if (target.hasClass("check-expect-top-level")) {
+            $("#ceMenu").width("10%")
+            $("#ceMenu").show()
+            tracerWrapper.width("90%")
+        }
+
         target.addClass("picked")
         target.removeClass("other")
-        $(bodyWrapper).scrollLeft(0)
+
+        $(tracerWrapper).scrollLeft(0)
         swapIcon($(".lastHighlighted").children("img"))
         $(".lastHighlighted").removeClass("lastHighlighted")
         clearHighlight(codePane)
@@ -473,7 +532,6 @@ $(document).ready(function () {
     first.trigger("click")
     
     function setContentSize() {
-        
         $(".column").height($(window).height()-$("div#tabbar").outerHeight()
                             -2*parseInt($(document.body).css("margin-top")))
         
@@ -489,6 +547,7 @@ $(document).ready(function () {
     $(window).resize(setContentSize)
 
     function dragHandler(event) {
+        console.log("drag handler")
         var oldX=event.pageX
         var oldY=event.pageY
         var body = $(document.body)
@@ -497,20 +556,22 @@ $(document).ready(function () {
         bodies.addClass("dragging")
 
         function moveHandler(event) {
+            console.log("move handler")
             var newTime = new Date().getTime()
             var newX = event.pageX
             var newY = event.pageY
-            bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
-            bodyWrapper.scrollTop(bodyWrapper.scrollTop()-newY+oldY)
+            tracerWrapper.scrollLeft(tracerWrapper.scrollLeft()-newX+oldX)
+            tracerWrapper.scrollTop(tracerWrapper.scrollTop()-newY+oldY)
             oldX=newX
             oldY=newY
             return false
         }
         function endHandler(event) {
+            console.log("end handler")
             var newX = event.pageX
             var newY = event.pageY
-            bodyWrapper.scrollLeft(bodyWrapper.scrollLeft()-newX+oldX)
-            bodyWrapper.scrollTop(bodyWrapper.scrollTop()-newY+oldY)
+            tracerWrapper.scrollLeft(tracerWrapper.scrollLeft()-newX+oldX)
+            tracerWrapper.scrollTop(tracerWrapper.scrollTop()-newY+oldY)
             body.unbind("mousemove",moveHandler)
             body.unbind("mouseup",endHandler)
             body.unbind("mouseleave",endHandler)

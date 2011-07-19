@@ -4,15 +4,18 @@
     <title> @title </title>
     <style type="text/css"> @tracerCSS
     </style>
-    <script type = "text/javascript" id = "buttons">
+    <script type = "text/javascript" id = "variables">
         var upImageSrc = @upImageSrc
         var downImageSrc = @downImageSrc
         var toDefImageSrc = @toDefImageSrc
         var toDefImageSelSrc = @toDefImageSelSrc
         var correctCEImageSrc = @correctCEImageSrc
         var correctCEImageSelSrc = @correctCEImageSelSrc
-    </script>
-    <script type="text/javascript" id="treeOfTrace"> @treeOfTrace
+
+        var theTrace = @theTrace
+        var ceTrace = @ceTrace
+        var code = @code
+        var codeOffset = @offset
     </script>
     <script type="text/javascript" id="jQuery"> @jQuery
     </script>
@@ -29,8 +32,11 @@
           <div id="codePaneButton">&raquo;</div>
           <div id="codePane"></div>
         </div>
-        <div id="tracerWrapper" class = "column background2">
-            <div id="tracer" class="superparent"></div>
+        <div id = "wrapper" class = "column">
+            <div id="tracerWrapper" class = "background2">
+                <div id="tracer" class="superparent"></div>
+            </div>
+            <div id="ceMenu"></div>
         </div>
    </div>
   </body>
