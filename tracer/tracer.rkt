@@ -89,13 +89,10 @@
 (define current-fun (make-parameter #f))
 (define current-app-call (make-parameter empty))
 
-(define correct-ce-hash (make-hash))
+(define ce-hash (make-hash))
 
-(define (add-to-hash h key idx span)
-  (hash-set! h key (list idx span))) 
-           #|  
-             (set-add (hash-ref h key (set))
-                            (list idx span))))|#
+(define (add-to-hash h key idx span success)
+  (hash-set! h key (list idx span success))) 
 
 (define-syntax (check-expect-recorder e)
   (with-syntax ([linum (syntax-line e)]
@@ -122,24 +119,26 @@
               (parameterize ([current-call actual-node])
                 (set-node-result! actual-node actualStx))
               ;Check if actual and expected are the same
-              (if (apply equal?
-                         (map node-result
-                              (node-kids parent-node)))
-                  ;When ce is true, add to hash
-                  #,(let* ([datum (syntax-e #'actualStx)])
-                      (when (pair? datum)
-                        (let* ([func (car datum)]
-                               [args (cdr datum)]
-                               [ret #`(add-to-hash correct-ce-hash
-                                                   (list #,func (node-result actual-node) (list . #,args))
-                                                   idx
-                                                   span)])
-                          ret)))
-                  ;When ce is false, create a ce node
-                  (begin
-                    (set-node-result! parent-node #f)
-                    (set-node-kids! parent-node (reverse (node-kids parent-node)))
-                    (add-kid (current-call) parent-node)))
+              (let ([ce-correct? (apply equal?
+                                        (map node-result
+                                             (node-kids parent-node)))])
+                
+                ;When ce is true, add to hash
+                #,(let* ([datum (syntax-e #'actualStx)])
+                    (when (pair? datum)
+                      (let* ([func (car datum)]
+                             [args (cdr datum)]
+                             [ret #`(add-to-hash ce-hash
+                                                 (list #,func (node-result actual-node) (list . #,args))
+                                                 idx
+                                                 span
+                                                 ce-correct?)])
+                        ret)))
+                ;When ce is false, create a ce node
+                (when (not ce-correct?)
+                  (set-node-result! parent-node #f)
+                  (set-node-kids! parent-node (reverse (node-kids parent-node)))
+                  (add-kid (current-call) parent-node)))
               (node-result actual-node))
             (let ([expected-node (create-node 'expected 
                                               #f
@@ -298,10 +297,10 @@
         (hasheq 'type "value"
                 'value (get-output-string p)))))
 
-(define (ce-idx-span n)
+(define (ce-info n)
   (let* ([key (list (node-func n) (node-result n)  (node-actual n))]
-         [l (hash-ref correct-ce-hash key (list #f #f))])
-    (values (first l) (second l))))
+         [l (hash-ref ce-hash key (list #f #f #f))])
+    (values (first l) (second l) (third l))))
 
 
 (define (node->json t)
@@ -311,7 +310,7 @@
             (map (lambda (x)
                    (format-nicely x depth 40 literal))
                  lst))]
-    (let-values ([(ce-idx ce-span) (ce-idx-span t)])
+    (let-values ([(ce-idx ce-span ce-correct?) (ce-info t)])
       (hasheq 'name
               (format "~a" (node-name t))
               'formals
@@ -342,6 +341,8 @@
               ce-idx
               'ceSpan
               ce-span
+              'ceCorrect
+              ce-correct?
               ))))
     
 
@@ -415,8 +416,10 @@
         [tracerCSS (port->string CSSPort)]
         [upImageSrc (format "~s" (uri-string normal-up-arrow))]
         [downImageSrc (format "~s" (uri-string normal-down-arrow))]
-        [correctCEImageSrc (format "~s" (uri-string normal-checkbox))]
-        [correctCEImageSelSrc (format "~s" (uri-string highlight-checkbox))]
+        [correctCEImageSrc (format "~s" (uri-string normal-correct-checkbox))]
+        [failedCEImageSrc (format "~s" (uri-string normal-failed-checkbox))]
+        [correctCEImageSelSrc (format "~s" (uri-string highlight-correct-checkbox))]
+        [failedCEImageSelSrc (format "~s" (uri-string highlight-failed-checkbox))]
         [toDefImageSrc (format "~s" (uri-string normal-src-button))]
         [toDefImageSelSrc (format "~s" (uri-string highlight-src-button))]
         [jQueryPort (open-input-file (resolve-planet-path
@@ -443,7 +446,6 @@
         body ...
         (run-tests)
         (display-results)
-        (display correct-ce-hash)
         ;If empty trace generate error message
         (if (equal? empty (node-kids (current-call)))
             (message-box "Error" 

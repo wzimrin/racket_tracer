@@ -106,6 +106,30 @@ div.call {
     background: #98dc76;
 }
 
+/* Failed Check Expects */
+.failed-ce>table>tbody>tr>td {
+    color: white;
+}
+
+.failed-ce.background1 {
+    background: #900;
+    border-color: #900;
+}
+
+.failed-ce.background2 {
+    background: #700 !important;
+    border-color: #700 !important;
+}
+
+.failed-ce.background1>table>tbody>tr>td.arg {
+    background: #700;
+}
+
+.failed-ce.background2>table>tbody>tr>td.arg {
+    background: #500;
+}
+
+
 /* Buttons */
 
 .button {

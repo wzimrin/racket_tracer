@@ -186,6 +186,8 @@ function addIcon(container, src, srcSel ) {
     var icon = element("img")
     icon.attr("src", src)
     icon.data("otherSrc", srcSel)
+    //icon.height(imageSize)
+    //icon.width(imageSize)
     container.append(icon)
 }
 
@@ -211,8 +213,14 @@ function makeCall(traceNode, parent) {
 
     var ceButton = element("td")
     if (traceNode.ceIdx) {
-        call.addClass("passed-ce")
-        addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
+        if (traceNode.ceCorrect) {
+            call.addClass("passed-ce")
+            addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
+        }
+        else {
+            call.addClass("failed-ce")
+            addIcon(ceButton, failedCEImageSrc, failedCEImageSelSrc)
+        }
         ceButton.addClass("button to-src-button hasSource")
         ceButton.data({idx: traceNode.ceIdx,
                        span: traceNode.ceSpan})
