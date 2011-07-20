@@ -16,7 +16,8 @@ other
 
 body {
     overflow: auto;
-    font-family: "dejavu sans mono","courier new","courier","monospace";
+    margin: 0px;
+    font-family: "dejavu sans mono", "consolas", "courier new","monospace";
 }
 
 .dragging {
@@ -254,7 +255,7 @@ ul.tabs > li.other:hover {
 }
 
 ul.tabs > li.check-expect-top-level {
-    background: red;
+    color: red;
 }
 
 /* Check Expect Menu */
