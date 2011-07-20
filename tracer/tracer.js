@@ -70,36 +70,41 @@ function makeCell(formShort, formFull, cssClass) {
 }
 
 //Formats function name, actuals and result into table form
-function makeCallTable(node) {
+function makeCallTable(node, checkExpect) {
     var table = element("table")
     table.addClass("callTable")
     var row = element("tr")
 
     //Function name
     var nameTD = element("td")
-    nameTD.text(node.name)
+    if (checkExpect)
+        nameTD.text("check-expect: "+node.name)
+    else
+        nameTD.text(node.name)
     nameTD.addClass("name cell")
     nameTD.data({idx: node.idx, span: node.span, linum: node.linum})
     if(!(node.idx == 0 && node.span == 0))
         nameTD.addClass("hasSource")
     row.append(nameTD)
 
-    //Formals and actuals
-    for (var i = 0; i < node.actuals.length; i++) {
-        //Display in collapsed form if actualsExpanded is undefined or false
-        var actual = makeCell(node.actualsShort[i],node.actuals[i],"arg")
-        row.append(actual)
+    if (!checkExpect) {
+        //Formals and actuals
+        for (var i = 0; i < node.actuals.length; i++) {
+            //Display in collapsed form if actualsExpanded is undefined or false
+            var actual = makeCell(node.actualsShort[i],node.actuals[i],"arg")
+            row.append(actual)
+        }
+
+        //Arrow
+        var arrow = element('td')
+        arrow.html("&rarr;")
+        arrow.addClass("arrow cell")
+        row.append(arrow)
+
+        //Result
+        resultTD = makeCell(node.resultShort,node.result,false,"result")
+        row.append(resultTD)
     }
-
-    //Arrow
-    var arrow = element('td')
-    arrow.html("&rarr;")
-    arrow.addClass("arrow cell")
-    row.append(arrow)
-
-    //Result
-    resultTD = makeCell(node.resultShort,node.result,false,"result")
-    row.append(resultTD)
 
     table.append(row)
     return table
@@ -202,7 +207,7 @@ function swapIcon(img)
 
 //Makes an expandedCall: delete button, function, formals, actuals and result
 //All in their appropriate expanded or unexpanded form
-function makeCall(traceNode, parent) {
+function makeCall(traceNode, parent, checkExpect) {
     parent = $(parent)
 
     var call = element("div")
@@ -227,7 +232,7 @@ function makeCall(traceNode, parent) {
     }
     call.addClass("call")
     
-    var callTable = makeCallTable(traceNode)
+    var callTable = makeCallTable(traceNode, checkExpect)
 
     var childrenButton = element("td")
     addIcon(childrenButton, upImageSrc, upImageSrc)
@@ -268,7 +273,7 @@ function makeCall(traceNode, parent) {
     buttonTable.addClass("buttonTable")
     if(bodyButton.hasClass("hasSource")) 
         buttonTable.append(bodyButton)
-    if (traceNode.children.length!=0)
+    if (traceNode.children.length!=0 && !checkExpect)
         buttonTable.append(childrenButton)
     if (traceNode.ceIdx)
         buttonTable.append(ceButton)
@@ -278,7 +283,7 @@ function makeCall(traceNode, parent) {
     //0 for identification. Don't have a definition/body for any of these.
     
     call.append(lowerDiv)
-    call.data("expanded",false)
+    call.data("expanded",checkExpect)
     call.data("hidable",hidable)
     call.data("button",childrenButton)
 
@@ -356,24 +361,20 @@ $(document).ready(function () {
         li.text("check-expect")
         li.addClass("other check-expect-top-level")
         ul.append(li)
-        console.log("after ul append")
         
         var ceList = element("ul")
         ceList.addClass("ce-list")
         var firstDiv
 
         for(var j = 0; j < ceTrace.children.length; j++) {
-            console.log("beginning j for loop")
             var ceRow = element("li")
             ceRow.text(ceTrace.children[j].name)
             ceRow.addClass("check-expect")
-            console.log("before exp")
-            var exp = makeCall(ceTrace.children[j], tabs)
+            var exp = makeCall(ceTrace.children[j], tabs, true)
             exp.addClass("toplevel")
             bodies.append(exp)
             ceList.append(ceRow)
             ceRow.data("child", exp)
-            console.log("before first div")
             if(j==0)
                 ceRow.addClass("picked")
             else
