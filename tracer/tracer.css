@@ -15,16 +15,12 @@ other
 /* Whole page */
 
 body {
-    overflow: hidden;
+    overflow: auto;
     font-family: "dejavu sans mono","courier new","courier","monospace";
 }
 
 .dragging {
     cursor: move !important;
-}
-
-div#middle .column {
-    position: relative;
 }
 
 .superparent {
@@ -33,23 +29,41 @@ div#middle .column {
     float: left;
 }
 
-/* Trace */
+/*ce-menu/rest of page positioning*/
+
+div#middle .column {
+    position: relative;
+}
+
+div#middle {
+    position: relative;
+    width: 100%;
+    overflow: visible;
+    float: left;
+}
 
 div#wrapper {
+    overflow: visible;
     float: left;
-    width: 90%;
+    width: 100%;
     height: 10px;
-    overlow: auto;
+    /*padding-left: 200px;*/
 }
 
 div#ceMenu {
+    display: none;
     float: left;
+    margin-left: -100%;
+    position: relative;
+    right: 200px;
     /*width: 10%;*/
-    width: 0%;
+    width: 200px;
     height: 100%;
     overflow: auto;
     background: blue;
 }
+
+/* Trace */
 
 div#tracerWrapper {
     float: right;
@@ -236,6 +250,26 @@ ul.tabs > li.picked {
 }
 
 ul.tabs > li.other:hover {
+    font-weight: bold;
+}
+
+ul.tabs > li.check-expect-top-level {
+    background: red;
+}
+
+/* Check Expect Menu */
+
+ul.ce-list {
+    list-style-type: none;
+    margin: 5px 0px; /*TB, LR*/
+    padding-left: 0px
+}
+
+ul.ce-list > li.picked {
+    font-weight: bold;
+}
+
+ul.ce-list > li.other:hover {
     font-weight: bold;
 }
 

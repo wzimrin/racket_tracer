@@ -99,62 +99,64 @@
   (with-syntax ([linum (syntax-line e)]
                 [idx (syntax-position e)]
                 [span (syntax-span e)]
-                [ce 'check-expect]
                 [actual 'actual]
                 [expected 'expected])
     (syntax-case e ()
       [(_ actualStx expectedStx)
-       #`(begin 
-           (define parent-node (create-node 'ce #f empty empty linum idx span 0 0))
-           (check-expect 
-            (let ([actual-node (create-node 'actual 
-                                            #f
-                                            (list 'actualStx)
-                                            empty
-                                            #,(syntax-line #'actualStx)
-                                            #,(syntax-position #'actualStx)
-                                            #,(syntax-span #'actualStx)
-                                            0
-                                            0)])
-              (add-kid parent-node actual-node)
-              (parameterize ([current-call actual-node])
-                (set-node-result! actual-node actualStx))
-              ;Check if actual and expected are the same
-              (let ([ce-correct? (apply equal?
-                                        (map node-result
-                                             (node-kids parent-node)))])
-                
-                ;When ce is true, add to hash
-                #,(let* ([datum (syntax-e #'actualStx)])
-                    (when (pair? datum)
-                      (let* ([func (car datum)]
-                             [args (cdr datum)]
-                             [ret #`(add-to-hash ce-hash
-                                                 (list #,func (node-result actual-node) (list . #,args))
-                                                 idx
-                                                 span
-                                                 ce-correct?)])
-                        ret)))
-                ;When ce is false, create a ce node
-                (when (not ce-correct?)
-                  (set-node-result! parent-node #f)
-                  (set-node-kids! parent-node (reverse (node-kids parent-node)))
-                  (add-kid topCENode parent-node)))
-              (node-result actual-node))
-            (let ([expected-node (create-node 'expected 
+       (let* ([datum (syntax-e #'actualStx)]
+              [func (if (pair? datum)
+                        (car datum)
+                        datum)]
+              [ce-name func]
+              [args (when (pair? datum)
+                      (cdr datum))])
+         #`(begin 
+             (define parent-node (create-node '#,ce-name #f empty empty linum idx span 0 0))
+             (check-expect 
+              (let ([actual-node (create-node 'actual 
                                               #f
-                                              (list 'expectedStx)
+                                              (list 'actualStx)
                                               empty
-                                              #,(syntax-line #'expectedStx)
-                                              #,(syntax-position #'expectedStx)
-                                              #,(syntax-span #'expectedStx)
+                                              #,(syntax-line #'actualStx)
+                                              #,(syntax-position #'actualStx)
+                                              #,(syntax-span #'actualStx)
                                               0
                                               0)])
-              (add-kid parent-node expected-node)
-              (parameterize ([current-call expected-node])
-                (let [(result expectedStx)]
-                  (set-node-result! expected-node result)
-                  result)))))])))
+                (add-kid parent-node actual-node)
+                (parameterize ([current-call actual-node])
+                  (set-node-result! actual-node actualStx))
+                ;Check if actual and expected are the same
+                (let ([ce-correct? (apply equal?
+                                          (map node-result
+                                               (node-kids parent-node)))])
+                  
+                  ;When ce is true, add to hash
+                  #,(when (pair? datum)
+                      #`(add-to-hash ce-hash
+                                     (list #,func (node-result actual-node) (list . #,args))
+                                     idx
+                                     span
+                                     ce-correct?))
+                  ;When ce is false, create a ce node
+                  (when (not ce-correct?)
+                    (set-node-result! parent-node #f)
+                    (set-node-kids! parent-node (reverse (node-kids parent-node)))
+                    (add-kid topCENode parent-node)))
+                (node-result actual-node))
+              (let ([expected-node (create-node 'expected 
+                                                #f
+                                                (list 'expectedStx)
+                                                empty
+                                                #,(syntax-line #'expectedStx)
+                                                #,(syntax-position #'expectedStx)
+                                                #,(syntax-span #'expectedStx)
+                                                0
+                                                0)])
+                (add-kid parent-node expected-node)
+                (parameterize ([current-call expected-node])
+                  (let [(result expectedStx)]
+                    (set-node-result! expected-node result)
+                    result))))))])))
 
 (define-for-syntax (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]

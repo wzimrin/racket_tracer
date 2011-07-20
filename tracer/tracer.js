@@ -351,41 +351,40 @@ $(document).ready(function () {
         bodies.append(exp)
     }
     
-    var li = element("li")
     if (ceTrace.children.length > 0) {
-        if (!first)
-            first = li
+        var li = element("li")
         li.text("check-expect")
         li.addClass("other check-expect-top-level")
         ul.append(li)
         console.log("after ul append")
         
-       /* var ceTable = element("table")
-        var firstDiv = element("div")
+        var ceList = element("ul")
+        ceList.addClass("ce-list")
+        var firstDiv
 
         for(var j = 0; j < ceTrace.children.length; j++) {
             console.log("beginning j for loop")
-            var ceRow = element("tr")
-            ceRow.text(ceTrace.children[j].children[0].name + " "
-                        + ceTrace.children[j].children[1].name)
+            var ceRow = element("li")
+            ceRow.text(ceTrace.children[j].name)
             ceRow.addClass("check-expect")
             console.log("before exp")
             var exp = makeCall(ceTrace.children[j], tabs)
             exp.addClass("toplevel")
             bodies.append(exp)
-            ceTable.append(ceRow)
+            ceList.append(ceRow)
             ceRow.data("child", exp)
             console.log("before first div")
             if(j==0)
-                firstDiv = exp
-        }*/
-        //li.data("child", firstDiv)
-        //$("#ceMenu").append(ceTable)
+                ceRow.addClass("picked")
+            else
+                ceRow.addClass("other")
+        }
+        $("#ceMenu").append(ceList)
         
 
-        var exp = makeCall(ceTrace,tabs)
+        //var exp = makeCall(ceTrace,tabs)
         //$(exp).css({background: "black"})
-        exp.addClass("toplevel")
+        //exp.addClass("toplevel")
         li.data("child",exp)
         bodies.append(exp)
     }
@@ -411,7 +410,7 @@ $(document).ready(function () {
                                         codePane.removeClass("hidden")
                                         codePaneButton.html(arrow)
                                         onComplete()}})
-            bodyWrapper.animate({"width":(100-newWidth)+"%"},
+            tracerWrapper.animate({"width":(100-newWidth)+"%"},
                                            speed)
         }
         else
@@ -499,53 +498,71 @@ $(document).ready(function () {
     $('.check-expect').bind('click', function(event) {
         target = $(this)
         var child = target.data("child")
-        $(".toplevel").hide()
-        child.show()
-        
-    })
-
-
-    //makes the tabs switch what is displayed and
-    //highlight on hover
-    $('ul.tabs li.other').bind('click', function (event) {//switch display
-        target = $(this)
-        var div = $("#tracer")
-        $(".toplevel").hide()
-        var child = target.data("child")
-        child.show()
-        var oldPicked = $("ul.tabs li.picked")
+        var oldPicked = $("ul.ce-list li.picked")
         oldPicked.removeClass("picked")
         oldPicked.addClass("other")
-
-        if(oldPicked.hasClass("check-expect-top-level")) {
-            $("#ceMenu").hide()
-            tracerWrapper.width("100%")
-        }
-        else if (target.hasClass("check-expect-top-level")) {
-            $("#ceMenu").width("10%")
-            $("#ceMenu").show()
-            tracerWrapper.width("90%")
-        }
-
-        target.addClass("picked")
         target.removeClass("other")
+        target.addClass("picked")
+        switchTo(child)
+    })
 
+    function switchTo(child) {
+        $(".toplevel").hide()
+        child.show()
         $(tracerWrapper).scrollLeft(0)
         swapIcon($(".lastHighlighted").children("img"))
         $(".lastHighlighted").removeClass("lastHighlighted")
         clearHighlight(codePane)
         collapseCodePane()
         refocusScreen()
+    }
+    
+    //makes the tabs switch what is displayed and
+    //highlight on hover
+    $('ul.tabs li.other').bind('click', function (event) {//switch display
+        target = $(this)
+        var div = $("#tracer")
+        var oldPicked = $("ul.tabs li.picked")
+        oldPicked.removeClass("picked")
+        oldPicked.addClass("other")
+        var child = target.data("child")
+        if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level")) {
+            bodyWrapper.animate({"padding-left":0},
+                                {duration:"fast",
+                                 complete:function () {
+                                     $("#ceMenu").css("display","none")
+                                 },
+                                 step:setContentWidth})
+        }
+        else if (target.hasClass("check-expect-top-level")) {
+            $("#ceMenu").css("display","inline")
+            bodyWrapper.animate({"padding-left":"200px"},
+                                {duration:"fast",
+                                 step:setContentWidth})
+        }
+
+        target.addClass("picked")
+        target.removeClass("other")
+        if (target.hasClass("check-expect-top-level"))
+            switchTo($("ul.ce-list li.picked").data("child"))
+        else
+            switchTo(child)
     })
 
     first.trigger("click")
+
+    function setContentWidth() {
+        bodyWrapper.width($(window).width()-parseInt(bodyWrapper.css("padding-left"))
+                          -2*parseInt($(document.body).css("margin-left")))
+        setCodePaneWidth()
+    }
     
     function setContentSize() {
         $(".column").height($(window).height()-$("div#tabbar").outerHeight()
                             -2*parseInt($(document.body).css("margin-top")))
-        
-       codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)+codePane.height()-codePane.outerHeight(true))
-        setCodePaneWidth()
+        codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
+                        +codePane.height()-codePane.outerHeight(true))
+        setContentWidth()
     }
 
 
