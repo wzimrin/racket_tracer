@@ -318,7 +318,8 @@ $(document).ready(function () {
                 el.addClass(code[i].color)
                 el.addClass("codeChar")
                 el.addClass("codeElem")
-                codePane.append(el)
+                if (el.text() != "\r")
+                    codePane.append(el)
             }
         } else if (code[i].type=="image") {
             var el = element("img")
@@ -574,7 +575,6 @@ $(document).ready(function () {
     $(window).resize(setContentSize)
 
     function dragHandler(event) {
-        console.log("drag handler")
         var oldX=event.pageX
         var oldY=event.pageY
         var body = $(document.body)
@@ -583,7 +583,6 @@ $(document).ready(function () {
         bodies.addClass("dragging")
 
         function moveHandler(event) {
-            console.log("move handler")
             var newTime = new Date().getTime()
             var newX = event.pageX
             var newY = event.pageY
@@ -594,7 +593,6 @@ $(document).ready(function () {
             return false
         }
         function endHandler(event) {
-            console.log("end handler")
             var newX = event.pageX
             var newY = event.pageY
             tracerWrapper.scrollLeft(tracerWrapper.scrollLeft()-newX+oldX)
