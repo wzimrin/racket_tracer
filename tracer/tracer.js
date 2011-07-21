@@ -217,7 +217,9 @@ function makeCall(traceNode, parent, checkExpect) {
         call.addClass("background1")
 
     var ceButton = element("td")
-    if (traceNode.ceIdx) {
+    if (checkExpect) {
+        call.addClass("failed-ce")
+    } else if (traceNode.ceIdx) {
         if (traceNode.ceCorrect) {
             call.addClass("passed-ce")
             addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
