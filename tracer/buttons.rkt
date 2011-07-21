@@ -21,7 +21,7 @@
 (define normal-background-color (html-color "#000000"))
 (define normal-foreground-color "white")
 (define highlight-background-color (html-color "#ffff9e"))
-(define highlight-foreground-color "black")
+(define highlight-foreground-color "chocolate")
 (define checkbox-size 13)
 (define checkbox-stroke-width 1)
 (define check-stroke-width 3)
