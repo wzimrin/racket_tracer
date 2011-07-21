@@ -301,17 +301,17 @@ div#codePane {
 }
 
 .highlight {
-    background: #ffff9e /*dark purple*/;
+    background: #ffff61;
 }
 
 .highlight span {
-    color: chocolate !important;
+    color: fireBrick !important;
 }
 
 .lastHighlighted {
-    background: #ffff9e /*#FF0*/;
-    border-color: #ffff9e /*#ff0*/;
-    color: chocolate !important;
+    background: #ffff61 /*#FF0*/;
+    border-color: #ffff61 /*#ff0*/;
+    color: fireBrick !important;
 }
 
 .to-src-button.lastHighlighted:hover {
