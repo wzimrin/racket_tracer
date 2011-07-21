@@ -13,6 +13,8 @@
 
 (check-expect (scale-point 2 (list 1 2))
               (list 2 4))
+(check-expect (scale-point 2 (list 2 4))
+              (list 4 8))
 (define (scale-point x p)
   (map (lambda (i) (* x i))
        p))
@@ -23,6 +25,7 @@
   (map - p1 p2))
 
 (check-expect (dist (list 1 2) (list 4 6)) 5)
+(check-expect (dist (list 0 0) (list 80 0)) 80)
 (define (dist p1 p2)
   (sqrt (apply +
                (map sq (sub-point p2 p1)))))
@@ -37,12 +40,12 @@
   (scale-point 1/2 (add-point p1 p2)))
 
 (check-expect (third-point (list 1 2) (list 4 5)) (list 2 3))
+(check-expect (third-point (list 0 0) (list 80 0)) (list 80/3 0))
 (define (third-point p1 p2)
   (map weighted-avg p1 p2))
 
-(define (make-fractal depth side)
-  (local [(define (draw-fractal canvas depth p1 p2)
-            (let* ([mid1 (third-point p1 p2)]
+(define (middle-points p1 p2)
+  (let* ([mid1 (third-point p1 p2)]
                    [mid2 (third-point p2 p1)]
                    [middle (mid-point p1 p2)]
                    [side (/ (dist p1 p2) 3)]
@@ -51,7 +54,15 @@
                    [point (add-point middle
                                      (scale-point side
                                                   (list (cos angle)
-                                                        (sin angle))))]
+                                                        (sin angle))))])
+    (list mid1 mid2 point)))
+
+(define (make-fractal depth side)
+  (local [(define (draw-fractal canvas depth p1 p2)
+            (let* ([points (middle-points p1 p2)]
+                   [mid1 (first points)]
+                   [mid2 (second points)]
+                   [point (third points)]
                    [new-depth (sub1 depth)])
               (if (<= depth 0)
                   (add-line canvas
@@ -68,4 +79,3 @@
                   (list 0 0) (list side 0))))
 
 (make-fractal 3 80)
-

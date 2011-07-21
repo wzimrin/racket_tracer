@@ -167,7 +167,7 @@ div.call {
 .button {
     /*color:white;
       background:black;*/
-    background: pink;
+    background: black;
     vertical-align: middle;
 
     border: 1px solid black;
@@ -262,9 +262,15 @@ ul.tabs > li.check-expect-top-level {
 
 ul.ce-list {
     list-style-type: none;
-    margin: 10px 10px; /*TB, LR*/
+    float:left;
+    margin: 10px 0px; /*TB, LR*/
     /*margin-left: 10px;*/
     padding-left: 0px
+}
+
+ul.ce-list > li {
+    white-space: nowrap;
+    margin: 0px 10px;
 }
 
 ul.ce-list > li.picked {
@@ -300,6 +306,7 @@ div#codePane {
 .lastHighlighted {
     background: #ffff9e /*#FF0*/;
     border-color: #ffff9e /*#ff0*/;
+    color: black !important;
 }
 
 .to-src-button.lastHighlighted {
