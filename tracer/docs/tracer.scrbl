@@ -22,7 +22,7 @@ Each box in the tracer corresponds to a call of a user-defined function.  A call
 Consider the code below:
 
 @codeblock|{
-#lang racket
+#lang planet tracer/tracer:1:2
 (define (alpha a) (+ a a))
 (define (beta b) (* b 2))
 (define (gamma c) (+ (alpha c) (beta c)))
