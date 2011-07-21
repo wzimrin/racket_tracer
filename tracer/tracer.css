@@ -149,8 +149,8 @@ div.call {
 }
 
 .failed-ce.background2 {
-    background: #e60000;
-    border-color: #e60000;
+    background: red;
+    border-color: red;
 }
 
 .failed-ce.background1>table>tbody>tr>td.arg {
@@ -158,7 +158,7 @@ div.call {
 }
 
 .failed-ce.background2>table>tbody>tr>td.arg {
-    background: #f33;
+    background: #ff4d4d;
 }
 
 
@@ -301,7 +301,7 @@ div#codePane {
 }
 
 .highlight {
-    background: #ffff9e /*#FF0*/;
+    background: #4d004d /*dark purple*/;
 }
 
 .highlight span {
@@ -331,7 +331,7 @@ span.sexp-comment {
 }
 
 span.constant {
-    color: #5ce259;
+    color: #47D600;
 }
 
 span.string {
@@ -339,11 +339,11 @@ span.string {
 }
 
 span.parenthesis {
-    color: #b7654b;
+    color: white;
 }
 
 span.symbol {
-    color: #7788ff;
+    color: #47a1c2;
 }
 
 div#codePaneButton {
