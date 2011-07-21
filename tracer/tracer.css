@@ -56,12 +56,12 @@ div#ceMenu {
     float: left;
     margin-left: -100%;
     position: relative;
-    right: 200px;
+    /*right: 100px;*/
     /*width: 10%;*/
-    width: 200px;
+    /*width: 100px;*/
     height: 100%;
     overflow: auto;
-    background: blue;
+    background: #C8D2DA;
 }
 
 /* Trace */
@@ -262,7 +262,8 @@ ul.tabs > li.check-expect-top-level {
 
 ul.ce-list {
     list-style-type: none;
-    margin: 5px 0px; /*TB, LR*/
+    margin: 10px 10px; /*TB, LR*/
+    /*margin-left: 10px;*/
     padding-left: 0px
 }
 

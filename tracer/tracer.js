@@ -382,7 +382,15 @@ $(document).ready(function () {
                 ceRow.addClass("other")
         }
         $("#ceMenu").append(ceList)
-        
+
+        var ceMenuWidth;
+        if($("#ceMenu").width() > 200)
+            ceMenuWidth = 200;
+        else
+            ceMenuWidth = $("#ceMenu").width()
+
+        $("#ceMenu").width(ceMenuWidth)
+        $("#ceMenu").css({"right": ceMenuWidth+"px"})
 
         //var exp = makeCall(ceTrace,tabs)
         //$(exp).css({background: "black"})
@@ -538,7 +546,7 @@ $(document).ready(function () {
         }
         else if (target.hasClass("check-expect-top-level")) {
             $("#ceMenu").css("display","inline")
-            bodyWrapper.animate({"padding-left":"200px"},
+            bodyWrapper.animate({"padding-left":ceMenuWidth+"px"},
                                 {duration:"fast",
                                  step:setContentWidth})
         }
