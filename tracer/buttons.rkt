@@ -20,7 +20,7 @@
 (define triangle-stroke-width 3)
 (define normal-background-color (html-color "#000000"))
 (define normal-foreground-color "white")
-(define highlight-background-color (html-color "#ffff9e"))
+(define highlight-background-color (html-color "#ffff61"))
 (define highlight-foreground-color "fireBrick")
 (define checkbox-size 13)
 (define checkbox-stroke-width 1)
