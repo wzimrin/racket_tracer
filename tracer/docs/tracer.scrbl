@@ -22,7 +22,7 @@ Each box in the tracer corresponds to a call of a user-defined function.  A call
 Consider the code below:
 
 @codeblock|{
-#lang planet tracer/tracer
+#lang racket
 (define (alpha a) (+ a a))
 (define (beta b) (* b 2))
 (define (gamma c) (+ (alpha c) (beta c)))
@@ -30,18 +30,26 @@ Consider the code below:
 (gamma 3)
 (delta 3)}|
 
-The trace of this code would generate two top level calls - @racket[gamma] and @racket[delta]. Both of this calls would have alpha and beta as children at the same level. 
-
-Clicking on the function name will highlight the corresponding call to that function in the code browser on the right of the screen. Clicking on the expand or collapse button will display or hide the child calls for that function. To view the definition of a function, click on the jump to definition button located to the right of the expand/collapse button. If an argument is displayed in a shortened form (includes ...), clicking on it will expand it. Clicking again will collapse it back to it's original size. 
+The trace of this code would generate two top level calls: @racket[gamma] and @racket[delta]. Both of this calls would have alpha and beta as children at the same level. 
 
 Once the trace is too large to display on the screen, you can move the trace by clicking and dragging, or by using the scroll bars. 
 
+@subsection{A Call}
+
+The top portion of a call shows its function name and the arguments passed to it.  Clicking on the function name will highlight the source of the function call in the code.  Underneath the call, there are up to three buttons.  The magnifying glass button highlights the function definition.  The up or down arrowhead button shows or hides the children of the call.  The checkbox button relates to check expects, and is discussed in @(secref "check-expect").
+
 @subsection{The Code}
 
-The right side of the display shows the source code of the file that was traced. To expand click anywhere along the expand bar on the top, or double click anywhere on the code itself. To collapse, the same applies. Clicking on a function name or jump to definition will automatically open the code pane. Clicking again on the same function will hide the code pane. 
+The right side of the display shows the source code of the file that was traced. Click anywhere along the bar above the code or on the code itself to expand or shrink the code. Clicking on a function name or the magnifying glass automatically expands the code pane. Clicking again on the same function name will shrink the code pane. 
+
+@(subsection "Check Expects" #:tag "check-expect")
+
+If a call in the trace corresponds to a check-expect (the function and the arguments passed to the function are both the same), the call is colored.  If the check-expect passed, the call is green, while if the check-expect failed, the call is red.  The checkbox button appears as well, which will highlight the check-expect that corresponds to the call.
+
+If there are any failed check-expects, a new check-expect tab appears in the tab bar.  Clicking on this tab shows a menu on the left with the failed check-expects.  Clicking on a check-expect brings up the trace of the check-expect, letting you look at how the actual value and the expected value were computed.
 
 @section{Compatibility}
-Suggested browsers: Firefox, Chrome, or Safari.  Other browsers may work, but we don't test them. @litchar{#lang planet tracer/tracer} currently supports images generated in the code: @codeblock{(define r (circle 25 "solid" "red"))} However, we don't currently support images embedded in the code. 
+Suggested browsers: Firefox, Chrome, or Safari.  Other browsers may work, but we don't test them. @litchar{#lang planet tracer/tracer} currently supports images generated in the code or embedded in the code.
 
                              
 
