@@ -263,6 +263,7 @@ ul.tabs > li.check-expect-top-level {
 ul.ce-list {
     list-style-type: none;
     float:left;
+    color: #DF1616;
     margin: 10px 0px; /*TB, LR*/
     /*margin-left: 10px;*/
     padding-left: 0px
