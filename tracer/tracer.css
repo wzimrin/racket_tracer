@@ -301,13 +301,13 @@ div#codePane {
 }
 
 .highlight {
-    background: #ffff9e /*#FF0*/;
+    background: #4d004d /*dark purple*/;
 }
 
 .lastHighlighted {
-    background: #ffff9e /*#FF0*/;
-    border-color: #ffff9e /*#ff0*/;
-    color: black !important;
+    background: #4d004d /*dark purple*/;
+    border-color: #4d004d /*dark purple*/;
+    color: white !important;
 }
 
 .to-src-button.lastHighlighted {
@@ -330,7 +330,7 @@ span.sexp-comment {
 }
 
 span.constant {
-    color: #5ce259;
+    color: #47D600;
 }
 
 span.string {
@@ -338,11 +338,11 @@ span.string {
 }
 
 span.parenthesis {
-    color: #b7654b;
+    color: white;
 }
 
 span.symbol {
-    color: #7788ff;
+    color: #47a1c2;
 }
 
 div#codePaneButton {
