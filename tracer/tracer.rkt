@@ -458,7 +458,8 @@
         (run-tests)
         (display-results)
         ;If empty trace generate error message
-        (if (equal? empty (node-kids (current-call)))
+        (if (and (empty? (node-kids (current-call)))
+                 (empty? (node-kids topCENode)))
             (message-box "Error" 
                          "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
                          #f 

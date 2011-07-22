@@ -7,4 +7,3 @@
       x
       (+ (bad-fib (sub1 x))
          (bad-fib (sub1 x)))))
-(bad-fib 1)

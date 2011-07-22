@@ -364,6 +364,9 @@ $(document).ready(function () {
         li.text("check-expect")
         li.addClass("other check-expect-top-level")
         ul.append(li)
+
+        if (!first)
+            first = li
         
         var ceList = element("ul")
         ceList.addClass("ce-list")
