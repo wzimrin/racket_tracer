@@ -1,15 +1,10 @@
 ***** CURRENT ISSUES*****
 - Bugs from emails
-- Printing
-    - Name of node from application of function that was an argument (a-func vs. my-add example)
     - Dealing with large flat data structures
 - Language levels
     - Printing
     - Error checking
     - How we do let, define etc
-- Check expect
-    - show all check-expects, failed in red (guillaume)
-    - Display of check expect traces
 - GUI
     - clickable when can't drag (display still too small)
     - (define (foo x) x) --> visual glitch (eric)
@@ -45,6 +40,11 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- Check expect
+    - show all check-expects, failed in red (guillaume)
+    - Display of check expect traces
+- Printing
+    - Name of node from application of function that was an argument (a-func vs. my-add example)
 - Double clicking on code pane highlights a line
 - image icon (7/18)
 - Marking correct check expects (7/14)

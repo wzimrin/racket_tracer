@@ -28,3 +28,5 @@
 
 (define (add-first-n lst n)
   (add-list (take lst 2)))
+
+(add-first-n (list 1 2 3 4) 2)

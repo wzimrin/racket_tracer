@@ -422,7 +422,7 @@
         [CSSPort (open-input-file (resolve-planet-path 
                                          '(planet tracer/tracer/tracer.css)))]
         [tracerCSS (port->string CSSPort)]
-        [upImageSrc (format "~s" (uri-string normal-up-arrow))]
+        [sideImageSrc (format "~s" (uri-string normal-side-arrow))]
         [downImageSrc (format "~s" (uri-string normal-down-arrow))]
         [correctCEImageSrc (format "~s" (uri-string normal-correct-checkbox))]
         [failedCEImageSrc (format "~s" (uri-string normal-failed-checkbox))]

@@ -132,9 +132,9 @@ function updateCall(html,animate) {
     }
     
     if (expanded) 
-        buttonImg.attr("src", upImageSrc)
-    else 
         buttonImg.attr("src", downImageSrc)
+    else 
+        buttonImg.attr("src", sideImageSrc)
 
 }
 
@@ -237,7 +237,7 @@ function makeCall(traceNode, parent, checkExpect) {
     var callTable = makeCallTable(traceNode, checkExpect)
 
     var childrenButton = element("td")
-    addIcon(childrenButton, upImageSrc, upImageSrc)
+    addIcon(childrenButton, downImageSrc, downImageSrc)
     childrenButton.addClass("button ec-button")
 
     var bodyButton = element('td')
@@ -273,10 +273,10 @@ function makeCall(traceNode, parent, checkExpect) {
     call.append(callTable)
     var buttonTable = element('table')
     buttonTable.addClass("buttonTable")
-    if(bodyButton.hasClass("hasSource")) 
-        buttonTable.append(bodyButton)
     if (traceNode.children.length!=0 && !checkExpect)
         buttonTable.append(childrenButton)
+    if(bodyButton.hasClass("hasSource")) 
+        buttonTable.append(bodyButton)
     if (traceNode.ceIdx)
         buttonTable.append(ceButton)
     call.append(buttonTable)
