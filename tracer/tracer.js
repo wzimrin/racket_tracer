@@ -134,9 +134,9 @@ function updateCall(html,animate) {
     }
     
     if (expanded) 
-        buttonImg.attr("src", upImageSrc)
-    else 
         buttonImg.attr("src", downImageSrc)
+    else 
+        buttonImg.attr("src", sideImageSrc)
 
 }
 
@@ -239,7 +239,7 @@ function makeCall(traceNode, parent, checkExpect) {
     var callTable = makeCallTable(traceNode, checkExpect)
 
     var childrenButton = element("td")
-    addIcon(childrenButton, upImageSrc, upImageSrc)
+    addIcon(childrenButton, downImageSrc, downImageSrc)
     childrenButton.addClass("button ec-button")
 
     var bodyButton = element('td')
@@ -275,10 +275,10 @@ function makeCall(traceNode, parent, checkExpect) {
     call.append(callTable)
     var buttonTable = element('table')
     buttonTable.addClass("buttonTable")
-    if(bodyButton.hasClass("hasSource")) 
-        buttonTable.append(bodyButton)
     if (traceNode.children.length!=0 && !checkExpect)
         buttonTable.append(childrenButton)
+    if(bodyButton.hasClass("hasSource")) 
+        buttonTable.append(bodyButton)
     if (traceNode.ceIdx)
         buttonTable.append(ceButton)
     call.append(buttonTable)
@@ -422,11 +422,12 @@ $(document).ready(function () {
             codePaneWidth = newWidth            
             codePaneWrapper.animate({"width":newWidth+"%"},
                                     {duration:speed, 
-                                    complete: function() {
-                                        setCodePaneWidth()
-                                        codePane.removeClass("hidden")
-                                        codePaneButton.html(arrow)
-                                        onComplete()}})
+                                     complete: function() {
+                                         setCodePaneWidth()
+                                         codePane.removeClass("hidden")
+                                         codePaneButton.html(arrow)
+                                         onComplete()
+                                     }})
             tracerWrapper.animate({"width":(100-newWidth)+"%"},
                                            speed)
         }
@@ -439,13 +440,13 @@ $(document).ready(function () {
     //Expand the code pane
     function expandCodePane(onComplete) {
         setCodePaneWrapperWidth(expandedCodePaneWidth, "slow", "&raquo;", 
-                        onComplete)
+                                onComplete)
         //onComplete()
     }
     //Collapse the code pane
     function collapseCodePane() {
-        setCodePaneWrapperWidth(collapsedCodePaneWidth,"fast", "&laquo",
-            function(){})
+        setCodePaneWrapperWidth(collapsedCodePaneWidth,"fast", "&laquo;",
+                                function(){})
     }
     
     //Expand and collapse codePane on click 
@@ -468,12 +469,14 @@ $(document).ready(function () {
     function showSpan() {
         var span = codePane.find(".highlight")
         var pos = span.position()
-        var height = codePane.height()
-        var width = codePane.width()
-        //If new span is off the displayed portion of the code
-        codePane.animate({scrollTop: pos.top-(height/2)+codePane.scrollTop(),
-                          scrollLeft: pos.left-(width/2)+codePane.scrollLeft()}, 
-                         'slow')
+        if (pos) {
+            var height = codePane.height()
+            var width = codePane.width()
+            //If new span is off the displayed portion of the code
+            codePane.animate({scrollTop: pos.top-(height/2)+codePane.scrollTop(),
+                              scrollLeft: pos.left-(width/2)+codePane.scrollLeft()}, 
+                             'slow')
+        }
     }
 
     var lastFunctionHighlighted;
