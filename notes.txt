@@ -1,10 +1,19 @@
 ***** CURRENT ISSUES*****
 - Bugs from emails
+<<<<<<< HEAD
+- Printing
+=======
+>>>>>>> 0274bd49593fd5b9560c9e6bf176461feaff3a39
     - Dealing with large flat data structures
 - Language levels
     - Printing
     - Error checking
     - How we do let, define etc
+<<<<<<< HEAD
+- Check expect
+    - show all check-expects, failed in red (guillaume)
+=======
+>>>>>>> 0274bd49593fd5b9560c9e6bf176461feaff3a39
 - GUI
     - clickable when can't drag (display still too small)
     - (define (foo x) x) --> visual glitch (eric)
@@ -19,6 +28,7 @@
 - context of lst in lambda (guillaume)
 - deleting temp files that are generated (guillaume)
 - not dying on contracts (vs skipping contracts)
+- other check forms
 
 ***** WISHLIST *****
 - world film strip GUI
@@ -40,11 +50,16 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+<<<<<<< HEAD
+- Name of node from application of function that was an argument (a-func vs. my-add example)
+- Display of check expect traces (7/22)
+=======
 - Check expect
     - show all check-expects, failed in red (guillaume)
     - Display of check expect traces
 - Printing
     - Name of node from application of function that was an argument (a-func vs. my-add example)
+>>>>>>> 0274bd49593fd5b9560c9e6bf176461feaff3a39
 - Double clicking on code pane highlights a line
 - image icon (7/18)
 - Marking correct check expects (7/14)
