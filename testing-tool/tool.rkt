@@ -4,7 +4,8 @@
          racket/class
          racket/gui/base
          racket/unit
-         mrlib/switchable-button)
+         mrlib/switchable-button
+         lang/stepper-language-interface)
 (provide tool@)
 
 (define tool@
@@ -12,28 +13,30 @@
     (import drracket:tool^)
     (export drracket:tool-exports^)
     
-    (define reverse-button-mixin
+    (define tracer-button-mixin
       (mixin (drracket:unit:frame<%>) ()
         (super-new)
         (inherit get-button-panel
                  get-definitions-text)
         (inherit register-toolbar-button)
         
-        (let ([btn
-               (new switchable-button%
-                    (label "Definitions")
-                    (callback (λ (button) 
-                                (message-box "Def Window"
-                                             (send 
-                                              (extract-language-level 
-                                               (get-definitions-text))
-                                              get-one-line-summary))))
-                    (parent (get-button-panel))
-                    (bitmap reverse-content-bitmap))])
-          (register-toolbar-button btn)
-          (send (get-button-panel) change-children
-                (λ (l)
-                  (cons btn (remq btn l)))))))
+        (define tracer-button
+          (new switchable-button%
+               (label "Definitions")
+               (callback 
+                (λ (button) 
+                  (message-box 
+                   "Def Window"
+                   (format "~s"
+                           (let ([lang-level (extract-language-level 
+                                              (get-definitions-text))])
+                             (tracer-works-for? lang-level))))))
+               (parent (get-button-panel))
+               (bitmap reverse-content-bitmap)))
+        (register-toolbar-button tracer-button)
+        (send (get-button-panel) change-children
+              (λ (l)
+                (cons tracer-button (remq tracer-button l))))))
     
     (define reverse-content-bitmap
       (let* ((bmp (make-bitmap 16 16))
@@ -61,4 +64,8 @@
     (define (settings->language-level settings)
       (drracket:language-configuration:language-settings-language settings))
     
-    (drracket:get/extend:extend-unit-frame reverse-button-mixin)))
+    (define (tracer-works-for? language-level)
+      (or (send language-level stepper:supported?)
+          (getenv "PLTTRACERRUNSAFE")))
+    
+    (drracket:get/extend:extend-unit-frame tracer-button-mixin)))
