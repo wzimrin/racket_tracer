@@ -1,6 +1,8 @@
 //William Zimrin and Jeanette Miranda
 //tracer.js	6/02/2011
 
+"use strict";
+
 //----- GENERAL HELPERS -----
 
 function toInt(cssString) {
@@ -102,7 +104,7 @@ function makeCallTable(node, checkExpect) {
         row.append(arrow)
 
         //Result
-        resultTD = makeCell(node.resultShort,node.result,false,"result")
+        var resultTD = makeCell(node.resultShort,node.result,false,"result")
         row.append(resultTD)
     }
 
@@ -148,7 +150,7 @@ function toggleCall(html,animate) {
 function refocusScreen()
 {
     //Find all visible calls
-    visibleCalls = $("div#tracer").find(".call").filter(":visible")
+    var visibleCalls = $("div#tracer").find(".call").filter(":visible")
 
     //Check the alignment of each visible call
     visibleCalls.each(function(index) {
@@ -159,7 +161,7 @@ function refocusScreen()
         var fromLeft = $(this).position().left
                         + toInt($(this).css('marginLeft'))
                         + callTableMarL
-                        - $(wrapper).scrollLeft()
+                        - $("#wrapper").scrollLeft()
         
         //only move callTables that are less wide than the current width
         //of the call (will this condition always be true?)
@@ -264,7 +266,7 @@ function makeCall(traceNode, parent, checkExpect) {
     for (var i = 0; i < traceNode.children.length; i++) {
         var cell = element('td')
         cell.addClass("childTD")
-        collapsedDiv = makeCall(traceNode.children[i],call);
+        var collapsedDiv = makeCall(traceNode.children[i],call);
         cell.append(collapsedDiv)
         lowerRow.append(cell);
     }
@@ -499,7 +501,7 @@ $(document).ready(function () {
     
     //makes the expand/collapse buttons work
     $('.ec-button').bind('click',function(event) {
-        thisCall = $(this).parents(".call").first()
+        var thisCall = $(this).parents(".call").first()
         toggleCall(thisCall,"fast")
     })
 
@@ -511,7 +513,7 @@ $(document).ready(function () {
     })
 
     $('.check-expect').bind('click', function(event) {
-        target = $(this)
+        var target = $(this)
         var child = target.data("child")
         var oldPicked = $("ul.ce-list li.picked")
         oldPicked.removeClass("picked")
@@ -535,7 +537,7 @@ $(document).ready(function () {
     //makes the tabs switch what is displayed and
     //highlight on hover
     $('ul.tabs li.other').bind('click', function (event) {//switch display
-        target = $(this)
+        var target = $(this)
         var div = $("#tracer")
         var oldPicked = $("ul.tabs li.picked")
         oldPicked.removeClass("picked")

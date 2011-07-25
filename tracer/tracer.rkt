@@ -195,6 +195,12 @@
     [(_ id val)
      #'(define id val)]))
 
+(define (function-syntax s)
+  (let ([datum (syntax-e s)])
+    (if (cons? datum)
+        (f-name (first datum))
+        s)))
+
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)
   (syntax-case e ()
