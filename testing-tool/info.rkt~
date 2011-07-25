@@ -1,0 +1,4 @@
+#lang setup/infotab
+
+(define drracket-name "My Tool")
+(define drracket-tools (list (list "tool.rkt")))
