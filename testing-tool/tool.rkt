@@ -1,44 +1,21 @@
-#lang racket/base
+#lang racket
 
 (require drracket/tool
          racket/class
          racket/gui/base
          racket/unit
-         mrlib/switchable-button
-         lang/stepper-language-interface)
+         mrlib/switchable-button)
+         ;lang/stepper-language-interface)
 (provide tool@)
+
+;(define-local-member-name tracer-callback)
 
 (define tool@
   (unit
     (import drracket:tool^)
     (export drracket:tool-exports^)
     
-    (define tracer-button-mixin
-      (mixin (drracket:unit:frame<%>) ()
-        (super-new)
-        (inherit get-button-panel
-                 get-definitions-text)
-        (inherit register-toolbar-button)
-        
-        (define tracer-button
-          (new switchable-button%
-               (label "Definitions")
-               (callback 
-                (λ (button) 
-                  (message-box 
-                   "Def Window"
-                   (format "~s"
-                           (let ([lang-level (extract-language-level 
-                                              (get-definitions-text))])
-                             (tracer-works-for? lang-level))))))
-               (parent (get-button-panel))
-               (bitmap reverse-content-bitmap)))
-        (register-toolbar-button tracer-button)
-        (send (get-button-panel) change-children
-              (λ (l)
-                (cons tracer-button (remq tracer-button l))))))
-    
-    (define reverse-content-bitmap
+    (define tracer-bitmap
       (let* ((bmp (make-bitmap 16 16))
              (bdc (make-object bitmap-dc% bmp)))
         (send bdc erase)
@@ -51,21 +28,94 @@
         (send bdc set-bitmap #f)
         bmp))
     
-    
+    #;(define (tracer-frame-mixin super%)
+      (class super%
+        ...))
     (define (phase1) (void))
+    
     (define (phase2) (void))
     
     (define (extract-language-level definitions-text)
-      (settings->language-level (definitions-text->settings definitions-text)))
+      (let* ([settings (send definitions-text get-next-settings)]
+             [lang-level (drracket:language-configuration:language-settings-language settings)])
+        lang-level))
+        
+    (define (extract-language-settings definitions-text)
+      (let* ([settings (send definitions-text get-next-settings)]
+             [lang-settings (drracket:language-configuration:language-settings-settings settings)])
+        lang-settings))
+
     
-    (define (definitions-text->settings definitions-text)
-      (send definitions-text get-next-settings))
+    (define tracer-frame-mixin
+      (mixin (drracket:unit:frame<%>) ()
+        (super-new)
+        (inherit get-button-panel
+                 get-definitions-text)
+        (inherit register-toolbar-button)
+        
+        
+        (define tracer-button
+          (new switchable-button%
+               (label "Tracer")
+               (bitmap tracer-bitmap)
+               (parent (send this get-button-panel))
+               (callback (λ (button) (send this tracer-callback)))))
+        
+        (define (definitions->image-and-char def)
+          (letrec ([first-snip (send def find-first-snip)]
+                   [process-snip 
+                    (lambda (a-snip)
+                      (cond 
+                        [(is-a? a-snip string-snip%)
+                         (reverse (string->list (send a-snip get-text 0 99999999999999999999)))]
+                        [(equal? #f a-snip) empty]
+                        [else (list a-snip)]))]
+                   [add-snip (lambda (l cur-snip)
+                               (if (equal? cur-snip #f)
+                                   l
+                                   (add-snip (append (process-snip cur-snip) l)
+                                             (send cur-snip next))))])
+            (reverse (add-snip empty first-snip))))
+        
+        (define/public (tracer-callback)
+          (let* ([def-text (send this get-definitions-text)]
+                 [lang-setting (send def-text get-next-settings)]
+                 [text-end (send def-text get-end-position)]
+                 [text-pos (drracket:language:text/pos def-text 0 text-end)]
+                 [init (lambda() (void))]
+                 [kill-termination (lambda() (void))]
+                 [iter (lambda (stx cont)
+                         (displayln (syntax->datum stx))
+                         (cont))]
+                 [src (definitions->image-and-char def-text)])
+            
+            (drracket:eval:expand-program text-pos 
+                                          lang-setting
+                                          #f ;eval-compile-time-part?
+                                          init
+                                          kill-termination
+                                          iter)
+            
+            #;(displayln (format "~s \nlang-setting: ~s\ntext-end: ~s \ntext-pos ~s"
+                                 (definitions->image-and-char (get-definitions-text))
+                                 lang-setting
+                                 text-end
+                                 text-pos))
+            ))               
+        
+        (register-toolbar-button tracer-button)
+        (send (get-button-panel) change-children
+              (λ (l)
+                (cons tracer-button (remq tracer-button l))))))
     
-    (define (settings->language-level settings)
-      (drracket:language-configuration:language-settings-language settings))
+    
+    
+    
+     
     
     (define (tracer-works-for? language-level)
-      (or (send language-level stepper:supported?)
-          (getenv "PLTTRACERRUNSAFE")))
-    
-    (drracket:get/extend:extend-unit-frame tracer-button-mixin)))
+      #t
+      #;(or (send language-level stepper:supported?)
+            (getenv "PLTTRACERRUNSAFE")))
+  
+  (drracket:get/extend:extend-unit-frame tracer-frame-mixin)))
