@@ -3,7 +3,12 @@
 (provide annotate-and-eval)
 
 (define (annotate-and-eval stx src)
-  (displayln stx))
+  (displayln stx)
+  (displayln "before eval")
+  (displayln (my-eval stx)))
+
+(define (my-eval stx)
+  (map eval-stx stx))
 
 #|
 #lang racket
