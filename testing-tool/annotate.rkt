@@ -1,5 +1,13 @@
 #lang racket
 
+(provide annotate-and-eval)
+
+(define (annotate-and-eval stx src)
+  (displayln stx))
+
+#|
+#lang racket
+
 (require "buttons.rkt")
 
 (require [except-in lang/htdp-intermediate-lambda
@@ -458,6 +466,8 @@
   (syntax-case stx ()
     [(_ name source offset body ...)
      #`(#%plain-module-begin
+        (annotate-and-eval #'(#%plain-module-begin body ...)
+                           source)
         (set-box! src source)
         body ...
         (run-tests)
@@ -491,3 +501,4 @@
                function-name
                (list (node-result actual-node) (+ sub-arg1 sub-arg2) arg2 arg3))
 
+|#

@@ -4,7 +4,8 @@
          racket/class
          racket/gui/base
          racket/unit
-         mrlib/switchable-button)
+         mrlib/switchable-button
+         "annotate.rkt")
          ;lang/stepper-language-interface)
 (provide tool@)
 
@@ -83,10 +84,17 @@
                  [text-end (send def-text get-end-position)]
                  [text-pos (drracket:language:text/pos def-text 0 text-end)]
                  [init (lambda() (void))]
-                 [kill-termination (lambda() (void))]
+                 [code (box empty)]
+                 [kill-termination (lambda()
+                                     (void))]
                  [iter (lambda (stx cont)
-                         (displayln (syntax->datum stx))
-                         (cont))]
+                         (if (eof-object? stx)
+                             #;(annotate-and-eval (reverse (unbox code)) src)
+                             (displayln (map syntax->datum (reverse (unbox code))))
+                             (begin (displayln stx)
+                                    (set-box! code 
+                                              (cons stx (unbox code)))
+                                    (cont))))]
                  [src (definitions->image-and-char def-text)])
             
             (drracket:eval:expand-program text-pos 
@@ -94,14 +102,7 @@
                                           #f ;eval-compile-time-part?
                                           init
                                           kill-termination
-                                          iter)
-            
-            #;(displayln (format "~s \nlang-setting: ~s\ntext-end: ~s \ntext-pos ~s"
-                                 (definitions->image-and-char (get-definitions-text))
-                                 lang-setting
-                                 text-end
-                                 text-pos))
-            ))               
+                                          iter)))               
         
         (register-toolbar-button tracer-button)
         (send (get-button-panel) change-children
