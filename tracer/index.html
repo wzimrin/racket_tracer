@@ -4,9 +4,9 @@
     <title> @title </title>
     <style type="text/css"> @tracerCSS
     </style>
-    <script type = "text/javascript" id = "buttons">
-        var upImageSrc = @upImageSrc
+    <script type = "text/javascript" id = "variables">
         var downImageSrc = @downImageSrc
+        var sideImageSrc = @sideImageSrc
         var toDefImageSrc = @toDefImageSrc
         var toDefImageSelSrc = @toDefImageSelSrc
         var correctCEImageSrc = @correctCEImageSrc
@@ -14,8 +14,11 @@
         var failedCEImageSrc = @failedCEImageSrc
         var failedCEImageSelSrc = @failedCEImageSelSrc
         var imageSize = @button-size
-    </script>
-    <script type="text/javascript" id="treeOfTrace"> @treeOfTrace
+
+        var theTrace = @theTrace
+        var ceTrace = @ceTrace
+        var code = @code
+        var codeOffset = @offset
     </script>
     <script type="text/javascript" id="jQuery"> @jQuery
     </script>
@@ -27,15 +30,18 @@
 
   <body>
     <div id="tabbar"></div>
-    <div id = "middle">
+    <div id = "wrapper">
+      <div id = "middle">
         <div id="codePaneWrapper" class = "column">
-          <div id="codePaneButton">&raquo;</div>
+          <div id="codePaneButton">&laquo;</div>
           <div id="codePane"></div>
         </div>
-        <div id="tracerWrapper" class = "column background2">
-            <div id="tracer" class="superparent"></div>
+        <div id="tracerWrapper" class = "background2 column">
+          <div id="tracer" class="superparent"></div>
         </div>
-   </div>
+      </div>
+      <div id="ceMenu" class = "column"></div>
+    </div>
   </body>
 
 </html>

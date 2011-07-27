@@ -5,7 +5,7 @@
       x
       (+ (fib (- x 1))
          (fib (- x 2)))))
-
+#|
 (define (add x y)
   (+ x y))
 
@@ -77,4 +77,4 @@
                    empty)))]))
 
 ;9
-(how-many A)
+(how-many A)|#

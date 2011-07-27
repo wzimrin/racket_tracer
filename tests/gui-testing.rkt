@@ -99,3 +99,8 @@ To-Add
 ;Long function names at top level
 (map (λ (x) (a-very-long-function-name x)) 
      (build-list 10 (lambda (n) (* n 2))))
+
+(check-expect (a-very-long-function-name 5)
+              5)
+
+(check-expect 5 4)

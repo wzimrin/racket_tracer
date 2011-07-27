@@ -6,5 +6,5 @@
 (define primary-file "tracer.rkt")
 (define categories '(devtools))
 (define scribblings '(("docs/tracer.scrbl")))
-(define release-notes '((p "Minor bugfixes")))
+(define release-notes '((p "GUI Tweaks")))
 

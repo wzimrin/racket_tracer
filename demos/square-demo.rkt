@@ -56,5 +56,5 @@
            new-x2 side side new-y3 color side) 
           0 new-y1 new-x2 side color side))]))
 
-(make-webbed-square 15 60 sq-helper)
-(make-webbed-square 15 60 sq-helper2)
+(make-webbed-square 4 40 sq-helper2)
+(make-webbed-square 4 40 sq-helper)

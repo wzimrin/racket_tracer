@@ -15,16 +15,13 @@ other
 /* Whole page */
 
 body {
-    overflow: hidden;
-    font-family: "dejavu sans mono","courier new","courier","monospace";
+    margin: 0px;
+    overflow: auto;
+    font-family: "dejavu sans mono", "consolas", "courier new","monospace";
 }
 
 .dragging {
     cursor: move !important;
-}
-
-div#middle .column {
-    position: relative;
 }
 
 .superparent {
@@ -33,20 +30,55 @@ div#middle .column {
     float: left;
 }
 
+/*ce-menu/rest of page positioning*/
+
+div#middle .column {
+    position: relative;
+}
+
+div#middle {
+    position: relative;
+    width: 100%;
+    overflow: visible;
+    float: left;
+}
+
+div#wrapper {
+    overflow: visible;
+    float: left;
+    width: 100%;
+    height: 10px;
+    /*padding-left: 200px;*/
+}
+
+div#ceMenu {
+    display: none;
+    float: left;
+    margin-left: -100%;
+    position: relative;
+    /*right: 100px;*/
+    /*width: 10%;*/
+    /*width: 100px;*/
+    height: 100%;
+    overflow: auto;
+    background: #C8D2DA;
+}
+
 /* Trace */
 
-
 div#tracerWrapper {
-    float: left;
-    width: 90%;
-    height: 10px;
+    float: right;
+    position: relative;
+    /*width: 90%;*/
+    width: 100%;
+    height: 100%;
     overflow: auto;
 }
 
 div#tracer {
-    position: absolute;
+    /*position: absolute;
     top:0px;
-    left:0px; 
+    left:0px;*/ 
     white-space: nowrap;
     cursor: pointer;
 }
@@ -89,21 +121,21 @@ div.call {
 
 /* Passed Check Expects */
 .passed-ce.background1 {
-    background: #98dc76;
-    border-color: #98dc76;
+    background: #2c9004;
+    border-color: #2c9004;
 }
 
 .passed-ce.background2 {
-    background: #83c363 !important;
-    border-color: #83c363 !important;
+    background: #3cc305;
+    border-color: #3cc305;
 }
 
 .passed-ce.background1>table>tbody>tr>td.arg {
-    background: #c7f6b0;
+    background: #3cc305;
 }
 
 .passed-ce.background2>table>tbody>tr>td.arg {
-    background: #98dc76;
+    background: #4af406;
 }
 
 /* Failed Check Expects */
@@ -112,30 +144,29 @@ div.call {
 }
 
 .failed-ce.background1 {
-    background: #b00;
-    border-color: #b00;
+    background: #b30000;
+    border-color: #b30000;
 }
 
 .failed-ce.background2 {
-    background: #900 !important;
-    border-color: #900 !important;
+    background: red;
+    border-color: red;
 }
 
 .failed-ce.background1>table>tbody>tr>td.arg {
-    background: #900;
+    background: #e60000;
 }
 
 .failed-ce.background2>table>tbody>tr>td.arg {
-    background: #700;
+    background: #ff4d4d;
 }
-
 
 /* Buttons */
 
 .button {
     /*color:white;
       background:black;*/
-    background: pink;
+    background: black;
     vertical-align: middle;
 
     border: 1px solid black;
@@ -222,6 +253,34 @@ ul.tabs > li.other:hover {
     font-weight: bold;
 }
 
+ul.tabs > li.check-expect-top-level {
+    color: #F80000;
+}
+
+/* Check Expect Menu */
+
+ul.ce-list {
+    list-style-type: none;
+    float:left;
+    color: #DF1616;
+    margin: 10px 0px; /*TB, LR*/
+    /*margin-left: 10px;*/
+    padding-left: 0px
+}
+
+ul.ce-list > li {
+    white-space: nowrap;
+    margin: 0px 10px;
+}
+
+ul.ce-list > li.picked {
+    font-weight: bold;
+}
+
+ul.ce-list > li.other:hover {
+    font-weight: bold;
+}
+
 /* Code Pane */
 
 div#codePaneWrapper {
@@ -241,17 +300,19 @@ div#codePane {
 }
 
 .highlight {
-    background: #ffff9e /*#FF0*/;
+    background: #ffff61;
+}
+
+.highlight span {
+    color: fireBrick !important;
 }
 
 .lastHighlighted {
-    background: #ffff9e /*#FF0*/;
-    border-color: #ffff9e /*#ff0*/;
+    background: #ffff61 /*#FF0*/;
+    border-color: #ffff61 /*#ff0*/;
+    color: fireBrick !important;
 }
 
-.to-src-button.lastHighlighted {
-    color: black !important;
-}
 .to-src-button.lastHighlighted:hover {
     border-color: #ffffdb !important;
 }
@@ -269,7 +330,7 @@ span.sexp-comment {
 }
 
 span.constant {
-    color: #5ce259;
+    color: #47D600;
 }
 
 span.string {
@@ -277,11 +338,11 @@ span.string {
 }
 
 span.parenthesis {
-    color: #b7654b;
+    color: white;
 }
 
 span.symbol {
-    color: #7788ff;
+    color: #47a1c2;
 }
 
 div#codePaneButton {
@@ -301,5 +362,3 @@ div.expandable:hover {
 .hidden {
     display: none
 }
-
-
