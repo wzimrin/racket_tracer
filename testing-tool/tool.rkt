@@ -87,15 +87,15 @@
                  [code (box empty)]
                  [kill-termination (lambda()
                                      (void))]
+                 [src (definitions->image-and-char def-text)]
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
                              #;(annotate-and-eval (reverse (unbox code)) src)
-                             (displayln (map syntax->datum (reverse (unbox code))))
+                             (annotate-and-eval (reverse (unbox code)) src)
                              (begin (displayln stx)
                                     (set-box! code 
                                               (cons stx (unbox code)))
-                                    (cont))))]
-                 [src (definitions->image-and-char def-text)])
+                                    (cont))))])
             
             (drracket:eval:expand-program text-pos 
                                           lang-setting
