@@ -1,3 +1,13 @@
+- Integration with Dr. Racket (guillaume)
+- Catch exceptions so trace still shows up
+- Compression of expressions in function position
+- Some option to trace all and only display them sometimes
+- Trace compression
+- Let error
+- New button layout
+
+
+
 ***** CURRENT ISSUES*****
 - Bugs from emails
 <<<<<<< HEAD
