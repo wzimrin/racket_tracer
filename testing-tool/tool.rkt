@@ -81,7 +81,6 @@
                              (begin (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
-            
             (send cur-rep-text reset-console)
             (send cur-rep-text
                   run-in-evaluation-thread
