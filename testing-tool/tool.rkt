@@ -77,7 +77,7 @@
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
                              (let* ([expanded-st (reverse (unbox code))])
-                               (map eval expanded-st))
+                               (map eval (annotate expanded-st src)))
                              (begin (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
