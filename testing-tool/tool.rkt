@@ -6,10 +6,7 @@
          racket/unit
          mrlib/switchable-button
          "annotate.rkt")
-         ;lang/stepper-language-interface)
 (provide tool@)
-
-;(define-local-member-name tracer-callback)
 
 (define tool@
   (unit
@@ -28,30 +25,18 @@
         (send bdc draw-ellipse 6 6 8 8)
         (send bdc set-bitmap #f)
         bmp))
-    
-    #;(define (tracer-frame-mixin super%)
-      (class super%
-        ...))
+
     (define (phase1) (void))
     
     (define (phase2) (void))
     
-    (define (extract-language-level definitions-text)
-      (let* ([settings (send definitions-text get-next-settings)]
-             [lang-level (drracket:language-configuration:language-settings-language settings)])
-        lang-level))
-        
-    (define (extract-language-settings definitions-text)
-      (let* ([settings (send definitions-text get-next-settings)]
-             [lang-settings (drracket:language-configuration:language-settings-settings settings)])
-        lang-settings))
-
     
     (define tracer-frame-mixin
       (mixin (drracket:unit:frame<%>) ()
         (super-new)
         (inherit get-button-panel
-                 get-definitions-text)
+                 get-definitions-text
+                 get-current-tab)
         (inherit register-toolbar-button)
         
         
@@ -68,7 +53,7 @@
                     (lambda (a-snip)
                       (cond 
                         [(is-a? a-snip string-snip%)
-                         (reverse (string->list (send a-snip get-text 0 99999999999999999999)))]
+                         (reverse (string->list (send a-snip get-text 0 (send a-snip get-count))))]
                         [(equal? #f a-snip) empty]
                         [else (list a-snip)]))]
                    [add-snip (lambda (l cur-snip)
@@ -81,42 +66,38 @@
         (define/public (tracer-callback)
           (let* ([def-text (send this get-definitions-text)]
                  [lang-setting (send def-text get-next-settings)]
-                 [text-end (send def-text get-end-position)]
+                 [text-end (string-length (send def-text get-text))]
                  [text-pos (drracket:language:text/pos def-text 0 text-end)]
                  [init (lambda() (void))]
                  [code (box empty)]
                  [kill-termination (lambda()
                                      (void))]
                  [src (definitions->image-and-char def-text)]
+                 [cur-rep-text (send (send this get-current-tab) get-ints)]
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
-                             #;(annotate-and-eval (reverse (unbox code)) src)
-                             (annotate-and-eval (reverse (unbox code)) src)
-                             (begin (displayln stx)
-                                    (set-box! code 
+                             (let* ([expanded-st (reverse (unbox code))])
+                               (map eval expanded-st))
+                             (begin (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
-            
-            (drracket:eval:expand-program text-pos 
+           
+            (send cur-rep-text reset-console)
+            (send cur-rep-text
+                  run-in-evaluation-thread
+                  (lambda()
+                    (drracket:eval:expand-program text-pos 
                                           lang-setting
                                           #f ;eval-compile-time-part?
                                           init
                                           kill-termination
-                                          iter)))               
+                                          iter)))
+            (send cur-rep-text insert-prompt)))               
         
         (register-toolbar-button tracer-button)
         (send (get-button-panel) change-children
               (λ (l)
                 (cons tracer-button (remq tracer-button l))))))
     
-    
-    
-    
-     
-    
-    (define (tracer-works-for? language-level)
-      #t
-      #;(or (send language-level stepper:supported?)
-            (getenv "PLTTRACERRUNSAFE")))
-  
   (drracket:get/extend:extend-unit-frame tracer-frame-mixin)))
+

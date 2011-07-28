@@ -5,10 +5,12 @@
 (define (annotate-and-eval stx src)
   (displayln stx)
   (displayln "before eval")
-  (displayln (my-eval stx)))
+  ;(displayln (file-stream-port? (current-output-port)))
+  (my-eval stx))
 
 (define (my-eval stx)
-  (map eval-stx stx))
+  (map eval-syntax stx))
+
 
 #|
 #lang racket
