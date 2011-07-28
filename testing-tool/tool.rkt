@@ -81,17 +81,17 @@
                              (begin (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
-           
+            
             (send cur-rep-text reset-console)
             (send cur-rep-text
                   run-in-evaluation-thread
                   (lambda()
                     (drracket:eval:expand-program text-pos 
-                                          lang-setting
-                                          #f ;eval-compile-time-part?
-                                          init
-                                          kill-termination
-                                          iter)))
+                                                  lang-setting
+                                                  #f ;eval-compile-time-part?
+                                                  init
+                                                  kill-termination
+                                                  iter)))
             (send cur-rep-text insert-prompt)))               
         
         (register-toolbar-button tracer-button)
