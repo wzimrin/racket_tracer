@@ -92,10 +92,10 @@
                          (if (eof-object? stx)
                              #;(annotate-and-eval (reverse (unbox code)) src)
                              (annotate-and-eval (reverse (unbox code)) src)
-                             (begin (displayln stx)
-                                    (set-box! code 
-                                              (cons stx (unbox code)))
-                                    (cont))))])
+                             (begin
+                               (set-box! code 
+                                         (cons stx (unbox code)))
+                               (cont))))])
             
             (drracket:eval:expand-program text-pos 
                                           lang-setting
