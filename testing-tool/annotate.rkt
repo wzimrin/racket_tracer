@@ -170,11 +170,11 @@
             (quasisyntax/loc clause
               (arg-list 
                (let ([debugger-local-bindings
-                      (#%plain-lambda ()
-                                      (#%plain-app
-                                       list*
-                                       #,@(assemble-debug-info new-bound-vars new-bound-vars 'normal #f)
-                                       #,(previous-bindings bound-vars)))])
+                      #;(#%plain-lambda ()
+                                        (#%plain-app
+                                         list*
+                                         #,@(assemble-debug-info new-bound-vars new-bound-vars 'normal #f)
+                                         #,(previous-bindings bound-vars)))])
                  #,@new-bodies))))]))
       
       (define annotated
@@ -338,27 +338,23 @@
     (make-syntax-hash src))
   
   (define (lambda-tracer expanded original)
-    (displayln original)
     (let ([ret (syntax-case expanded (#%plain-lambda)
                  [(#%plain-lambda args body ...)
-                  (begin
-                    (displayln #'(body ...))
-                    (syntax-case* original (define lambda) (on equal? syntax->datum)
-                      [(define (name a ...)
-                         bd ...)
-                       (begin
-                         (displayln #'name)
-                         #`(#%plain-lambda args
-                             #,(lambda-body #'(list . args) #'(list body ...) #'name original #'name)))]
-                      [(lambda as bd ...)
-                       (let ([sym (gensym)])
-                         #`(letrec ([#,sym (lambda args)])
-                             (#%plain-lambda args
-                                             #,(lambda-body #'(list . args)
-                                                            #'(list body ...)
-                                                            #'lambda
-                                                            original
-                                                            sym))))]))])])
+                  (syntax-case* original (define lambda) (on equal? syntax->datum)
+                    [(define (name a ...)
+                       bd ...)
+                     (displayln #'name)
+                     #`(#%plain-lambda args
+                                       #,(lambda-body #'(list . args) #'(list body ...) #'name original #'name))]
+                    [(lambda as bd ...)
+                     (let ([sym (gensym)])
+                       #`(letrec ([#,sym (lambda args)])
+                           (#%plain-lambda args
+                                           #,(lambda-body #'(list . args)
+                                                          #'(list body ...)
+                                                          #'lambda
+                                                          original
+                                                          sym))))])])])
       (displayln ret)
       ret))
   
@@ -366,12 +362,35 @@
          (let-values ([(a b)
                        (annotate-stx x
                                      (lambda (frame expanded original is-tail?)
-                                       (syntax-case x ()
-                                         [(lambda args body ...)
+                                       (syntax-case x (#%plain-app)
+                                         [(#%plain-lambda args body ...)
                                           (lambda-tracer expanded 
                                                          (hash-ref syntax-hash
                                                                    (list (syntax-position original)
                                                                          (syntax-span original))))]
+                                         [(#%plain-app fun-expr arg-expr ...) 
+                                          (let* ([orig-syntax (hash-ref syntax-hash
+                                                                        '((syntax-position stx)
+                                                                          (syntax-span stx)))])
+                                            (with-syntax ([linum (syntax-line stx)]
+                                                          [idx (syntax-position stx)]
+                                                          [span (syntax-span stx)])
+                                              #'(let* ([fun fun-expr]
+                                                       [args '(arg-expr ...)]       
+                                                       [n (create-node (function-sym 'fun-expr) fun empty args
+                                                                       linum idx span 0 0)]
+                                                       [result (parameterize ([current-linum linum]
+                                                                              [current-idx idx]
+                                                                              [current-span span]
+                                                                              [current-fun fun]
+                                                                              [current-app-call n])
+                                                                 (apply fun args))])
+                                                  #;(set-node-result! n result)
+                                                  #;(add-kid (current-call) n)
+                                                  (when (not (empty? (node-kids n)))
+                                                    (set-node-result! n result)
+                                                    (add-kid (current-call) n))
+                                                  result)))]
                                          [_ expanded]))
                                      (lambda (a b c)
                                        (void))
