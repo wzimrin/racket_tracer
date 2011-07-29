@@ -31,13 +31,16 @@
 (define (match stx)
   (syntax-case stx (#%app #%module-begin)
     [(#%app fun-expr arg-expr ...) 
-     (let* ([orig-syntax (hash-ref syntax-hash '((syntax-position stx) (syntax-span stx)))])
+     (let ([orig-syntax (hash-ref syntax-hash '((syntax-position stx) (syntax-span stx)))])
      (with-syntax ([linum (syntax-line stx)]
                    [idx (syntax-position stx)]
-                   [span (syntax-span stx)])
-       #'(let* ([fun fun-expr]
+                   [span (syntax-span stx)]
+                   [orig-function (syntax-case orig-syntax ()
+                                    [(_ orig-fun . _) orig-fun])])
+       #'(let* ([ofun orig-function]
+                [fun fun-expr]
                 [args '(arg-expr ...)]       
-                [n (create-node (function-sym 'fun-expr) fun empty args
+                [n (create-node (function-sym 'orig-function) fun empty args
                                 linum idx span 0 0)]
                 [result (parameterize ([current-linum linum]
                                        [current-idx idx]
