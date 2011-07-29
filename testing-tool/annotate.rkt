@@ -347,31 +347,29 @@
     (make-syntax-hash src))
   
   (define (lambda-tracer expanded original)
-    (let ([ret (syntax-case expanded (#%plain-lambda)
-                 [(#%plain-lambda args body ...)
-                  (syntax-case* original (define lambda) (on equal? syntax->datum)
-                    [(define (name a ...)
-                       bd ...)
-                     (displayln #'name)
-                     #`(#%plain-lambda args
-                                       #,(lambda-body #'(list . args) #'(list body ...) #'name original #'name))]
-                    [(lambda as bd ...)
-                     (let ([sym (gensym)])
-                       #`(letrec ([#,sym (lambda args)])
-                           (#%plain-lambda args
-                                           #,(lambda-body #'(list . args)
-                                                          #'(list body ...)
-                                                          #'lambda
-                                                          original
-                                                          sym))))])])])
-      (displayln ret)
-      ret))
+    (syntax-case expanded (#%plain-lambda)
+      [(#%plain-lambda args body ...)
+       (syntax-case* original (define lambda) (on equal? syntax->datum)
+         [(define (name a ...)
+            bd ...)
+          (displayln #'name)
+          #`(#%plain-lambda args
+                            #,(lambda-body #'(list . args) #'(list body ...) #'name original #'name))]
+         [(lambda as bd ...)
+          (let ([sym (gensym)])
+            #`(letrec ([#,sym (lambda args)])
+                (#%plain-lambda args
+                                #,(lambda-body #'(list . args)
+                                               #'(list body ...)
+                                               #'lambda
+                                               original
+                                               sym))))])]))
   
   (map (lambda (x)
          (let-values ([(a b)
                        (annotate-stx x
                                      (lambda (frame expanded original is-tail?)
-                                       (syntax-case x (#%plain-app)
+                                       (syntax-case original (#%plain-app)
                                          [(#%plain-lambda args body ...)
                                           (lambda-tracer expanded 
                                                          (hash-ref syntax-hash
