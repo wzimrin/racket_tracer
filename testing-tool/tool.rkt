@@ -77,11 +77,12 @@
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
                              (let* ([expanded-st (reverse (unbox code))]
-                                    [annotated (annotate expanded-st src)])
+                                    [annotated (annotate expanded-st src)]
+                                    #;[ret (map eval annotated)])
                                (displayln annotated)
                                (map eval annotated))
-                             (begin (displayln "in iter not eof")
-                                    (displayln stx)
+                             (begin ;(displayln "in iter not eof")
+                                    ;(displayln stx)
                                (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])

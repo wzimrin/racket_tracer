@@ -175,7 +175,7 @@
             (quasisyntax/loc clause
               (arg-list 
                (let ([debugger-local-bindings
-                      #;(#%plain-lambda ()
+                      (#%plain-lambda ()
                                         (#%plain-app
                                          list*
                                          #,@(assemble-debug-info new-bound-vars new-bound-vars 'normal #f)
@@ -302,7 +302,7 @@
       hash)))
 
 ;--------------------------------------------------------------------
-; Syntax Annotation
+; End Syntax Annotation
 ;--------------------------------------------------------------------
 
 (struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
@@ -346,6 +346,11 @@
   (define syntax-hash
     (make-syntax-hash src))
   
+  (define (function-sym datum)
+  (if (cons? datum)
+      (function-sym (first datum))
+      datum))
+  
   (define (lambda-tracer expanded original)
     (syntax-case expanded (#%plain-lambda)
       [(#%plain-lambda args body ...)
@@ -365,44 +370,53 @@
                                                original
                                                sym))))])]))
   
+  (displayln "before map")
   (map (lambda (x)
-         (let-values ([(a b)
-                       (annotate-stx x
-                                     (lambda (frame expanded original is-tail?)
-                                       (syntax-case original (#%plain-app)
-                                         [(#%plain-lambda args body ...)
-                                          (lambda-tracer expanded 
-                                                         (hash-ref syntax-hash
-                                                                   (list (syntax-position original)
-                                                                         (syntax-span original))))]
-                                         [(#%plain-app fun-expr arg-expr ...) 
-                                          (let* ([orig-syntax (hash-ref syntax-hash
-                                                                        '((syntax-position stx)
-                                                                          (syntax-span stx)))])
-                                            (with-syntax ([linum (syntax-line stx)]
-                                                          [idx (syntax-position stx)]
-                                                          [span (syntax-span stx)])
-                                              #'(let* ([fun fun-expr]
-                                                       [args '(arg-expr ...)]       
-                                                       [n (create-node (function-sym 'fun-expr) fun empty args
-                                                                       linum idx span 0 0)]
-                                                       [result (parameterize ([current-linum linum]
-                                                                              [current-idx idx]
-                                                                              [current-span span]
-                                                                              [current-fun fun]
-                                                                              [current-app-call n])
-                                                                 (apply fun args))])
-                                                  #;(set-node-result! n result)
-                                                  #;(add-kid (current-call) n)
-                                                  (when (not (empty? (node-kids n)))
-                                                    (set-node-result! n result)
-                                                    (add-kid (current-call) n))
-                                                  result)))]
-                                         [_ expanded]))
-                                     (lambda (a b c)
-                                       (void))
-                                     (lambda (a b c)
-                                       (void)))])
+         (let-values 
+             ([(a b)
+               (annotate-stx 
+                x
+                (lambda (frame expanded original is-tail?)
+                  (kernel:kernel-syntax-case 
+                   original #f 
+                   [(#%plain-lambda args body ...)
+                    (lambda-tracer expanded 
+                                   (hash-ref syntax-hash
+                                             (list (syntax-position original)
+                                                   (syntax-span original))))]
+                   [(#%plain-app fun-expr arg-expr ...) 
+                    (let* ([orig-syntax (hash-ref syntax-hash
+                                                  (list (syntax-position original)
+                                                    (syntax-span original)))])
+                      (with-syntax ([linum (syntax-line original)]
+                                    [idx (syntax-position original)]
+                                    [span (syntax-span original)])
+                        #'(let* ([fun (begin (displayln "fun")
+                                             fun-expr)]
+                                 [args (begin (displayln "args")
+                                              '(arg-expr ...))]       
+                                 [n (begin (displayln "n")
+                                           (create-node (function-sym 'orig-syntax) fun empty args
+                                                 linum idx span 0 0))]
+                                 [result (begin (displayln "result")
+                                                (parameterize ([current-linum linum]
+                                                        [current-idx idx]
+                                                        [current-span span]
+                                                        [current-fun fun]
+                                                        [current-app-call n])
+                                           (displayln "after parameterize")
+                                           (apply fun args)))])
+                            #;(set-node-result! n result)
+                            #;(add-kid (current-call) n)
+                            (when (not (empty? (node-kids n)))
+                              (set-node-result! n result)
+                              (add-kid (current-call) n))
+                            result)))]
+                   [_ expanded]))
+                (lambda (a b c)
+                  (void))
+                (lambda (a b c)
+                  (void)))])
            a))
        stx))
 
