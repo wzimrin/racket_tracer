@@ -76,8 +76,10 @@
                  [cur-rep-text (send (send this get-current-tab) get-ints)]
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
-                             (let* ([expanded-st (reverse (unbox code))])
-                               (map eval (annotate expanded-st src)))
+                             (let* ([expanded-st (reverse (unbox code))]
+                                    [annotated (annotate expanded-st src)])
+                               (displayln annotated)
+                               (map eval annotated))
                              (begin (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
