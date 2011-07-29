@@ -80,7 +80,9 @@
                                     [annotated (annotate expanded-st src)])
                                (displayln annotated)
                                (map eval annotated))
-                             (begin (set-box! code 
+                             (begin (displayln "in iter not eof")
+                                    (displayln stx)
+                               (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
             (send cur-rep-text reset-console)

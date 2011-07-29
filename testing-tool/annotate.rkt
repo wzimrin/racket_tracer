@@ -7,6 +7,11 @@
          (for-syntax scheme/base)
          (only-in mzscheme [apply plain-apply]))
 
+;--------------------------------------------------------------------
+; Syntax Annotation
+;--------------------------------------------------------------------
+
+
 (define (arglist-bindings arglist-stx)
     (syntax-case arglist-stx ()
       [var
@@ -295,6 +300,10 @@
       (for ([s syntaxes])
         (iter s))
       hash)))
+
+;--------------------------------------------------------------------
+; Syntax Annotation
+;--------------------------------------------------------------------
 
 (struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
 (define (create-node n func f a l i s s-i s-s)
