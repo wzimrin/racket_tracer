@@ -274,47 +274,42 @@
 (provide annotate)
 
 (define (make-syntax-hash src)
-  (let-values ([(in out) (make-pipe-with-specials)])
-    (for ([v src])
-      (if (char? v)
-          (display v out)
-          (write-special v out)))
-    (close-output-port out)
-    (letrec ([syntaxes (parameterize ([read-accept-reader #t])
-                         (let iter ([vals empty])
-                           (let ([v (read-syntax #f in)])
-                             (if (eof-object? v)
-                                 (reverse vals)
-                                 (iter (cons v vals))))))]
-             [hash (make-hash)]
-             [iter (lambda (syntax)
-                     (and (syntax-position syntax)
-                          (syntax-span syntax)
-                          (hash-set! hash
-                                     (list (syntax-position syntax)
-                                           (syntax-span syntax))
-                                     syntax))
-                     (let ([datum (syntax-e syntax)])
-                       (when (list? datum)
-                         (map iter datum))))])
-      (for ([s syntaxes])
-        (iter s))
-      hash)))
+  (letrec ([syntaxes (parameterize ([read-accept-reader #t])
+                       (let iter ([vals empty])
+                         (let ([v (read-syntax #f src)])
+                           (if (eof-object? v)
+                               (reverse vals)
+                               (iter (cons v vals))))))]
+           [hash (make-hash)]
+           [iter (lambda (syntax)
+                   (and (syntax-position syntax)
+                        (syntax-span syntax)
+                        (hash-set! hash
+                                   (list (syntax-position syntax)
+                                         (syntax-span syntax))
+                                   syntax))
+                   (let ([datum (syntax-e syntax)])
+                     (when (list? datum)
+                       (map iter datum))))])
+    (for ([s syntaxes])
+      (iter s))
+    hash))
 
 ;--------------------------------------------------------------------
 ; End Syntax Annotation
 ;--------------------------------------------------------------------
 
-(struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
-(define (create-node n func f a l i s s-i s-s)
-  (node n func f 'no-result a empty l i s s-i s-s))
-
-(define current-call (make-parameter (create-node 'top-level #f empty empty 0 0 0 0 0)))
-(define current-linum (make-parameter 0))
-(define current-idx (make-parameter 0))
-(define current-span (make-parameter 0))
-(define current-fun (make-parameter #f))
-(define current-app-call (make-parameter empty))
+(define pre-code
+  #'((struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
+     (displayln "work!!!!!!!!!!!!")
+     (define (create-node n func f a l i s s-i s-s)
+       (node n func f 'no-result a empty l i s s-i s-s))
+     (define current-call (make-parameter (create-node 'top-level #f empty empty 0 0 0 0 0)))
+     (define current-linum (make-parameter 0))
+     (define current-idx (make-parameter 0))
+     (define current-span (make-parameter 0))
+     (define current-fun (make-parameter #f))
+     (define current-app-call (make-parameter empty))))
 
 (define (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]
@@ -342,14 +337,14 @@
   (apply fun (map arg-fun args)))
 
 (define (annotate stx src)
-  
+  (displayln src)
   (define syntax-hash
     (make-syntax-hash src))
-  
+  (display syntax-hash)
   (define (function-sym datum)
-  (if (cons? datum)
-      (function-sym (first datum))
-      datum))
+    (if (cons? datum)
+        (function-sym (first datum))
+        datum))
   
   (define (lambda-tracer expanded original)
     (syntax-case expanded (#%plain-lambda)
@@ -371,9 +366,9 @@
                                                sym))))])]))
   
   (displayln "before map")
-  (map (lambda (x)
+   (map (lambda (x)
          (let-values 
-             ([(a b)
+             ([(annotated-stx breaks)
                (annotate-stx 
                 x
                 (lambda (frame expanded original is-tail?)
@@ -387,7 +382,7 @@
                    [(#%plain-app fun-expr arg-expr ...) 
                     (let* ([orig-syntax (hash-ref syntax-hash
                                                   (list (syntax-position original)
-                                                    (syntax-span original)))])
+                                                        (syntax-span original)))])
                       (with-syntax ([linum (syntax-line original)]
                                     [idx (syntax-position original)]
                                     [span (syntax-span original)])
@@ -397,15 +392,15 @@
                                               '(arg-expr ...))]       
                                  [n (begin (displayln "n")
                                            (create-node (function-sym 'orig-syntax) fun empty args
-                                                 linum idx span 0 0))]
+                                                        linum idx span 0 0))]
                                  [result (begin (displayln "result")
                                                 (parameterize ([current-linum linum]
-                                                        [current-idx idx]
-                                                        [current-span span]
-                                                        [current-fun fun]
-                                                        [current-app-call n])
-                                           (displayln "after parameterize")
-                                           (apply fun args)))])
+                                                               [current-idx idx]
+                                                               [current-span span]
+                                                               [current-fun fun]
+                                                               [current-app-call n])
+                                                  (displayln "after parameterize")
+                                                  (apply fun args)))])
                             #;(set-node-result! n result)
                             #;(add-kid (current-call) n)
                             (when (not (empty? (node-kids n)))
@@ -417,7 +412,13 @@
                   (void))
                 (lambda (a b c)
                   (void)))])
-           a))
+           (syntax-case annotated-stx (module)
+             [(module name lang
+                (mod-begin body ...))
+              #`(module name lang
+                  (mod-begin #,@pre-code
+                             body ...))]
+             [_ annotated-stx])))
        stx))
 
 #;(define original-syntax

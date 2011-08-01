@@ -47,23 +47,32 @@
                (parent (send this get-button-panel))
                (callback (λ (button) (send this tracer-callback)))))
         
-        (define (definitions->image-and-char def)
-          (letrec ([first-snip (send def find-first-snip)]
-                   [process-snip 
-                    (lambda (a-snip)
-                      (cond 
-                        [(is-a? a-snip string-snip%)
-                         (reverse (string->list (send a-snip get-text 0 (send a-snip get-count))))]
-                        [(equal? #f a-snip) empty]
-                        [else (list a-snip)]))]
-                   [add-snip (lambda (l cur-snip)
-                               (if (equal? cur-snip #f)
-                                   l
-                                   (add-snip (append (process-snip cur-snip) l)
-                                             (send cur-snip next))))])
-            (reverse (add-snip empty first-snip))))
-        
+        #;(define (definitions->image-and-char def)
+            (letrec ([first-snip (send def find-first-snip)]
+                     [process-snip 
+                      (lambda (a-snip)
+                        (cond 
+                          [(is-a? a-snip string-snip%)
+                           (reverse (string->list (send a-snip get-text 0 (send a-snip get-count))))]
+                          [(equal? #f a-snip) empty]
+                          [else (list a-snip)]))]
+                     [add-snip (lambda (l cur-snip)
+                                 (if (equal? cur-snip #f)
+                                     l
+                                     (add-snip (append (process-snip cur-snip) l)
+                                               (send cur-snip next))))])
+              (reverse (add-snip empty first-snip))))
+
         (define/public (tracer-callback)
+          #;(let* ([tab (get-current-tab)]
+                 [rep (send tab get-ints)])
+            (send tab disable-evaluation)
+            (send rep reset-console)
+            (send rep clear-undos)
+            (send rep insert-prompt)
+            (send tab enable-evaluation)
+            (message-box "title" (format "~s"
+                                         (namespace-mapped-symbols (send rep get-user-namespace)))))
           (let* ([def-text (send this get-definitions-text)]
                  [lang-setting (send def-text get-next-settings)]
                  [text-end (string-length (send def-text get-text))]
@@ -72,21 +81,25 @@
                  [code (box empty)]
                  [kill-termination (lambda()
                                      (void))]
-                 [src (definitions->image-and-char def-text)]
+                 [src (open-input-text-editor def-text)]
                  [cur-rep-text (send (send this get-current-tab) get-ints)]
+                 [ns (send cur-rep-text get-user-namespace)]
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
                              (let* ([expanded-st (reverse (unbox code))]
                                     [annotated (annotate expanded-st src)]
                                     #;[ret (map eval annotated)])
                                (displayln annotated)
-                               (map eval annotated))
+                               (map (lambda (stx)
+                                      (eval stx ns))
+                                    annotated))
                              (begin ;(displayln "in iter not eof")
                                     ;(displayln stx)
                                (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
-            (send cur-rep-text reset-console)
+            #;(send (send this get-current-tab) disable-evaluation)
+            #;(send cur-rep-text reset-console)
             (send cur-rep-text
                   run-in-evaluation-thread
                   (lambda()
@@ -96,7 +109,7 @@
                                                   init
                                                   kill-termination
                                                   iter)))
-            (send cur-rep-text insert-prompt)))               
+            #;(send cur-rep-text insert-prompt)))
         
         (register-toolbar-button tracer-button)
         (send (get-button-panel) change-children
