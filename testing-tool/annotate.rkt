@@ -1,428 +1,2073 @@
-#lang racket
+#reader(lib"read.ss""wxme")WXME0108 ## 
+#|
+   This file uses the GRacket editor format.
+   Open this file in DrRacket version 5.1.1 or later to read it.
 
-(require (prefix-in kernel: syntax/kerncase)
-         gui-debugger/marks
-         mzlib/etc
-         (prefix-in srfi: srfi/1/search)
-         (for-syntax scheme/base)
-         (only-in mzscheme [apply plain-apply]))
+   Most likely, it was created by saving a program in DrRacket,
+   and it probably contains a program with non-text elements
+   (such as images or comment boxes).
 
-;--------------------------------------------------------------------
-; Annotate-stx
-;--------------------------------------------------------------------
-
-
-(define (arglist-bindings arglist-stx)
-    (syntax-case arglist-stx ()
-      [var
-       (identifier? arglist-stx)
-       (list arglist-stx)]
-      [(var ...)
-       (syntax->list arglist-stx)]
-      [(var . others)
-       (cons #'var (arglist-bindings #'others))]))
-
-(define annotate-stx
-  (opt-lambda (stx break-wrap record-bound-id record-top-level-id [source #f])
-    
-    (define breakpoints (make-hasheq))
-    
-    (define (previous-bindings bound-vars)
-      (if (null? bound-vars)
-          #'null
-          #'(#%plain-app debugger-local-bindings)))
-    
-    (define (top-level-annotate stx)
-      (kernel:kernel-syntax-case/phase
-       stx (namespace-base-phase)
-       [(module identifier name (plain-module-begin . module-level-exprs))
-        (with-syntax ([(module . _) stx])
-          (quasisyntax/loc stx (module identifier name
-                                 (plain-module-begin 
-                                  #,@(map (lambda (e) (module-level-expr-iterator
-                                                       e (list (syntax-e #'identifier)
-                                                               (syntax-source #'identifier))))
-                                          (syntax->list #'module-level-exprs))))))]
-       [else-stx
-        (general-top-level-expr-iterator stx  #f)]))
-    
-    (define (module-level-expr-iterator stx module-name )
-      (kernel:kernel-syntax-case
-       stx #f
-       [(#%provide . provide-specs)
-        stx]
-       [else-stx
-        (general-top-level-expr-iterator stx module-name )]))
-    
-    (define (general-top-level-expr-iterator stx module-name )
-      (kernel:kernel-syntax-case
-       stx #f
-       [(define-values (var ...) expr)
-        
-        (begin
-          (for-each (lambda (v) (record-bound-id 'bind v v))
-                    (syntax->list #'(var ...)))
-          (quasisyntax/loc stx
-            (begin (define-values (var ...) #,(annotate #`expr '() #t module-name))
-                   #,(if (syntax-source stx)
-                         #`(begin (#%plain-app 
-                                   #,record-top-level-id '#,module-name #'var (case-lambda
-                                                                                [() var]
-                                                                                [(v) (set! var v)])) ...)
-                         #'(#%plain-app void))
-                   (#%plain-app void)))
-          )
-        ]
-       [(define-syntaxes (var ...) expr)
-        stx]
-       [(define-values-for-syntax (var ...) expr)
-        ;; define-values-for-syntax's RHS is compile time, so treat it
-        ;; like define-syntaxes
-        stx]
-       [(begin . top-level-exprs)
-        (quasisyntax/loc stx (begin #,@(map (lambda (expr)
-                                              (module-level-expr-iterator expr module-name ))
-                                            (syntax->list #'top-level-exprs))))]
-       [(#%require . require-specs)
-        stx]
-       [else
-        (annotate stx '() #f module-name )]))
-    
-    (define (annotate expr bound-vars is-tail? module-name)
-      
-      (define annotate-break?
-        (let ([pos (syntax-position expr)]
-              [src (syntax-source expr)])
-          (and src pos
-               (hash-ref breakpoints pos (lambda () #t))
-               (kernel:kernel-syntax-case
-                expr #f
-                [(if test then else) #t]
-                [(begin . bodies) #t]
-                [(begin0 . bodies) #t]
-                [(let-values . clause) #t]
-                [(letrec-values . clause) #t]
-                [(set! var val) #t]
-                [(with-continuation-mark key mark body) #t]
-                [(#%plain-app . exprs) #t]
-                [(#%plain-lambda . exprs) #t]
-                [(case-lambda . exprs) #t]
-                [_ #f])
-               (begin
-                 (hash-set! breakpoints pos #f)
-                 (when (not is-tail?)
-                   (hash-set! breakpoints (+ pos (syntax-span expr) -1) #f))
-                 #t))))
-      
-      (define (let/rec-values-annotator letrec?)
-        (kernel:kernel-syntax-case
-         expr #f
-         [(label (((var ...) rhs) ...) . bodies)
-          (let* ([new-bindings (apply append
-                                      (map syntax->list
-                                           (syntax->list #`((var ...) ...))))]
-                 [all-bindings (append new-bindings bound-vars)]
-                 [new-rhs (map (lambda (expr)
-                                 (annotate expr 
-                                           (if letrec? all-bindings bound-vars)
-                                           #f module-name ))
-                               (syntax->list #'(rhs ...)))]
-                 [last-body (car (reverse (syntax->list #'bodies)))]
-                 [all-but-last-body (reverse (cdr (reverse (syntax->list #'bodies))))]
-                 [bodies (append (map (lambda (expr)
-                                        (annotate expr all-bindings #f module-name ))
-                                      all-but-last-body)
-                                 (list (annotate
-                                        last-body
-                                        all-bindings 
-                                        is-tail? module-name )))]
-                 [local-debug-info (assemble-debug-info new-bindings new-bindings 'normal #f)]
-                 [previous-bindings (previous-bindings bound-vars)])
-            (for-each (lambda (id) (record-bound-id 'bind id id)) new-bindings)
-            (with-syntax ([(new-rhs/trans ...) new-rhs]
-                          [previous-bindings previous-bindings])
-              (if letrec?
-                  (quasisyntax/loc expr
-                    (let ([old-bindings previous-bindings])
-                      (label (((debugger-local-bindings) (#%plain-lambda ()
-                                                                         (#%plain-app
-                                                                          list*
-                                                                          #,@local-debug-info
-                                                                          old-bindings)))
-                              ((var ...) new-rhs/trans) ...)
-                             #,@bodies)))
-                  (quasisyntax/loc expr
-                    (label (((var ...) new-rhs/trans) ...)
-                           (let ([debugger-local-bindings (#%plain-lambda ()
-                                                                          (#%plain-app
-                                                                           list*
-                                                                           #,@local-debug-info
-                                                                           previous-bindings))])
-                             #,@bodies))))))]))
-      
-      (define (lambda-clause-annotator clause)
-        (kernel:kernel-syntax-case
-         clause #f
-         [(arg-list . bodies)
-          (let* ([new-bound-vars (arglist-bindings #'arg-list)]
-                 [all-bound-vars (append new-bound-vars bound-vars)]
-                 [new-bodies (let loop ([bodies (syntax->list #'bodies)])
-                               (if (equal? '() (cdr bodies))
-                                   (list (annotate (car bodies) all-bound-vars #t module-name ))
-                                   (cons (annotate (car bodies) all-bound-vars #f module-name )
-                                         (loop (cdr bodies)))))])
-            (for-each (lambda (id) (record-bound-id 'bind id id)) new-bound-vars)
-            (quasisyntax/loc clause
-              (arg-list 
-               (let ([debugger-local-bindings
-                      (#%plain-lambda ()
-                                        (#%plain-app
-                                         list*
-                                         #,@(assemble-debug-info new-bound-vars new-bound-vars 'normal #f)
-                                         #,(previous-bindings bound-vars)))])
-                 #,@new-bodies))))]))
-      
-      (define annotated
-        (syntax-recertify
-         (kernel:kernel-syntax-case
-          expr #f
-          [var-stx (identifier? (syntax var-stx))
-                   (let ([binder (and (syntax-original? expr)
-                                      (srfi:member expr bound-vars free-identifier=?))])
-                     (if binder
-                         (record-bound-id 'ref expr (car binder))
-                         (record-bound-id 'top-level expr expr))
-                     expr)]
-          
-          [(#%plain-lambda . clause)
-           (quasisyntax/loc expr 
-             (#%plain-lambda #,@(lambda-clause-annotator #'clause)))]
-          
-          [(case-lambda . clauses)
-           (quasisyntax/loc expr
-             (case-lambda #,@(map lambda-clause-annotator (syntax->list #'clauses))))]
-          
-          [(if test then else)
-           (quasisyntax/loc expr (if #,(annotate #'test bound-vars #f module-name )
-                                     #,(annotate #'then bound-vars is-tail? module-name )
-                                     #,(annotate #'else bound-vars is-tail? module-name )))]
-          
-          [(begin . bodies)
-           (letrec ([traverse
-                     (lambda (lst)
-                       (if (and (pair? lst) (equal? '() (cdr lst)))
-                           `(,(annotate (car lst) bound-vars is-tail? module-name ))
-                           (cons (annotate (car lst) bound-vars #f module-name )
-                                 (traverse (cdr lst)))))])
-             (quasisyntax/loc expr (begin #,@(traverse (syntax->list #'bodies)))))]
-          
-          [(begin0 . bodies)
-           (quasisyntax/loc expr (begin0 #,@(map (lambda (expr)
-                                                   (annotate expr bound-vars #f module-name ))
-                                                 (syntax->list #'bodies))))]
-          
-          [(let-values . clause)
-           (let/rec-values-annotator #f)]
-          
-          [(letrec-values . clause) 
-           (let/rec-values-annotator #t)]
-          
-          [(set! var val)
-           (let ([binder (and (syntax-original? #'var)
-                              (srfi:member #'var bound-vars free-identifier=?))])
-             (when binder
-               (record-bound-id 'set expr (car binder)))
-             (quasisyntax/loc expr (set! var #,(annotate #`val bound-vars #f module-name ))))]
-          
-          [(quote _) expr]
-          
-          [(quote-syntax _) expr]
-          
-          [(with-continuation-mark key mark body)
-           (quasisyntax/loc expr (with-continuation-mark key
-                                   #,(annotate #'mark bound-vars #f module-name )
-                                   #,(annotate #'body bound-vars is-tail? module-name )))]
-          
-          [(#%plain-app . exprs)
-           (let ([subexprs (map (lambda (expr) 
-                                  (annotate expr bound-vars #f module-name ))
-                                (syntax->list #'exprs))])
-             (if (or is-tail? (not (syntax-source expr)))
-                 (quasisyntax/loc expr (#%plain-app . #,subexprs))
-                 (wcm-wrap (make-debug-info module-name expr bound-vars bound-vars 'normal #f (previous-bindings bound-vars))
-                           (quasisyntax/loc expr (#%plain-app . #,subexprs)))))]
-          
-          [(#%top . var) expr]
-          [(#%variable-reference . _) expr]
-          
-          [else (error 'expr-syntax-object-iterator "unknown expr: ~a"
-                       (syntax->datum expr))])
-         expr
-         (current-code-inspector)
-         #f))
-      
-      (if annotate-break?
-          (break-wrap
-           (make-debug-info module-name expr bound-vars bound-vars 'at-break #f (previous-bindings bound-vars))
-           annotated
-           expr
-           is-tail?)
-          annotated))
-    
-    (values (top-level-annotate stx) (hash-map breakpoints (lambda (k v) k)))))
-
-(provide annotate)
-
-;--------------------------------------------------------------------
-; End Annotate-stx
-;--------------------------------------------------------------------
-
-(define (make-syntax-hash src)
-  (letrec ([syntaxes (parameterize ([read-accept-reader #t])
-                       (let iter ([vals empty])
-                         (let ([v (read-syntax #f src)])
-                           (if (eof-object? v)
-                               (reverse vals)
-                               (iter (cons v vals))))))]
-           [hash (make-hash)]
-           [iter (lambda (syntax)
-                   (and (syntax-position syntax)
-                        (syntax-span syntax)
-                        (hash-set! hash
-                                   (list (syntax-position syntax)
-                                         (syntax-span syntax))
-                                   syntax))
-                   (let ([datum (syntax-e syntax)])
-                     (when (list? datum)
-                       (map iter datum))))])
-    (for ([s syntaxes])
-      (iter s))
-    hash))
-
-(define pre-code
-  #'((struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
-     (displayln "work!!!!!!!!!!!!")
-     (define (create-node n func f a l i s s-i s-s)
-       (node n func f 'no-result a empty l i s s-i s-s))
-     (define current-call (make-parameter (create-node 'top-level #f empty empty 0 0 0 0 0)))
-     (define current-linum (make-parameter 0))
-     (define current-idx (make-parameter 0))
-     (define current-span (make-parameter 0))
-     (define current-fun (make-parameter #f))
-     (define current-app-call (make-parameter empty))))
-
-(define (lambda-body args body name orig fun)
-  #`(let* ([app-call? (eq? #,fun (current-fun))]
-           [n (if app-call?
-                  (struct-copy node (current-app-call)
-                               [src-idx #,(syntax-position orig)]
-                               [src-span #,(syntax-span orig)])
-                  (create-node '#,name #,fun empty #,args
-                               0 0 0
-                               #,(syntax-position orig)
-                               #,(syntax-span orig)))]
-           [parent (if app-call?
-                       (current-call)
-                       (current-app-call))])
-      (add-kid parent n)
-      (parameterize ([current-call n])
-        (let ([result #,body])
-          (set-node-result! n result)
-          result))))
-
-;returns a function that applies arg-fun to every argument passed
-;and calls fun on the result.  (on equal? struct-value) checks if
-;the passed structs have equal? values
-(define ((on fun arg-fun) . args)
-  (apply fun (map arg-fun args)))
-
-(define (annotate stx src)
-  (displayln src)
-  (define syntax-hash
-    (make-syntax-hash src))
-  (display syntax-hash)
-  (define (function-sym datum)
-    (if (cons? datum)
-        (function-sym (first datum))
-        datum))
-  
-  (define (lambda-tracer expanded original)
-    (syntax-case expanded (#%plain-lambda)
-      [(#%plain-lambda args body ...)
-       (syntax-case* original (define lambda) (on equal? syntax->datum)
-         [(define (name a ...) bd ...)
-          #`(#%plain-lambda args
-                            #,(lambda-body #'(list . args) #'(list body ...) #'name original #'name))]
-         [(lambda as bd ...)
-          (let ([sym (gensym)])
-            #`(letrec ([#,sym (lambda args)])
-                (#%plain-lambda args
-                                #,(lambda-body #'(list . args)
-                                               #'(list body ...)
-                                               #'lambda
-                                               original
-                                               sym))))])]))
-  
-  (define annotated-stx-list
-    (map (lambda (x)
-           (let-values 
-               ([(annotated-stx breaks)
-                 (annotate-stx 
-                  x
-                  (lambda (frame expanded original is-tail?)
-                    (kernel:kernel-syntax-case 
-                     original #f 
-                     [(#%plain-lambda args body ...)
-                      (lambda-tracer expanded 
-                                     (hash-ref syntax-hash
-                                               (list (syntax-position original)
-                                                     (syntax-span original))))]
-                     [(#%plain-app fun-expr arg-expr ...) 
-                      (let* ([orig-syntax (hash-ref syntax-hash
-                                                    (list (syntax-position original)
-                                                          (syntax-span original)))])
-                        (with-syntax ([linum (syntax-line original)]
-                                      [idx (syntax-position original)]
-                                      [span (syntax-span original)])
-                          #'(let* ([fun (begin (displayln "fun")
-                                               fun-expr)]
-                                   [args (begin (displayln "args")
-                                                '(arg-expr ...))]       
-                                   [n (begin (displayln "n")
-                                             (create-node (function-sym 'orig-syntax) fun empty args
-                                                          linum idx span 0 0))]
-                                   [result (begin (displayln "result")
-                                                  (parameterize ([current-linum linum]
-                                                                 [current-idx idx]
-                                                                 [current-span span]
-                                                                 [current-fun fun]
-                                                                 [current-app-call n])
-                                                    (displayln "after parameterize")
-                                                    (apply fun args)))])
-                              #;(set-node-result! n result)
-                              #;(add-kid (current-call) n)
-                              (when (not (empty? (node-kids n)))
-                                (set-node-result! n result)
-                                (add-kid (current-call) n))
-                              result)))]
-                     [_ expanded]))
-                  (lambda (a b c)
-                    (void))
-                  (lambda (a b c)
-                    (void)))])
-             annotated-stx))
-         stx))
-  
-  (map (lambda(annotated-stx)
-         (syntax-case annotated-stx (module)
-           [(module some-name some-lang (modbeg topform ...))
-            (cons
-             (quasisyntax/loc annotated-stx
-               (module some-name some-lang
-                 (modbeg 
-                  #,@pre-code
-                  topform ... 
-                  (provide (all-defined-out)))))
-             (syntax->datum #''some-name))]
-           [_ (cons annotated-stx #f)]))
-       annotated-stx-list))
+            http://racket-lang.org/
+|#
+ 28 7 #"wxtext\0"
+3 1 6 #"wxtab\0"
+1 1 8 #"wximage\0"
+2 0 8 #"wxmedia\0"
+4 1 34 #"(lib \"syntax-browser.ss\" \"mrlib\")\0"
+1 0 16 #"drscheme:number\0"
+3 0 44 #"(lib \"number-snip.ss\" \"drscheme\" \"private\")\0"
+1 0 36 #"(lib \"comment-snip.ss\" \"framework\")\0"
+1 0 43 #"(lib \"collapsed-snipclass.ss\" \"framework\")\0"
+0 0 19 #"drscheme:sexp-snip\0"
+0 0 36 #"(lib \"cache-image-snip.ss\" \"mrlib\")\0"
+1 0 68
+(
+ #"((lib \"image-core.ss\" \"mrlib\") (lib \"image-core-wxme.rkt\" \"mr"
+ #"lib\"))\0"
+) 1 0 33 #"(lib \"bullet-snip.ss\" \"browser\")\0"
+0 0 29 #"drscheme:bindings-snipclass%\0"
+1 0 25 #"(lib \"matrix.ss\" \"htdp\")\0"
+1 0 22 #"drscheme:lambda-snip%\0"
+1 0 57
+#"(lib \"hrule-snip.rkt\" \"macro-debugger\" \"syntax-browser\")\0"
+1 0 45 #"(lib \"image-snipr.ss\" \"slideshow\" \"private\")\0"
+1 0 26 #"drscheme:pict-value-snip%\0"
+0 0 38 #"(lib \"pict-snipclass.ss\" \"slideshow\")\0"
+2 0 55 #"(lib \"vertical-separator-snip.ss\" \"stepper\" \"private\")\0"
+1 0 18 #"drscheme:xml-snip\0"
+1 0 31 #"(lib \"xml-snipclass.ss\" \"xml\")\0"
+1 0 21 #"drscheme:scheme-snip\0"
+2 0 34 #"(lib \"scheme-snipclass.ss\" \"xml\")\0"
+1 0 10 #"text-box%\0"
+1 0 32 #"(lib \"text-snipclass.ss\" \"xml\")\0"
+1 0 15 #"test-case-box%\0"
+2 0 1 6 #"wxloc\0"
+          0 0 56 0 1 #"\0"
+0 75 1 #"\0"
+0 12 90 -1 90 -1 3 -1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 255 255 255 1 -1 0 9
+#"Standard\0"
+0 75 12 #"Courier New\0"
+0 12 90 -1 90 -1 3 -1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 255 255 255 1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 -1 -1 2 24
+#"framework:default-color\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 150 0 150 0 0 0 -1 -1 2 15
+#"text:ports out\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 150 0 150 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1.0 0 -1 -1 93 -1 -1 -1 0 0 0 0 0 0 0 0 0 1.0 1.0 1.0 255 0 0 0 0 0 -1
+-1 2 15 #"text:ports err\0"
+0 -1 1 #"\0"
+1.0 0 -1 -1 93 -1 -1 -1 0 0 0 0 0 0 0 0 0 1.0 1.0 1.0 255 0 0 0 0 0 -1
+-1 2 1 #"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 0 175 0 0 0 -1 -1 2 17
+#"text:ports value\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 0 175 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1.0 0 92 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1.0 1.0 1.0 34 139 34 0 0 0 -1
+-1 2 27 #"Matching Parenthesis Style\0"
+0 -1 1 #"\0"
+1.0 0 92 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1.0 1.0 1.0 34 139 34 0 0 0 -1
+-1 2 1 #"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 38 38 128 0 0 0 -1 -1 2 37
+#"framework:syntax-color:scheme:symbol\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 38 38 128 0 0 0 -1 -1 2 38
+#"framework:syntax-color:scheme:keyword\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 38 38 128 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 194 116 31 0 0 0 -1 -1 2
+38 #"framework:syntax-color:scheme:comment\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 194 116 31 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 41 128 38 0 0 0 -1 -1 2 37
+#"framework:syntax-color:scheme:string\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 41 128 38 0 0 0 -1 -1 2 39
+#"framework:syntax-color:scheme:constant\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 41 128 38 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 132 60 36 0 0 0 -1 -1 2 42
+#"framework:syntax-color:scheme:parenthesis\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 132 60 36 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 255 0 0 0 0 0 -1 -1 2 36
+#"framework:syntax-color:scheme:error\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 255 0 0 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 -1 -1 2 36
+#"framework:syntax-color:scheme:other\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 81 112 203 0 0 0 -1 -1 2
+38 #"drracket:check-syntax:lexically-bound\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 81 112 203 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 178 34 34 0 0 0 -1 -1 2 28
+#"drracket:check-syntax:set!d\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 178 34 34 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 68 0 203 0 0 0 -1 -1 2 31
+#"drracket:check-syntax:imported\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 68 0 203 0 0 0 -1 -1 2 47
+#"drracket:check-syntax:my-obligation-style-pref\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 178 34 34 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 116 0 0 0 0 -1 -1 2 50
+#"drracket:check-syntax:their-obligation-style-pref\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 116 0 0 0 0 -1 -1 2 48
+#"drracket:check-syntax:unk-obligation-style-pref\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 139 142 28 0 0 0 -1 -1 2
+49 #"drracket:check-syntax:both-obligation-style-pref\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 139 142 28 0 0 0 -1 -1 2
+26 #"plt:htdp:test-coverage-on\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 0 0 0 255 165 0 0 0 0 -1 -1 2 27
+#"plt:htdp:test-coverage-off\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 0 0 0 255 165 0 0 0 0 -1 -1 4 1
+#"\0"
+0 70 1 #"\0"
+1.0 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 1.0 1.0 1.0 1.0 1.0 1.0 0 0 0 0 0 0
+-1 -1 4 4 #"XML\0"
+0 70 1 #"\0"
+1.0 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 1.0 1.0 1.0 1.0 1.0 1.0 0 0 0 0 0 0
+-1 -1 2 1 #"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 34 139 34 0 0 0 -1 -1 2 37
+#"plt:module-language:test-coverage-on\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 34 139 34 0 0 0 -1 -1 2 1
+#"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 176 48 96 0 0 0 -1 -1 2 38
+#"plt:module-language:test-coverage-off\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 176 48 96 0 0 0 -1 -1 4 1
+#"\0"
+0 71 1 #"\0"
+1.0 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 1.0 1.0 1.0 1.0 1.0 1.0 0 0 0 0 0 0
+-1 -1 4 1 #"\0"
+0 -1 1 #"\0"
+1.0 0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0 0 0 0 1.0 1.0 1.0 0 0 255 0 0 0 -1
+-1 4 1 #"\0"
+0 71 1 #"\0"
+1.0 0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0 0 0 0 1.0 1.0 1.0 0 0 255 0 0 0 -1
+-1 4 1 #"\0"
+0 71 1 #"\0"
+1.0 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1.0 1.0 1.0 0 100 0 0 0 0 -1
+-1 0 1 #"\0"
+0 -1 1 #"\0"
+1 0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 1 1 1 200 0 0 0 0 0 -1 -1 0 1
+#"\0"
+0 -1 1 #"\0"
+0 13 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 1.0 1.0 1.0 1.0 1.0 1.0 0 0 0 0 0 0
+-1 -1 2 1 #"\0"
+0 -1 1 #"\0"
+0 13 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 1.0 1.0 1.0 1.0 1.0 1.0 0 0 0 0 0 0
+-1 -1 0 1 #"\0"
+0 75 12 #"Courier New\0"
+0.0 12 90 -1 90 -1 3 -1 0 1 0 1 0 0 0.0 0.0 0.0 0.0 0.0 0.0 0 0 0 255
+255 255 1 -1           0 1102 0 26 3 12 #"#lang racket"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 0 22 3 1 #"("
+0 0 14 3 7 #"require"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 9 #"prefix-in"
+0 0 4 3 1 #" "
+0 0 14 3 7 #"kernel:"
+0 0 4 3 1 #" "
+0 0 14 3 15 #"syntax/kerncase"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 0 22 3 1 #"("
+0 0 14 3 7 #"require"
+0 0 4 3 1 #" "
+0 0 14 3 20 #"syntax/strip-context"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 22 3 1 #"("
+0 0 14 3 7 #"require"
+0 0 4 3 1 #" "
+0 0 19 3 18 #"\"std_annotate.rkt\""
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 8         997 4 2 #"(\0"
+2 #")\0"
+198 7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 1 #"d"
+7 #"wxtext\0"
+3 1 #"e"
+7 #"wxtext\0"
+3 4 #"fine"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 16 #"make-syntax-hash"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 3 #"src"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 2 #"  "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 6 #"letrec"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 8 #"syntaxes"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 12 #"parameterize"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 18 #"read-accept-reader"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#t"
+7 #"wxtext\0"
+3 2 #"])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 23 #"                       "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"let"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"iter"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 4 #"vals"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 5 #"empty"
+7 #"wxtext\0"
+3 2 #"])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 25 #"                         "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"let"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 1 #"v"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"read-syntax"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#f"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 3 #"src"
+7 #"wxtext\0"
+3 3 #")])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 27 #"                           "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 2 #"if"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"eof-object?"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"v"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 31 #"                               "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 7 #"reverse"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"vals"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 31 #"                               "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 4 #"iter"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 4 #"cons"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"v"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"vals"
+7 #"wxtext\0"
+3 7 #"))))))]"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 11 #"           "
+7 #"wxtext\0"
+3 1 #"["
+7 #"wxtext\0"
+3 4 #"hash"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 9 #"make-hash"
+7 #"wxtext\0"
+3 2 #")]"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 11 #"           "
+7 #"wxtext\0"
+3 1 #"["
+7 #"wxtext\0"
+3 4 #"iter"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 6 #"lambda"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 6 #"syntax"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 19 #"                   "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"and"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 15 #"syntax-position"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 6 #"syntax"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 24 #"                        "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"syntax-span"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 6 #"syntax"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 24 #"                        "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 9 #"hash-set!"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"hash"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 35 #"                                   "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 4 #"list"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 15 #"syntax-position"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 6 #"syntax"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 41 #"                                         "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"syntax-span"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 6 #"syntax"
+7 #"wxtext\0"
+3 2 #"))"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 35 #"                                   "
+7 #"wxtext\0"
+3 6 #"syntax"
+7 #"wxtext\0"
+3 2 #"))"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 19 #"                   "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"let"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 5 #"datum"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 8 #"syntax-e"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 6 #"syntax"
+7 #"wxtext\0"
+3 3 #")])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 21 #"                     "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 4 #"when"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 5 #"list?"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 5 #"datum"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 23 #"                       "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"map"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"iter"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 5 #"datum"
+7 #"wxtext\0"
+3 6 #"))))])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 4 #"    "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"for"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 1 #"s"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 8 #"syntaxes"
+7 #"wxtext\0"
+3 2 #"])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 6 #"      "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 4 #"iter"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"s"
+7 #"wxtext\0"
+3 2 #"))"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 4 #"    "
+7 #"wxtext\0"
+3 4 #"hash"
+7 #"wxtext\0"
+3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"pre-code"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 20 3 2 #"#'"
+0 0 22 3 2 #"(("
+0 0 15 3 6 #"struct"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"node"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"name"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"func"
+0 0 4 3 1 #" "
+0 0 14 3 6 #"formal"
+0 0 4 3 1 #" "
+0 0 14 3 6 #"result"
+0 0 4 3 1 #" "
+0 0 14 3 6 #"actual"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"kids"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"linum"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"idx"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"span"
+0 0 4 3 1 #" "
+0 0 14 3 7 #"src-idx"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"src-span"
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 22 3 9 #"#:mutable"
+0 0 4 3 1 #" "
+0 0 22 3 14 #"#:transparent)"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 17 3 15 #";(provide node)"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 11 #"create-node"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"func"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"f"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"a"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"l"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"i"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"s"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"s-i"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"s-s"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 7 #"       "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"node"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"func"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"f"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"'"
+0 0 14 3 9 #"no-result"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"a"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"empty"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"l"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"i"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"s"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"s-i"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"s-s"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 12 #"current-call"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"make-parameter"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 11 #"create-node"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"'"
+0 0 14 3 9 #"top-level"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#f"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"empty"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"empty"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 22 3 3 #")))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 13 #"current-linum"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"make-parameter"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 11 #"current-idx"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"make-parameter"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 12 #"current-span"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"make-parameter"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 11 #"current-fun"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"make-parameter"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#f"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 16 #"current-app-call"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"make-parameter"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"empty"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 12 #"function-sym"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"datum"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 7 #"       "
+0 0 22 3 1 #"("
+0 0 14 3 2 #"if"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 5 #"cons?"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"datum"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 11 #"           "
+0 0 22 3 1 #"("
+0 0 14 3 12 #"function-sym"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 5 #"first"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"datum"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 11 #"           "
+0 0 14 3 5 #"datum"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 17 3 23 #";adds a kid k to node n"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 7 #"add-kid"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"k"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 7 #"       "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"set-node-kids!"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"cons"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"k"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 9 #"node-kids"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 22 3 4 #"))))"
+0 0 4 29 1 #"\n"
+0 0 4 3 5 #"     "
+0 0 17 3 2 #"#;"
+0 0 22 3 1 #"("
+0 0 14 3 7 #"provide"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 15 #"all-defined-out"
+0 0 22 3 4 #"))))"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 8         897 4 2 #"(\0"
+2 #")\0"
+178 7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 1 #"d"
+7 #"wxtext\0"
+3 1 #"e"
+7 #"wxtext\0"
+3 4 #"fine"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"lambda-body"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"args"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"body"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"name"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"orig"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 3 #"fun"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 2 #"  "
+7 #"wxtext\0"
+3 2 #"#`"
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 4 #"let*"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 9 #"app-call?"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"eq?"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 3 #"fun"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"current-fun"
+7 #"wxtext\0"
+3 3 #"))]"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 11 #"           "
+7 #"wxtext\0"
+3 1 #"["
+7 #"wxtext\0"
+3 1 #"n"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 2 #"if"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 9 #"app-call?"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 18 #"                  "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"struct-copy"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"node"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 16 #"current-app-call"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 31 #"                               "
+7 #"wxtext\0"
+3 1 #"["
+7 #"wxtext\0"
+3 7 #"src-idx"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 15 #"syntax-position"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"orig"
+7 #"wxtext\0"
+3 2 #")]"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 31 #"                               "
+7 #"wxtext\0"
+3 1 #"["
+7 #"wxtext\0"
+3 8 #"src-span"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"syntax-span"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"orig"
+7 #"wxtext\0"
+3 3 #")])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 18 #"                  "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"create-node"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"'"
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 4 #"name"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 3 #"fun"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 5 #"empty"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 4 #"args"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 31 #"                               "
+7 #"wxtext\0"
+3 1 #"0"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"0"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"0"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 31 #"                               "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 15 #"syntax-position"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"orig"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 31 #"                               "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 11 #"syntax-span"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 4 #"orig"
+7 #"wxtext\0"
+3 4 #")))]"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 11 #"           "
+7 #"wxtext\0"
+3 1 #"["
+7 #"wxtext\0"
+3 6 #"parent"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 2 #"if"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 9 #"app-call?"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 23 #"                       "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 12 #"current-call"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 23 #"                       "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 16 #"current-app-call"
+7 #"wxtext\0"
+3 4 #"))])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 6 #"      "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 7 #"add-kid"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 6 #"parent"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"n"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 6 #"      "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 12 #"parameterize"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 12 #"current-call"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"n"
+7 #"wxtext\0"
+3 2 #"])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 8 #"        "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 3 #"let"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"(["
+7 #"wxtext\0"
+3 6 #"result"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 2 #"#,"
+7 #"wxtext\0"
+3 4 #"body"
+7 #"wxtext\0"
+3 2 #"])"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 10 #"          "
+7 #"wxtext\0"
+3 1 #"("
+7 #"wxtext\0"
+3 16 #"set-node-result!"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 1 #"n"
+7 #"wxtext\0"
+3 1 #" "
+7 #"wxtext\0"
+3 6 #"result"
+7 #"wxtext\0"
+3 1 #")"
+7 #"wxtext\0"
+29 1 #"\n"
+7 #"wxtext\0"
+3 10 #"          "
+7 #"wxtext\0"
+3 6 #"result"
+7 #"wxtext\0"
+3 4 #"))))"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 0 17 3 65
+#";returns a function that applies arg-fun to every argument passed"
+0 0 4 29 1 #"\n"
+0 0 17 3 65
+#";and calls fun on the result.  (on equal? struct-value) checks if"
+0 0 4 29 1 #"\n"
+0 0 17 3 38 #";the passed structs have equal? values"
+0 0 4 29 1 #"\n"
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 22 3 2 #"(("
+0 0 14 3 2 #"on"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"fun"
+0 0 4 3 1 #" "
+0 0 14 3 7 #"arg-fun"
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 26 3 1 #"."
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 22 3 1 #"("
+0 0 14 3 5 #"apply"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"fun"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 3 #"map"
+0 0 4 3 1 #" "
+0 0 14 3 7 #"arg-fun"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 22 3 3 #")))"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 8 #"annotate"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"stx"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"src"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 22 3 1 #"("
+0 0 14 3 9 #"displayln"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"src"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 11 #"syntax-hash"
+0 0 4 29 1 #"\n"
+0 0 4 3 4 #"    "
+0 0 22 3 1 #"("
+0 0 14 3 16 #"make-syntax-hash"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"src"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 22 3 1 #"("
+0 0 14 3 7 #"display"
+0 0 4 3 1 #" "
+0 0 14 3 11 #"syntax-hash"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 13 #"lambda-tracer"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"expanded"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 4 #"    "
+0 0 22 3 1 #"("
+0 0 15 3 11 #"syntax-case"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"expanded"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"#%plain-lambda"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 6 #"      "
+0 0 22 3 2 #"[("
+0 0 14 3 14 #"#%plain-lambda"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"body"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 7 #"       "
+0 0 22 3 1 #"("
+0 0 15 3 12 #"syntax-case*"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 15 3 6 #"lambda"
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 2 #"on"
+0 0 4 3 1 #" "
+0 0 14 3 6 #"equal?"
+0 0 4 3 1 #" "
+0 0 14 3 13 #"syntax->datum"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 9 #"         "
+0 0 22 3 2 #"[("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"name"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"a"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 14 3 2 #"bd"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 10 #"          "
+0 0 20 3 2 #"#`"
+0 0 22 3 1 #"("
+0 0 14 3 14 #"#%plain-lambda"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 4 29 1 #"\n"
+0 0 4 3 28 #"                            "
+0 0 26 3 2 #"#,"
+0 0 22 3 1 #"("
+0 0 14 3 11 #"lambda-body"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#'"
+0 0 22 3 1 #"("
+0 0 14 3 4 #"list"
+0 0 4 3 1 #" "
+0 0 26 3 1 #"."
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#'"
+0 0 22 3 1 #"("
+0 0 14 3 4 #"list"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"body"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#'"
+0 0 14 3 4 #"name"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#'"
+0 0 14 3 4 #"name"
+0 0 22 3 3 #"))]"
+0 0 4 29 1 #"\n"
+0 0 4 3 9 #"         "
+0 0 22 3 2 #"[("
+0 0 15 3 6 #"lambda"
+0 0 4 3 1 #" "
+0 0 14 3 2 #"as"
+0 0 4 3 1 #" "
+0 0 14 3 2 #"bd"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 10 #"          "
+0 0 22 3 1 #"("
+0 0 15 3 3 #"let"
+0 0 4 3 1 #" "
+0 0 22 3 2 #"(["
+0 0 14 3 3 #"sym"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 6 #"gensym"
+0 0 22 3 3 #")])"
+0 0 4 29 1 #"\n"
+0 0 4 3 12 #"            "
+0 0 20 3 2 #"#`"
+0 0 22 3 1 #"("
+0 0 15 3 6 #"letrec"
+0 0 4 3 1 #" "
+0 0 22 3 2 #"(["
+0 0 26 3 2 #"#,"
+0 0 14 3 3 #"sym"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"lambda"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 22 3 3 #")])"
+0 0 4 29 1 #"\n"
+0 0 4 3 16 #"                "
+0 0 22 3 1 #"("
+0 0 14 3 14 #"#%plain-lambda"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 4 29 1 #"\n"
+0 0 4 3 32 #"                                "
+0 0 26 3 2 #"#,"
+0 0 22 3 1 #"("
+0 0 14 3 11 #"lambda-body"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#'"
+0 0 22 3 1 #"("
+0 0 14 3 4 #"list"
+0 0 4 3 1 #" "
+0 0 26 3 1 #"."
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 47 #"                                               "
+0 0 20 3 2 #"#'"
+0 0 22 3 1 #"("
+0 0 14 3 4 #"list"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"body"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 47 #"                                               "
+0 0 20 3 2 #"#'"
+0 0 15 3 6 #"lambda"
+0 0 4 29 1 #"\n"
+0 0 4 3 47 #"                                               "
+0 0 14 3 8 #"original"
+0 0 4 29 1 #"\n"
+0 0 4 3 47 #"                                               "
+0 0 14 3 3 #"sym"
+0 0 22 3 9 #"))))])]))"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"define"
+0 0 4 3 1 #" "
+0 0 14 3 18 #"annotated-stx-list"
+0 0 4 29 1 #"\n"
+0 0 4 3 4 #"    "
+0 0 22 3 1 #"("
+0 0 14 3 3 #"map"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"lambda"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 1 #"x"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 11 #"           "
+0 0 22 3 1 #"("
+0 0 15 3 10 #"let-values"
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 15 #"               "
+0 0 22 3 3 #"([("
+0 0 14 3 13 #"annotated-stx"
+0 0 4 3 1 #" "
+0 0 14 3 6 #"breaks"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 17 #"                 "
+0 0 22 3 1 #"("
+0 0 14 3 12 #"annotate-stx"
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 18 #"                  "
+0 0 14 3 1 #"x"
+0 0 4 29 1 #"\n"
+0 0 4 3 18 #"                  "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"lambda"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 5 #"frame"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"expanded"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"is-tail?"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 20 #"                    "
+0 0 22 3 1 #"("
+0 0 14 3 25 #"kernel:kernel-syntax-case"
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 21 #"                     "
+0 0 14 3 8 #"original"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#f"
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 21 #"                     "
+0 0 22 3 2 #"[("
+0 0 14 3 14 #"#%plain-lambda"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"body"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 22 #"                      "
+0 0 22 3 1 #"("
+0 0 14 3 13 #"datum->syntax"
+0 0 4 29 1 #"\n"
+0 0 4 3 23 #"                       "
+0 0 14 3 8 #"original"
+0 0 4 29 1 #"\n"
+0 0 4 3 23 #"                       "
+0 0 22 3 1 #"("
+0 0 14 3 13 #"lambda-tracer"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"expanded"
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 38 #"                                      "
+0 0 22 3 1 #"("
+0 0 14 3 8 #"hash-ref"
+0 0 4 3 1 #" "
+0 0 14 3 11 #"syntax-hash"
+0 0 4 29 1 #"\n"
+0 0 4 3 48 #"                                                "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"list"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 15 #"syntax-position"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 54 #"                                                      "
+0 0 22 3 1 #"("
+0 0 14 3 11 #"syntax-span"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 4 #"))))"
+0 0 4 29 1 #"\n"
+0 0 4 3 23 #"                       "
+0 0 14 3 8 #"original"
+0 0 22 3 2 #")]"
+0 0 4 29 1 #"\n"
+0 0 4 3 21 #"                     "
+0 0 22 3 2 #"[("
+0 0 14 3 11 #"#%plain-app"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"fun-expr"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"arg-expr"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 22 #"                      "
+0 0 22 3 1 #"("
+0 0 14 3 13 #"datum->syntax"
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 23 #"                       "
+0 0 14 3 8 #"original"
+0 0 4 29 1 #"\n"
+0 0 4 3 23 #"                       "
+0 0 22 3 1 #"("
+0 0 15 3 4 #"let*"
+0 0 4 3 1 #" "
+0 0 22 3 2 #"(["
+0 0 14 3 11 #"orig-syntax"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 8 #"hash-ref"
+0 0 4 3 1 #" "
+0 0 14 3 11 #"syntax-hash"
+0 0 4 29 1 #"\n"
+0 0 4 3 53 #"                                                     "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"list"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 15 #"syntax-position"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 59
+#"                                                           "
+0 0 22 3 1 #"("
+0 0 14 3 11 #"syntax-span"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 5 #")))])"
+0 0 4 29 1 #"\n"
+0 0 4 3 25 #"                         "
+0 0 22 3 1 #"("
+0 0 15 3 3 #"let"
+0 0 4 3 1 #" "
+0 0 22 3 2 #"(["
+0 0 14 3 5 #"linum"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 11 #"syntax-line"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 2 #")]"
+0 0 4 29 1 #"\n"
+0 0 4 3 31 #"                               "
+0 0 22 3 1 #"["
+0 0 14 3 3 #"idx"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 15 #"syntax-position"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 2 #")]"
+0 0 4 29 1 #"\n"
+0 0 4 3 31 #"                               "
+0 0 22 3 1 #"["
+0 0 14 3 4 #"span"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 11 #"syntax-span"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"original"
+0 0 22 3 3 #")])"
+0 0 4 29 1 #"\n"
+0 0 4 3 27 #"                           "
+0 0 20 3 1 #"`"
+0 0 22 3 1 #"("
+0 0 15 3 4 #"let*"
+0 0 4 3 1 #" "
+0 0 22 3 2 #"(["
+0 0 14 3 3 #"fun"
+0 0 4 3 1 #" "
+0 0 26 3 1 #","
+0 0 20 3 2 #"#'"
+0 0 14 3 8 #"fun-expr"
+0 0 22 3 1 #"]"
+0 0 4 29 1 #"\n"
+0 0 4 3 36 #"                                    "
+0 0 22 3 1 #"["
+0 0 14 3 4 #"args"
+0 0 4 3 1 #" "
+0 0 26 3 1 #","
+0 0 20 3 2 #"#'"
+0 0 22 3 1 #"("
+0 0 14 3 4 #"list"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"arg-expr"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 2 #")]"
+0 0 4 3 2 #"  "
+0 0 4 29 1 #"\n"
+0 0 4 3 36 #"                                    "
+0 0 22 3 1 #"["
+0 0 14 3 1 #"n"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 11 #"create-node"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 12 #"function-sym"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"'"
+0 0 14 3 11 #"orig-syntax"
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"fun"
+0 0 4 3 1 #" "
+0 0 14 3 5 #"empty"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 4 29 1 #"\n"
+0 0 4 3 52 #"                                                    "
+0 0 14 3 5 #"linum"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"idx"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"span"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 4 3 1 #" "
+0 0 20 3 1 #"0"
+0 0 22 3 2 #")]"
+0 0 4 29 1 #"\n"
+0 0 4 3 36 #"                                    "
+0 0 22 3 1 #"["
+0 0 14 3 6 #"result"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 15 3 12 #"parameterize"
+0 0 4 3 1 #" "
+0 0 22 3 2 #"(["
+0 0 14 3 13 #"current-linum"
+0 0 4 3 1 #" "
+0 0 26 3 1 #","
+0 0 14 3 5 #"linum"
+0 0 22 3 1 #"]"
+0 0 4 29 1 #"\n"
+0 0 4 3 59
+#"                                                           "
+0 0 22 3 1 #"["
+0 0 14 3 11 #"current-idx"
+0 0 4 3 1 #" "
+0 0 26 3 1 #","
+0 0 14 3 3 #"idx"
+0 0 22 3 1 #"]"
+0 0 4 29 1 #"\n"
+0 0 4 3 59
+#"                                                           "
+0 0 22 3 1 #"["
+0 0 14 3 12 #"current-span"
+0 0 4 3 1 #" "
+0 0 26 3 1 #","
+0 0 14 3 4 #"span"
+0 0 22 3 1 #"]"
+0 0 4 29 1 #"\n"
+0 0 4 3 59
+#"                                                           "
+0 0 22 3 1 #"["
+0 0 14 3 11 #"current-fun"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"fun"
+0 0 22 3 1 #"]"
+0 0 4 29 1 #"\n"
+0 0 4 3 59
+#"                                                           "
+0 0 22 3 1 #"["
+0 0 14 3 16 #"current-app-call"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 22 3 2 #"])"
+0 0 4 29 1 #"\n"
+0 0 4 3 46 #"                                              "
+0 0 22 3 1 #"("
+0 0 14 3 5 #"apply"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"fun"
+0 0 4 3 1 #" "
+0 0 14 3 4 #"args"
+0 0 22 3 4 #"))])"
+0 0 4 29 1 #"\n"
+0 0 4 3 31 #"                               "
+0 0 17 3 2 #"#;"
+0 0 22 3 1 #"("
+0 0 14 3 16 #"set-node-result!"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 4 3 1 #" "
+0 0 14 3 6 #"result"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 31 #"                               "
+0 0 17 3 2 #"#;"
+0 0 22 3 1 #"("
+0 0 14 3 7 #"add-kid"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 12 #"current-call"
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 31 #"                               "
+0 0 22 3 1 #"("
+0 0 15 3 4 #"when"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 3 #"not"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 6 #"empty?"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 9 #"node-kids"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 22 3 3 #")))"
+0 0 4 29 1 #"\n"
+0 0 4 3 33 #"                                 "
+0 0 22 3 1 #"("
+0 0 14 3 16 #"set-node-result!"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 4 3 1 #" "
+0 0 14 3 6 #"result"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 33 #"                                 "
+0 0 22 3 1 #"("
+0 0 14 3 7 #"add-kid"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 12 #"current-call"
+0 0 22 3 1 #")"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"n"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 31 #"                               "
+0 0 14 3 6 #"result"
+0 0 22 3 3 #")))"
+0 0 4 29 1 #"\n"
+0 0 4 3 23 #"                       "
+0 0 14 3 8 #"original"
+0 0 22 3 2 #")]"
+0 0 4 29 1 #"\n"
+0 0 4 3 21 #"                     "
+0 0 22 3 1 #"["
+0 0 14 3 1 #"_"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"expanded"
+0 0 22 3 3 #"]))"
+0 0 4 29 1 #"\n"
+0 0 4 3 18 #"                  "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"lambda"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 1 #"a"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"b"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"c"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 20 #"                    "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"void"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 18 #"                  "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"lambda"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 1 #"a"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"b"
+0 0 4 3 1 #" "
+0 0 14 3 1 #"c"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 20 #"                    "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"void"
+0 0 22 3 5 #")))])"
+0 0 4 29 1 #"\n"
+0 0 4 3 13 #"             "
+0 0 14 3 13 #"annotated-stx"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 9 #"         "
+0 0 14 3 3 #"stx"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 4 29 1 #"\n"
+0 0 4 3 2 #"  "
+0 0 22 3 1 #"("
+0 0 14 3 3 #"map"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"lambda"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 13 #"annotated-stx"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 9 #"         "
+0 0 22 3 1 #"("
+0 0 15 3 11 #"syntax-case"
+0 0 4 3 1 #" "
+0 0 14 3 13 #"annotated-stx"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"module"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 11 #"           "
+0 0 22 3 2 #"[("
+0 0 15 3 6 #"module"
+0 0 4 3 1 #" "
+0 0 14 3 9 #"some-name"
+0 0 4 3 1 #" "
+0 0 14 3 9 #"some-lang"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 6 #"modbeg"
+0 0 4 3 1 #" "
+0 0 14 3 7 #"topform"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 3 12 #"            "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"cons"
+0 0 4 29 1 #"\n"
+0 0 4 3 13 #"             "
+0 0 22 3 1 #"("
+0 0 15 3 15 #"quasisyntax/loc"
+0 0 4 3 1 #" "
+0 0 14 3 13 #"annotated-stx"
+0 0 4 29 1 #"\n"
+0 0 4 3 15 #"               "
+0 0 22 3 1 #"("
+0 0 15 3 6 #"module"
+0 0 4 3 1 #" "
+0 0 14 3 9 #"some-name"
+0 0 4 3 1 #" "
+0 0 14 3 9 #"some-lang"
+0 0 4 29 1 #"\n"
+0 0 4 3 17 #"                 "
+0 0 22 3 1 #"("
+0 0 14 3 6 #"modbeg"
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 18 #"                  "
+0 0 26 3 3 #"#,@"
+0 0 22 3 1 #"("
+0 0 14 3 13 #"strip-context"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"pre-code"
+0 0 22 3 1 #")"
+0 0 4 29 1 #"\n"
+0 0 4 3 18 #"                  "
+0 0 14 3 7 #"topform"
+0 0 4 3 1 #" "
+0 0 14 3 3 #"..."
+0 0 4 3 1 #" "
+0 0 4 29 1 #"\n"
+0 0 4 3 18 #"                  "
+0 0 22 3 1 #"("
+0 0 14 3 7 #"provide"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 15 #"all-defined-out"
+0 0 22 3 5 #")))))"
+0 0 4 29 1 #"\n"
+0 0 4 3 13 #"             "
+0 0 22 3 1 #"("
+0 0 14 3 13 #"syntax->datum"
+0 0 4 3 1 #" "
+0 0 20 3 3 #"#''"
+0 0 14 3 9 #"some-name"
+0 0 22 3 3 #"))]"
+0 0 4 29 1 #"\n"
+0 0 4 3 11 #"           "
+0 0 22 3 1 #"["
+0 0 14 3 1 #"_"
+0 0 4 3 1 #" "
+0 0 22 3 1 #"("
+0 0 14 3 4 #"cons"
+0 0 4 3 1 #" "
+0 0 14 3 13 #"annotated-stx"
+0 0 4 3 1 #" "
+0 0 20 3 2 #"#f"
+0 0 22 3 4 #")]))"
+0 0 4 29 1 #"\n"
+0 0 4 3 7 #"       "
+0 0 14 3 18 #"annotated-stx-list"
+0 0 22 3 2 #"))"
+0 0 4 29 1 #"\n"
+0 0 4 29 1 #"\n"
+0 0 22 3 1 #"("
+0 0 14 3 7 #"provide"
+0 0 4 3 1 #" "
+0 0 14 3 8 #"annotate"
+0 0 22 3 1 #")"
+0           0
