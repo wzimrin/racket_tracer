@@ -25,7 +25,7 @@
         (send bdc draw-ellipse 6 6 8 8)
         (send bdc set-bitmap #f)
         bmp))
-
+    
     (define (phase1) (void))
     
     (define (phase2) (void))
@@ -62,17 +62,17 @@
                                      (add-snip (append (process-snip cur-snip) l)
                                                (send cur-snip next))))])
               (reverse (add-snip empty first-snip))))
-
+        
         (define/public (tracer-callback)
           #;(let* ([tab (get-current-tab)]
-                 [rep (send tab get-ints)])
-            (send tab disable-evaluation)
-            (send rep reset-console)
-            (send rep clear-undos)
-            (send rep insert-prompt)
-            (send tab enable-evaluation)
-            (message-box "title" (format "~s"
-                                         (namespace-mapped-symbols (send rep get-user-namespace)))))
+                   [rep (send tab get-ints)])
+              (send tab disable-evaluation)
+              (send rep reset-console)
+              (send rep clear-undos)
+              (send rep insert-prompt)
+              (send tab enable-evaluation)
+              (message-box "title" (format "~s"
+                                           (namespace-mapped-symbols (send rep get-user-namespace)))))
           (let* ([def-text (send this get-definitions-text)]
                  [lang-setting (send def-text get-next-settings)]
                  [text-end (string-length (send def-text get-text))]
@@ -87,34 +87,37 @@
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
                              (let* ([expanded-st (reverse (unbox code))]
-                                    [annotated (annotate expanded-st src)]
-                                    #;[ret (map eval annotated)])
+                                    [annotated (annotate expanded-st src)])
                                (displayln annotated)
-                               (map (lambda (stx)
-                                      (eval stx ns))
-                                    annotated))
-                             (begin ;(displayln "in iter not eof")
-                                    ;(displayln stx)
-                               (set-box! code 
+                               (send cur-rep-text
+                                     run-in-evaluation-thread
+                                     (lambda()
+                                       (map (lambda(stx-modname-pair)
+                                              (eval (car stx-modname-pair))
+                                              (when (cdr stx-modname-pair)
+                                                (dynamic-require (cdr stx-modname-pair) #f)))
+                                            annotated))))
+                             (begin (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
-            #;(send (send this get-current-tab) disable-evaluation)
-            #;(send cur-rep-text reset-console)
-            (send cur-rep-text
+            
+            (send cur-rep-text reset-console)
+            (send cur-rep-text 
                   run-in-evaluation-thread
-                  (lambda()
+                  (lambda ()
                     (drracket:eval:expand-program text-pos 
                                                   lang-setting
                                                   #f ;eval-compile-time-part?
                                                   init
                                                   kill-termination
                                                   iter)))
-            #;(send cur-rep-text insert-prompt)))
+            
+            (send cur-rep-text insert-prompt)))
         
         (register-toolbar-button tracer-button)
         (send (get-button-panel) change-children
               (λ (l)
                 (cons tracer-button (remq tracer-button l))))))
     
-  (drracket:get/extend:extend-unit-frame tracer-frame-mixin)))
+    (drracket:get/extend:extend-unit-frame tracer-frame-mixin)))
 
