@@ -8,7 +8,7 @@
          (only-in mzscheme [apply plain-apply]))
 
 ;--------------------------------------------------------------------
-; Syntax Annotation
+; Annotate-stx
 ;--------------------------------------------------------------------
 
 
@@ -302,7 +302,7 @@
       hash)))
 
 ;--------------------------------------------------------------------
-; End Syntax Annotation
+; End Annotate-stx
 ;--------------------------------------------------------------------
 
 (struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
@@ -355,9 +355,7 @@
     (syntax-case expanded (#%plain-lambda)
       [(#%plain-lambda args body ...)
        (syntax-case* original (define lambda) (on equal? syntax->datum)
-         [(define (name a ...)
-            bd ...)
-          (displayln #'name)
+         [(define (name a ...) bd ...)
           #`(#%plain-lambda args
                             #,(lambda-body #'(list . args) #'(list body ...) #'name original #'name))]
          [(lambda as bd ...)
@@ -370,9 +368,10 @@
                                                original
                                                sym))))])]))
   
-  (displayln "before map")
+  (define annotated-stx-list
   (map (lambda (x)
-         (let-values 
+         x
+         #;(let-values 
              ([(a b)
                (annotate-stx 
                 x
@@ -419,6 +418,18 @@
                   (void)))])
            a))
        stx))
+  
+  (map (lambda(annotated-stx)
+         (syntax-case annotated-stx (module)
+           [(module some-name some-lang (modbeg topform ...))
+            (cons
+             (quasisyntax/loc annotated-stx
+              (module some-name some-lang
+                (modbeg topform ... 
+                        (provide (all-defined-out)))))
+             (syntax->datum #''some-name))]
+           [_ (cons annotated-stx #f)]))
+       annotated-stx-list))
 
 #;(define original-syntax
     #'(begin

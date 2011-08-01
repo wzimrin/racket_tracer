@@ -77,25 +77,33 @@
                  [iter (lambda (stx cont)
                          (if (eof-object? stx)
                              (let* ([expanded-st (reverse (unbox code))]
-                                    [annotated (annotate expanded-st src)]
-                                    #;[ret (map eval annotated)])
+                                    [annotated (annotate expanded-st src)])
+                               (printf "before annotation: ~s" expanded-st)
                                (displayln annotated)
-                               (map eval annotated))
-                             (begin ;(displayln "in iter not eof")
-                                    ;(displayln stx)
-                               (set-box! code 
+                               (send cur-rep-text
+                                     run-in-evaluation-thread
+                                     (lambda()
+                                       (map (lambda(stx-modname-pair)
+                                              (eval (car stx-modname-pair))
+                                              (when (cdr stx-modname-pair)
+                                                (dynamic-require (cdr stx-modname-pair) #f)))
+                                            annotated))))
+                             (begin (set-box! code 
                                               (cons stx (unbox code)))
                                     (cont))))])
+            
             (send cur-rep-text reset-console)
-            (send cur-rep-text
+            (send cur-rep-text 
                   run-in-evaluation-thread
-                  (lambda()
+                  (lambda ()
                     (drracket:eval:expand-program text-pos 
                                                   lang-setting
                                                   #f ;eval-compile-time-part?
                                                   init
                                                   kill-termination
                                                   iter)))
+                    
+          
             (send cur-rep-text insert-prompt)))               
         
         (register-toolbar-button tracer-button)
