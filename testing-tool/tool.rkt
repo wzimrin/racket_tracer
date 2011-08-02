@@ -1,10 +1,11 @@
-#lang racket/base
+#lang racket
 
 (require drracket/tool
          racket/class
          racket/gui/base
          racket/unit
-         mrlib/switchable-button)
+         mrlib/switchable-button
+         "annotate.rkt")
 (provide tool@)
 
 (define tool@
@@ -12,30 +13,7 @@
     (import drracket:tool^)
     (export drracket:tool-exports^)
     
-    (define reverse-button-mixin
-      (mixin (drracket:unit:frame<%>) ()
-        (super-new)
-        (inherit get-button-panel
-                 get-definitions-text)
-        (inherit register-toolbar-button)
-        
-        (let ([btn
-               (new switchable-button%
-                    (label "Definitions")
-                    (callback (λ (button) 
-                                (message-box "Def Window"
-                                             (send 
-                                              (extract-language-level 
-                                               (get-definitions-text))
-                                              get-one-line-summary))))
-                    (parent (get-button-panel))
-                    (bitmap reverse-content-bitmap))])
-          (register-toolbar-button btn)
-          (send (get-button-panel) change-children
-                (λ (l)
-                  (cons btn (remq btn l)))))))
-    
-    (define reverse-content-bitmap
+    (define tracer-bitmap
       (let* ((bmp (make-bitmap 16 16))
              (bdc (make-object bitmap-dc% bmp)))
         (send bdc erase)
@@ -48,17 +26,98 @@
         (send bdc set-bitmap #f)
         bmp))
     
-    
     (define (phase1) (void))
+    
     (define (phase2) (void))
     
-    (define (extract-language-level definitions-text)
-      (settings->language-level (definitions-text->settings definitions-text)))
     
-    (define (definitions-text->settings definitions-text)
-      (send definitions-text get-next-settings))
+    (define tracer-frame-mixin
+      (mixin (drracket:unit:frame<%>) ()
+        (super-new)
+        (inherit get-button-panel
+                 get-definitions-text
+                 get-current-tab)
+        (inherit register-toolbar-button)
+        
+        
+        (define tracer-button
+          (new switchable-button%
+               (label "Tracer")
+               (bitmap tracer-bitmap)
+               (parent (send this get-button-panel))
+               (callback (λ (button) (send this tracer-callback)))))
+        
+        #;(define (definitions->image-and-char def)
+            (letrec ([first-snip (send def find-first-snip)]
+                     [process-snip 
+                      (lambda (a-snip)
+                        (cond 
+                          [(is-a? a-snip string-snip%)
+                           (reverse (string->list (send a-snip get-text 0 (send a-snip get-count))))]
+                          [(equal? #f a-snip) empty]
+                          [else (list a-snip)]))]
+                     [add-snip (lambda (l cur-snip)
+                                 (if (equal? cur-snip #f)
+                                     l
+                                     (add-snip (append (process-snip cur-snip) l)
+                                               (send cur-snip next))))])
+              (reverse (add-snip empty first-snip))))
+        
+        (define/public (tracer-callback)
+          #;(let* ([tab (get-current-tab)]
+                   [rep (send tab get-ints)])
+              (send tab disable-evaluation)
+              (send rep reset-console)
+              (send rep clear-undos)
+              (send rep insert-prompt)
+              (send tab enable-evaluation)
+              (message-box "title" (format "~s"
+                                           (namespace-mapped-symbols (send rep get-user-namespace)))))
+          (let* ([def-text (send this get-definitions-text)]
+                 [lang-setting (send def-text get-next-settings)]
+                 [text-end (string-length (send def-text get-text))]
+                 [text-pos (drracket:language:text/pos def-text 0 text-end)]
+                 [init (lambda() (void))]
+                 [code (box empty)]
+                 [kill-termination (lambda()
+                                     (void))]
+                 [src (open-input-text-editor def-text)]
+                 [cur-rep-text (send (send this get-current-tab) get-ints)]
+                 [ns (send cur-rep-text get-user-namespace)]
+                 [iter (lambda (stx cont)
+                         (if (eof-object? stx)
+                             (let* ([expanded-st (reverse (unbox code))]
+                                    [annotated (annotate expanded-st src)])
+                               (displayln annotated)
+                               (send cur-rep-text
+                                     run-in-evaluation-thread
+                                     (lambda()
+                                       (map (lambda(stx-modname-pair)
+                                              (eval (car stx-modname-pair))
+                                              (when (cdr stx-modname-pair)
+                                                (dynamic-require (cdr stx-modname-pair) #f)))
+                                            annotated))))
+                             (begin (set-box! code 
+                                              (cons stx (unbox code)))
+                                    (cont))))])
+            
+            (send cur-rep-text reset-console)
+            (send cur-rep-text 
+                  run-in-evaluation-thread
+                  (lambda ()
+                    (drracket:eval:expand-program text-pos 
+                                                  lang-setting
+                                                  #f ;eval-compile-time-part?
+                                                  init
+                                                  kill-termination
+                                                  iter)))
+            
+            (send cur-rep-text insert-prompt)))
+        
+        (register-toolbar-button tracer-button)
+        (send (get-button-panel) change-children
+              (λ (l)
+                (cons tracer-button (remq tracer-button l))))))
     
-    (define (settings->language-level settings)
-      (drracket:language-configuration:language-settings-language settings))
-    
-    (drracket:get/extend:extend-unit-frame reverse-button-mixin)))
+    (drracket:get/extend:extend-unit-frame tracer-frame-mixin)))
+

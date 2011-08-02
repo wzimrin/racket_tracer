@@ -195,6 +195,11 @@
     [(_ id val)
      #'(define id val)]))
 
+(define (function-sym datum)
+  (if (cons? datum)
+      (function-sym (first datum))
+      datum))
+
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)
   (syntax-case e ()
@@ -204,7 +209,7 @@
                    [span (syntax-span e)])
      #'(let* ([fun fun-expr]
               [args (list arg-expr ...)]       
-              [n (create-node 'fun-expr fun empty args
+              [n (create-node (function-sym 'fun-expr) fun empty args
                               linum idx span 0 0)]
               [result (parameterize ([current-linum linum]
                                      [current-idx idx]

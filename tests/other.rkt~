@@ -30,9 +30,9 @@
 
 (all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
 
-(check-expect (fib 5) (+ (fib 4) (fib 2)))
 (check-expect (fib 5) (+ (fib 4) (fib 3)))
-(check-expect (fib 5) 1)
+(check-expect (fib 4) (+ (fib 3) (fib 3)))
+(check-expect (fib 3) 1)
 
 (define-struct dir (name dirs files))
 (define-struct file (name size content))
