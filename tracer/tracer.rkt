@@ -7,7 +7,7 @@
                     check-expect let* letrec image? λ and or if])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
-                             define lambda require let local image? and or if]])
+                             define lambda let require local image? and or if]])
 (require test-engine/racket-tests)
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
@@ -23,8 +23,6 @@
 (require [only-in racket/gui
                   message-box])
 (require syntax/toplevel)
-(require [only-in errortrace/errortrace-lib
-                  errortrace-compile-handler])
 
 
 (require [for-syntax racket/port])
@@ -34,7 +32,7 @@
 
 (require (planet dherman/json:3:0))
 
-(provide let local let* letrec)
+(provide let local let* letrec require only-in except-in prefix-in)
 
 (provide [rename-out (app-recorder #%app)
                      (check-expect-recorder check-expect)
@@ -45,7 +43,7 @@
 (provide [all-from-out lang/htdp-intermediate-lambda])
 (provide [rename-out #;(isl:define define)
                      #;(isl:lambda lambda)
-                     (isl:require require)
+                     #;(isl:require require)
                      (isl:and and)
                      (isl:or or)
                      (isl:if if)
@@ -72,6 +70,10 @@
 ;adds a kid k to node n
 (define (add-kid n k)
   (set-node-kids! n (cons k (node-kids n))))
+
+(struct exn-wrapper (exn))
+(define (exn-wrapper-message w)
+  (exn-message (exn-wrapper-exn w)))
 
 ;the current definition we are in
 (define current-call (make-parameter (create-node 'top-level #f empty empty 0 0 0 0 0)))
@@ -168,11 +170,10 @@
           (add-kid (current-app-call) n))
       (set-node-used?! n #t)
       (parameterize ([current-call n])
-        (let ([result (with-handlers ([exn? identity])
+        (let ([result (with-handlers ([exn? exn-wrapper])
                         #,body)])
-          (displayln result)
           (set-node-result! n result)
-          (if (exn? result)
+          (if (exn-wrapper? result)
               (error "Error")
               result)))))
 
@@ -210,7 +211,7 @@
               [args (list arg-expr ...)]       
               [n (create-node (function-sym 'fun-expr) fun empty args
                               linum idx span 0 0)]
-              [result (with-handlers ([exn? identity])
+              [result (with-handlers ([exn? exn-wrapper])
                         (parameterize ([current-linum linum]
                                        [current-idx idx]
                                        [current-span span]
@@ -218,10 +219,10 @@
                                        [current-app-call n])
                           (apply fun args)))])
          (when (or (node-used? n)
-                   (exn? result))
+                   (exn-wrapper? result))
            (set-node-result! n result)
            (add-kid (current-call) n))
-         (if (exn? result)
+         (if (exn-wrapper? result)
              (error "Error")
              result)))]))
 
@@ -297,9 +298,9 @@
   (cond
     [(image? x)
      (json-image x)]
-    [(exn? x)
-     (hasheq 'type "value"
-             'value (exn-message x))]
+    [(exn-wrapper? x)
+     (hasheq 'type "error"
+             'message (exn-wrapper-message x))]
     [#t
      (let* ([p (open-output-string "out")])
        ;set columns and depth
@@ -482,7 +483,8 @@
      #`(#%plain-module-begin
         (set-box! src source)
         ;Set exception handler to allow tracing of functions that error out
-        (uncaught-exception-handler (lambda(x) (after-body name offset)
+        (uncaught-exception-handler (lambda (x)
+                                      (after-body name offset)
                                       ((error-escape-handler))))
         body ...
         (after-body name offset))]))
