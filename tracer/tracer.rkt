@@ -125,13 +125,13 @@
                   (set-node-result! actual-node (with-handlers ([exn? exn-wrapper])
                                                   actualStx)))
                 ;Check if actual and expected are the same
-                (let ([ce-correct? (or (not (exn-wrapper?
+               (let ([ce-correct? (and (not (exn-wrapper?
                                              (node-result actual-node)))
                                        (apply equal?
-                                          (map node-result
-                                               (node-kids parent-node))))])
+                                              (map node-result
+                                                   (node-kids parent-node))))])
                   
-                  ;When ce is true, add to hash
+                  ;add to hash
                   #,(when (pair? datum)
                       #`(add-to-hash ce-hash
                                      (list #,func (node-result actual-node) (list . #,args))
