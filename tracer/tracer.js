@@ -369,7 +369,7 @@ $(document).ready(function () {
         if(theTrace.children[i].result.type == "error") {
             first = li
             $("div#messagebar").text("Your program generated an error")
-            
+            $("div#messagebar").css({"padding": "2px 5px"})
         }
         li.data("child",exp)
         bodies.append(exp)
@@ -393,9 +393,12 @@ $(document).ready(function () {
             ceRow.text(ceTrace.children[j].name)
             ceRow.addClass("check-expect")
             var exp = makeCall(ceTrace.children[j], tabs, true)
-            if(theTrace.children[i].result.type == "error") {
+            
+            if(ceTrace.children[j].children[0].result.type == "error" 
+                || ceTrace.children[j].children[1].result.type == "error") {
                 first = li
                 $("div#messagebar").text("Your program generated an error")
+                $("div#messagebar").css({"padding": "2px 5px"})
             }
             exp.addClass("toplevel")
             bodies.append(exp)
@@ -590,10 +593,6 @@ $(document).ready(function () {
     first.trigger("click")
 
     function setContentWidth() {
-        console.log("Padding-left:" + bodyWrapper.css("padding-left"))
-        console.log("window width:" + $(window).width())
-        console.log("window width:" + $(window).width)
-        console.log("document body margin-left: " + $(document.body).css("margin-left"))
         bodyWrapper.width($(window).width()-parseInt(bodyWrapper.css("padding-left"))
                           -2*parseInt($(document.body).css("margin-left")))
         setCodePaneWidth()

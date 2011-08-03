@@ -228,7 +228,7 @@ td.arg.cell {
 
 div#messagebar {
     width: 100%;
-    padding: 2px 5px;
+    /*padding: 2px 5px;*/
     float:top;
     background-color: red;
 }
