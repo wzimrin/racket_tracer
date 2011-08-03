@@ -23,6 +23,9 @@
 (require [only-in racket/gui
                   message-box])
 (require syntax/toplevel)
+(require [only-in errortrace/errortrace-lib
+                  errortrace-compile-handler])
+
 
 (require [for-syntax racket/port])
 (require net/base64)
@@ -456,6 +459,20 @@
     (close-input-port tracerJSPort)
     template))
 
+;Code to run after users program has run
+;If nothing to trace, message to user
+;If code to trace, generates and displays page
+(define (after-body name offset)
+  (run-tests)
+  (display-results)
+  ;If empty trace generate error message
+  (if (and (empty? (node-kids (current-call)))
+           (empty? (node-kids topCENode)))
+      (message-box "Error" 
+                   "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
+                   #f 
+                   '(ok stop))
+      (send-url/contents (page name offset))))
 
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
@@ -463,20 +480,12 @@
     [(_ name source offset body ...)
      #`(#%plain-module-begin
         (set-box! src source)
-        (with-handlers ([(constantly true)
-                         (lambda (x) (void))])
-          body ...)
-        (run-tests)
-        (display-results)
-        ;If empty trace generate error message
-        (if (and (empty? (node-kids (current-call)))
-                 (empty? (node-kids topCENode)))
-            (message-box "Error" 
-                         "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
-                         #f 
-                         '(ok stop))
-            (send-url/contents (page name offset))))]))
-
+        ;Set exception handler to allow tracing of functions that error out
+        (uncaught-exception-handler (lambda(x) (after-body name offset)
+                                      ((error-escape-handler))))
+        body ...
+        (after-body name offset))]))
+        
 #;(port-write-handler 
          p
          (lambda (val port [depth 0])
