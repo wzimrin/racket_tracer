@@ -176,10 +176,13 @@
                                0 0 0
                                #,(syntax-position orig)
                                #,(syntax-span orig)))])
-      (if app-call?
-          (begin (set-node-src-idx! n #,(syntax-position orig))
-                 (set-node-src-span! n #,(syntax-span orig)))
-          (add-kid (current-app-call) n))
+      (cond
+        [app-call?
+         (begin (set-node-src-idx! n #,(syntax-position orig))
+                (set-node-src-span! n #,(syntax-span orig)))]
+        [(node? (current-app-call))
+         (add-kid (current-app-call) n)]
+        [#t (add-kid (current-call) n)])
       (set-node-used?! n #t)
       (parameterize ([current-call n])
         (let ([result (with-handlers ([exn? exn-wrapper])
@@ -443,7 +446,7 @@
   (printf "~a\n"
           (syntax->datum (local-expand d 'module (list)))))
 
-(define (page name o)
+(define (page name o errored)
   (let* ([title (string-append name " Trace")]
         [CSSPort (open-input-file (resolve-planet-path 
                                          '(planet tracer/tracer/tracer.css)))]
@@ -467,6 +470,7 @@
         [ceTrace (tree->json topCENode)]
         [code (code->json)]
         [offset o]
+        [errored (jsexpr->json errored)]
         [template (include-template "index.html")])
     (close-input-port CSSPort)
     (close-input-port jQueryPort)
@@ -476,7 +480,7 @@
 ;Code to run after users program has run
 ;If nothing to trace, message to user
 ;If code to trace, generates and displays page
-(define (after-body name offset)
+(define (after-body name offset errored)
   (display-results)
   ;If empty trace generate error message
   (if (and (empty? (node-kids (current-call)))
@@ -485,7 +489,7 @@
                    "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
                    #f 
                    '(ok stop))
-      (send-url/contents (page name offset))))
+      (send-url/contents (page name offset errored))))
 
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
@@ -495,11 +499,12 @@
         (set-box! src source)
         ;Set exception handler to allow tracing of functions that error out
         (uncaught-exception-handler (lambda (x)
-                                      (after-body name offset)
+                                      (displayln (exn-message x))
+                                      (after-body name offset #t)
                                       ((error-escape-handler))))
         body ...
         (run-tests)
-        (after-body name offset))]))
+        (after-body name offset #f))]))
         
 #;(port-write-handler 
          p
