@@ -111,7 +111,7 @@
          #`(begin 
              (define parent-node (create-node '#,ce-name #f empty empty linum idx span 0 0))
              (check-expect 
-              (let ([actual-node (create-node 'actual 
+             (let ([actual-node (create-node 'actual 
                                               #f
                                               (list 'actualStx)
                                               empty
@@ -122,11 +122,14 @@
                                               0)])
                 (add-kid parent-node actual-node)
                 (parameterize ([current-call actual-node])
-                  (set-node-result! actual-node actualStx))
+                  (set-node-result! actual-node (with-handlers ([exn? exn-wrapper])
+                                                  actualStx)))
                 ;Check if actual and expected are the same
-                (let ([ce-correct? (apply equal?
+                (let ([ce-correct? (or (not (exn-wrapper?
+                                             (node-result actual-node)))
+                                       (apply equal?
                                           (map node-result
-                                               (node-kids parent-node)))])
+                                               (node-kids parent-node))))])
                   
                   ;When ce is true, add to hash
                   #,(when (pair? datum)
@@ -140,7 +143,9 @@
                     (set-node-result! parent-node #f)
                     (set-node-kids! parent-node (reverse (node-kids parent-node)))
                     (add-kid topCENode parent-node)))
-                (node-result actual-node))
+                (if (exn-wrapper? (node-result actual-node))
+                  (error "Error")
+                  (node-result actual-node)))
               (let ([expected-node (create-node 'expected 
                                                 #f
                                                 (list 'expectedStx)
@@ -151,10 +156,17 @@
                                                 0
                                                 0)])
                 (add-kid parent-node expected-node)
-                (parameterize ([current-call expected-node])
-                  (let [(result expectedStx)]
-                    (set-node-result! expected-node result)
-                    result))))))])))
+                
+                (let ([result (parameterize ([current-call expected-node])
+                                (with-handlers ([exn? exn-wrapper])
+                                  expectedStx))])
+                  (set-node-result! expected-node result)
+                  (if (exn-wrapper? result)
+                      (begin
+                        (set-node-result! parent-node #f)
+                        (add-kid topCENode parent-node)
+                        (error "Error"))
+                      result))))))])))
 
 (define-for-syntax (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]
@@ -465,7 +477,6 @@
 ;If nothing to trace, message to user
 ;If code to trace, generates and displays page
 (define (after-body name offset)
-  (run-tests)
   (display-results)
   ;If empty trace generate error message
   (if (and (empty? (node-kids (current-call)))
@@ -487,6 +498,7 @@
                                       (after-body name offset)
                                       ((error-escape-handler))))
         body ...
+        (run-tests)
         (after-body name offset))]))
         
 #;(port-write-handler 
