@@ -23,6 +23,9 @@
 (require [only-in racket/gui
                   message-box])
 (require syntax/toplevel)
+(require [only-in errortrace/errortrace-lib
+                  errortrace-compile-handler])
+
 
 (require [for-syntax racket/port])
 (require net/base64)
@@ -453,23 +456,28 @@
     template))
 
 
+(define (after-body name offset)
+  (run-tests)
+  (display-results)
+  ;If empty trace generate error message
+  (if (and (empty? (node-kids (current-call)))
+           (empty? (node-kids topCENode)))
+      (message-box "Error" 
+                   "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
+                   #f 
+                   '(ok stop))
+      (send-url/contents (page name offset))))
+
 ;adds trace->json and send-url to the end of the file
 (define-syntax (#%module-begin stx)
   (syntax-case stx ()
     [(_ name source offset body ...)
      #`(#%plain-module-begin
         (set-box! src source)
+        (uncaught-exception-handler (lambda(x) (after-body name offset)
+                                      ((error-escape-handler))))
         body ...
-        (run-tests)
-        (display-results)
-        ;If empty trace generate error message
-        (if (and (empty? (node-kids (current-call)))
-                 (empty? (node-kids topCENode)))
-            (message-box "Error" 
-                         "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
-                         #f 
-                         '(ok stop))
-            (send-url/contents (page name offset))))]))
+        (after-body name offset))]))
 
 #;(port-write-handler 
          p
