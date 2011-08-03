@@ -167,7 +167,6 @@
       (parameterize ([current-call n])
         (let ([result (with-handlers ([exn? identity])
                         #,body)])
-          (displayln result)
           (set-node-result! n result)
           (if (exn? result)
               (error "Error")
