@@ -241,8 +241,11 @@ function makeCall(traceNode, parent, checkExpect) {
     }
     call.addClass("call")
 
-    if(traceNode.result.type == "error")
+    var expand = false;
+    if(traceNode.result.type == "error") {
         call.addClass("error")
+        expand = true
+    }
     
     var callTable = makeCallTable(traceNode, checkExpect)
 
@@ -272,7 +275,7 @@ function makeCall(traceNode, parent, checkExpect) {
     for (var i = 0; i < traceNode.children.length; i++) {
         var cell = element('td')
         cell.addClass("childTD")
-        var collapsedDiv = makeCall(traceNode.children[i],call);
+        var collapsedDiv = makeCall(traceNode.children[i],call, false);
         cell.append(collapsedDiv)
         lowerRow.append(cell);
     }
@@ -293,7 +296,7 @@ function makeCall(traceNode, parent, checkExpect) {
     //0 for identification. Don't have a definition/body for any of these.
     
     call.append(lowerDiv)
-    call.data("expanded",checkExpect)
+    call.data("expanded",checkExpect || expand)
     call.data("hidable",hidable)
     call.data("button",childrenButton)
 
@@ -358,13 +361,16 @@ $(document).ready(function () {
         var li = element("li")
         if (!first)
             first = li
-        if(theTrace.children[i].result.type == "error")
-            first = li
         li.text(theTrace.children[i].name)
         li.addClass("other")
         ul.append(li)
         var exp = makeCall(theTrace.children[i],tabs)
         exp.addClass("toplevel")
+        if(theTrace.children[i].result.type == "error") {
+            first = li
+            $("div#messagebar").text("Your program generated an error")
+            $("div#messagebar").css({"padding": "2px 5px"})
+        }
         li.data("child",exp)
         bodies.append(exp)
     }
@@ -375,27 +381,35 @@ $(document).ready(function () {
         li.addClass("other check-expect-top-level")
         ul.append(li)
 
-        if (!first)
-            first = li
+        first = li
         
         var ceList = element("ul")
         ceList.addClass("ce-list")
-        var firstDiv
+        var errorInCE=false
 
         for(var j = 0; j < ceTrace.children.length; j++) {
             var ceRow = element("li")
             ceRow.text(ceTrace.children[j].name)
             ceRow.addClass("check-expect")
             var exp = makeCall(ceTrace.children[j], tabs, true)
+            
+            if(ceTrace.children[j].children[0].result.type == "error" 
+                || ceTrace.children[j].children[1].result.type == "error") {
+                first = li
+                errorInCE=ceRow
+                $("div#messagebar").text("Your program generated an error")
+                $("div#messagebar").css({"padding": "2px 5px"})
+                ceRow.addClass("picked")
+            }
+            else
+                ceRow.addClass("other")
             exp.addClass("toplevel")
             bodies.append(exp)
             ceList.append(ceRow)
             ceRow.data("child", exp)
-            if(j==0)
-                ceRow.addClass("picked")
-            else
-                ceRow.addClass("other")
         }
+        if(!errorInCE)
+            ceList.children().first().removeClass("other").addClass("picked")
         $("#ceMenu").append(ceList)
 
         var ceMenuWidth;
@@ -488,7 +502,12 @@ $(document).ready(function () {
     }
 
     var lastFunctionHighlighted;
-    
+   
+   $("div#messagebar").bind('click', function() {
+        first.trigger("click")
+        if(errorInCE)
+            errorInCE.trigger("click")})
+
     //Function names on click
     $(".hasSource").bind('click', function () {
         if (lastFunctionHighlighted == this) {
@@ -586,7 +605,7 @@ $(document).ready(function () {
     }
     
     function setContentSize() {
-        $(".column").height($(window).height()-$("div#tabbar").outerHeight()
+        $(".column").height($(window).height()-$("div#tabbar").outerHeight()-$("div#messagebar").outerHeight()
                             -2*parseInt($(document.body).css("margin-top")))
         codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
                         +codePane.height()-codePane.outerHeight(true))
@@ -594,11 +613,9 @@ $(document).ready(function () {
     }
 
 
-    setContentSize()
    $(window).trigger("resize") 
-    //Begin with a collapsed code pane
-    //collapseCodePane()
     $(window).resize(setContentSize)
+    setContentSize()
 
     function dragHandler(event) {
         var oldX=event.pageX
