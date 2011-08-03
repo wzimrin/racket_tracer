@@ -92,6 +92,10 @@ div.call {
     border-width: 1px;
 }
 
+div.call .error {
+    color: purple
+}
+
 .childTD {
     vertical-align: top
 }

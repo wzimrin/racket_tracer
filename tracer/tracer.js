@@ -235,6 +235,9 @@ function makeCall(traceNode, parent, checkExpect) {
                        span: traceNode.ceSpan})
     }
     call.addClass("call")
+
+    if(traceNode.result.type == "error")
+        call.addClass("error")
     
     var callTable = makeCallTable(traceNode, checkExpect)
 
