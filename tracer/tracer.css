@@ -232,6 +232,7 @@ div#messagebar {
     float:top;
     background-color: red;
 }
+div#messagebar:hover { font-weight:bold;}
 
 div#tabbar {
     width: 100%;

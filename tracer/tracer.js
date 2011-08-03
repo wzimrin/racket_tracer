@@ -381,8 +381,7 @@ $(document).ready(function () {
         li.addClass("other check-expect-top-level")
         ul.append(li)
 
-        if (!first)
-            first = li
+        first = li
         
         var ceList = element("ul")
         ceList.addClass("ce-list")
@@ -410,7 +409,7 @@ $(document).ready(function () {
             ceRow.data("child", exp)
         }
         if(!errorInCE)
-            ceList.first().removeClass("other").addClass("picked")
+            ceList.children().first().removeClass("other").addClass("picked")
         $("#ceMenu").append(ceList)
 
         var ceMenuWidth;
