@@ -226,6 +226,13 @@ td.arg.cell {
 
 /* Tab bar */
 
+div#messagebar {
+    width: 100%;
+    padding: 2px 5px;
+    float:top;
+    background-color: red;
+}
+
 div#tabbar {
     width: 100%;
     overflow: auto;
@@ -350,6 +357,7 @@ span.symbol {
 }
 
 div#codePaneButton {
+    height: 28px;
     font-size: 24px;
     background: white;
 }

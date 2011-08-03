@@ -241,8 +241,11 @@ function makeCall(traceNode, parent, checkExpect) {
     }
     call.addClass("call")
 
-    if(traceNode.result.type == "error")
+    var expand = false;
+    if(traceNode.result.type == "error") {
         call.addClass("error")
+        expand = true
+    }
     
     var callTable = makeCallTable(traceNode, checkExpect)
 
@@ -272,7 +275,7 @@ function makeCall(traceNode, parent, checkExpect) {
     for (var i = 0; i < traceNode.children.length; i++) {
         var cell = element('td')
         cell.addClass("childTD")
-        var collapsedDiv = makeCall(traceNode.children[i],call);
+        var collapsedDiv = makeCall(traceNode.children[i],call, false);
         cell.append(collapsedDiv)
         lowerRow.append(cell);
     }
@@ -293,7 +296,7 @@ function makeCall(traceNode, parent, checkExpect) {
     //0 for identification. Don't have a definition/body for any of these.
     
     call.append(lowerDiv)
-    call.data("expanded",checkExpect)
+    call.data("expanded",checkExpect || expand)
     call.data("hidable",hidable)
     call.data("button",childrenButton)
 
@@ -358,13 +361,16 @@ $(document).ready(function () {
         var li = element("li")
         if (!first)
             first = li
-        if(theTrace.children[i].result.type == "error")
-            first = li
         li.text(theTrace.children[i].name)
         li.addClass("other")
         ul.append(li)
         var exp = makeCall(theTrace.children[i],tabs)
         exp.addClass("toplevel")
+        if(theTrace.children[i].result.type == "error") {
+            first = li
+            $("div#messagebar").text("Your program generated an error")
+            
+        }
         li.data("child",exp)
         bodies.append(exp)
     }
@@ -387,6 +393,10 @@ $(document).ready(function () {
             ceRow.text(ceTrace.children[j].name)
             ceRow.addClass("check-expect")
             var exp = makeCall(ceTrace.children[j], tabs, true)
+            if(theTrace.children[i].result.type == "error") {
+                first = li
+                $("div#messagebar").text("Your program generated an error")
+            }
             exp.addClass("toplevel")
             bodies.append(exp)
             ceList.append(ceRow)
@@ -580,13 +590,17 @@ $(document).ready(function () {
     first.trigger("click")
 
     function setContentWidth() {
+        console.log("Padding-left:" + bodyWrapper.css("padding-left"))
+        console.log("window width:" + $(window).width())
+        console.log("window width:" + $(window).width)
+        console.log("document body margin-left: " + $(document.body).css("margin-left"))
         bodyWrapper.width($(window).width()-parseInt(bodyWrapper.css("padding-left"))
                           -2*parseInt($(document.body).css("margin-left")))
         setCodePaneWidth()
     }
     
     function setContentSize() {
-        $(".column").height($(window).height()-$("div#tabbar").outerHeight()
+        $(".column").height($(window).height()-$("div#tabbar").outerHeight()-$("div#messagebar").outerHeight()
                             -2*parseInt($(document.body).css("margin-top")))
         codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
                         +codePane.height()-codePane.outerHeight(true))
@@ -594,11 +608,9 @@ $(document).ready(function () {
     }
 
 
-    setContentSize()
    $(window).trigger("resize") 
-    //Begin with a collapsed code pane
-    //collapseCodePane()
     $(window).resize(setContentSize)
+    setContentSize()
 
     function dragHandler(event) {
         var oldX=event.pageX
