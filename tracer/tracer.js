@@ -386,7 +386,7 @@ $(document).ready(function () {
         
         var ceList = element("ul")
         ceList.addClass("ce-list")
-        var firstDiv
+        var errorInCE=false
 
         for(var j = 0; j < ceTrace.children.length; j++) {
             var ceRow = element("li")
@@ -397,18 +397,20 @@ $(document).ready(function () {
             if(ceTrace.children[j].children[0].result.type == "error" 
                 || ceTrace.children[j].children[1].result.type == "error") {
                 first = li
+                errorInCE=ceRow
                 $("div#messagebar").text("Your program generated an error")
                 $("div#messagebar").css({"padding": "2px 5px"})
+                ceRow.addClass("picked")
             }
+            else
+                ceRow.addClass("other")
             exp.addClass("toplevel")
             bodies.append(exp)
             ceList.append(ceRow)
             ceRow.data("child", exp)
-            if(j==0)
-                ceRow.addClass("picked")
-            else
-                ceRow.addClass("other")
         }
+        if(!errorInCE)
+            ceList.first().removeClass("other").addClass("picked")
         $("#ceMenu").append(ceList)
 
         var ceMenuWidth;
@@ -501,7 +503,12 @@ $(document).ready(function () {
     }
 
     var lastFunctionHighlighted;
-    
+   
+   $("div#messagebar").bind('click', function() {
+        first.trigger("click")
+        if(errorInCE)
+            errorInCE.trigger("click")})
+
     //Function names on click
     $(".hasSource").bind('click', function () {
         if (lastFunctionHighlighted == this) {
