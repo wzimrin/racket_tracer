@@ -60,24 +60,14 @@
 
 
 ;the actual struct that stores our data
-(struct node (name func formal result actual kids linum idx span src-idx src-span) #:mutable #:transparent)
-
-(struct wrapper (value id) #:transparent)
-
-(define (unwrap x)
-  (if (wrapper? x)
-      (wrapper-value x)
-      x))
-
-(define (wrap x)
-  (wrapper x (gensym "value")))
+(struct node (name func formal result actual kids linum idx span src-idx src-span used?) #:mutable #:transparent)
 
 (define src (box ""))
 
 ;creates a node with no result or children
 ;takes a name, a formals list, and an actuals list
 (define (create-node n func f a l i s s-i s-s)
-  (node n func f 'no-result a empty l i s s-i s-s))
+  (node n func f 'no-result a empty l i s s-i s-s #f))
 
 ;adds a kid k to node n
 (define (add-kid n k)
@@ -97,6 +87,9 @@
 
 (define (add-to-hash h key idx span success)
   (hash-set! h key (list idx span success))) 
+
+(define ((constantly val) any)
+  val)
 
 (define-syntax (check-expect-recorder e)
   (with-syntax ([linum (syntax-line e)]
@@ -164,21 +157,24 @@
 (define-for-syntax (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]
            [n (if app-call?
-                  (struct-copy node (current-app-call)
-                               [src-idx #,(syntax-position orig)]
-                               [src-span #,(syntax-span orig)])
+                  (current-app-call)
                   (create-node '#,name #,fun empty #,args
                                0 0 0
                                #,(syntax-position orig)
-                               #,(syntax-span orig)))]
-           [parent (if app-call?
-                       (current-call)
-                       (current-app-call))])
-      (add-kid parent n)
+                               #,(syntax-span orig)))])
+      (if app-call?
+          (begin (set-node-src-idx! n #,(syntax-position orig))
+                 (set-node-src-span! n #,(syntax-span orig)))
+          (add-kid (current-app-call) n))
+      (set-node-used?! n #t)
       (parameterize ([current-call n])
-        (let ([result #,body])
+        (let ([result (with-handlers ([exn? identity])
+                        #,body)])
+          (displayln result)
           (set-node-result! n result)
-          result))))
+          (if (exn? result)
+              (error "Error")
+              result)))))
 
 (define-syntax (custom-lambda e)
   (syntax-case e ()
@@ -214,16 +210,20 @@
               [args (list arg-expr ...)]       
               [n (create-node (function-sym 'fun-expr) fun empty args
                               linum idx span 0 0)]
-              [result (parameterize ([current-linum linum]
-                                     [current-idx idx]
-                                     [current-span span]
-                                     [current-fun fun]
-                                     [current-app-call n])
-                        (apply fun args))])
-         (when (not (empty? (node-kids n)))
+              [result (with-handlers ([exn? identity])
+                        (parameterize ([current-linum linum]
+                                       [current-idx idx]
+                                       [current-span span]
+                                       [current-fun fun]
+                                       [current-app-call n])
+                          (apply fun args)))])
+         (when (or (node-used? n)
+                   (exn? result))
            (set-node-result! n result)
            (add-kid (current-call) n))
-         result))]))
+         (if (exn? result)
+             (error "Error")
+             result)))]))
 
 (define (print-right t)
   (node (node-formal t)
@@ -294,19 +294,24 @@
            
 (define (format-nicely x depth width literal)
   ;print the result string readably
-  (if (image? x)
-      (json-image x)
-      (let* ([p (open-output-string "out")])
-        ;set columns and depth
-        (parameterize ([pretty-print-columns width]
-                       [pretty-print-depth depth]
-                       [constructor-style-printing #t])
-          (if (and (procedure? x) (object-name x))
-              (display (object-name x) p)            
-              (pretty-write (print-convert x) p)))
-        ;return what was printed
-        (hasheq 'type "value"
-                'value (get-output-string p)))))
+  (cond
+    [(image? x)
+     (json-image x)]
+    [(exn? x)
+     (hasheq 'type "value"
+             'value (exn-message x))]
+    [#t
+     (let* ([p (open-output-string "out")])
+       ;set columns and depth
+       (parameterize ([pretty-print-columns width]
+                      [pretty-print-depth depth]
+                      [constructor-style-printing #t])
+         (if (and (procedure? x) (object-name x))
+             (display (object-name x) p)            
+             (pretty-write (print-convert x) p)))
+       ;return what was printed
+       (hasheq 'type "value"
+               'value (get-output-string p)))]))
 
 (define (ce-info n)
   (let* ([key (list (node-func n) (node-result n)  (node-actual n))]
@@ -455,7 +460,9 @@
     (close-input-port tracerJSPort)
     template))
 
-
+;Code to run after users program has run
+;If nothing to trace, message to user
+;If code to trace, generates and displays page
 (define (after-body name offset)
   (run-tests)
   (display-results)
@@ -474,11 +481,12 @@
     [(_ name source offset body ...)
      #`(#%plain-module-begin
         (set-box! src source)
+        ;Set exception handler to allow tracing of functions that error out
         (uncaught-exception-handler (lambda(x) (after-body name offset)
                                       ((error-escape-handler))))
         body ...
         (after-body name offset))]))
-
+        
 #;(port-write-handler 
          p
          (lambda (val port [depth 0])
