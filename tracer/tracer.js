@@ -56,7 +56,12 @@ function makeCell(formShort, formFull, cssClass) {
         var el = element("img")
         el.attr("src",formFull.src)
         div.append(el)
-    } else {
+    }
+    else if (formFull.type == "error") {
+        div.text(formFull.message)
+         
+    }
+    else {
         //If a shortened form exists form exists
         if (formShort.value != formFull.value) {
             div.addClass("expandable")
@@ -104,7 +109,7 @@ function makeCallTable(node, checkExpect) {
         row.append(arrow)
 
         //Result
-        var resultTD = makeCell(node.resultShort,node.result,false,"result")
+        var resultTD = makeCell(node.resultShort,node.result,"")
         row.append(resultTD)
     }
 
@@ -352,6 +357,8 @@ $(document).ready(function () {
     for (var i = 0; i < theTrace.children.length; i++) {
         var li = element("li")
         if (!first)
+            first = li
+        if(theTrace.children[i].result.type == "error")
             first = li
         li.text(theTrace.children[i].name)
         li.addClass("other")
