@@ -47,6 +47,29 @@
        (set-node-kids! n (cons k (node-kids n))))
      #;(provide (all-defined-out))))
 
+(begin
+  (struct node (name func formal result actual kids linum idx span src-idx src-span)
+    #:mutable #:transparent)
+  ;(provide node)
+  (define (create-node n func f a l i s s-i s-s)
+    (node n func f 'no-result a empty l i s s-i s-s))
+  (define current-call (make-parameter (create-node 'top-level #f empty empty 0 0 0 0 0)))
+  (define current-linum (make-parameter 0))
+  (define current-idx (make-parameter 0))
+  (define current-span (make-parameter 0))
+  (define current-fun (make-parameter #f))
+  (define current-app-call (make-parameter empty))
+  (define (function-sym datum)
+    (if (cons? datum)
+        (function-sym (first datum))
+        datum))
+  ;adds a kid k to node n
+  (define (add-kid n k)
+    (set-node-kids! n (cons k (node-kids n)))))
+
+(provide create-node function-sym add-kid
+         current-call current-linum current-idx current-span current-fun current-app-call)
+
 (define (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]
            [n (if app-call?
@@ -105,24 +128,19 @@
                     (kernel:kernel-syntax-case 
                      original #f 
                      [(#%plain-lambda args body ...)
-                      (datum->syntax
-                       original
                        (lambda-tracer expanded 
                                       (hash-ref syntax-hash
                                                 (list (syntax-position original)
-                                                      (syntax-span original))))
-                       original)]
+                                                      (syntax-span original))))]
                      [(#%plain-app fun-expr arg-expr ...)
-                      (datum->syntax 
-                       original
-                       (let* ([orig-syntax (hash-ref syntax-hash
+                      (let* ([orig-syntax (hash-ref syntax-hash
                                                      (list (syntax-position original)
                                                            (syntax-span original)))])
                          (let ([linum (syntax-line original)]
                                [idx (syntax-position original)]
                                [span (syntax-span original)])
-                           `(let* ([fun ,#'fun-expr]
-                                    [args ,#'(list arg-expr ...)]  
+                           #'(let* ([fun fun-expr]
+                                    [args (list arg-expr ...)]  
                                     [n (create-node (function-sym 'orig-syntax) fun empty args
                                                     linum idx span 0 0)]
                                     [result (parameterize ([current-linum ,linum]
@@ -136,8 +154,7 @@
                                (when (not (empty? (node-kids n)))
                                  (set-node-result! n result)
                                  (add-kid (current-call) n))
-                               result)))
-                       original)]
+                               result)))]
                      [_ expanded]))
                   (lambda (a b c)
                     (void))
@@ -153,7 +170,7 @@
              (quasisyntax/loc annotated-stx
                (module some-name some-lang
                  (modbeg 
-                  #,@(strip-context pre-code)
+                  ;#,@(strip-context pre-code)
                   topform ... 
                   (provide (all-defined-out)))))
              (syntax->datum #''some-name))]
