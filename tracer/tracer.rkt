@@ -4,10 +4,14 @@
 
 (require [except-in lang/htdp-intermediate-lambda
                     #%app define lambda require #%module-begin let local
-                    check-expect let* letrec image? λ and or if])
+                    let* letrec image? λ and or if
+                    check-expect check-within check-error check-member-of check-range])
 (require [prefix-in isl:
                     [only-in lang/htdp-intermediate-lambda
                              define lambda let require local image? and or if]])
+(require [for-meta 1
+                   [only-in racket/list
+                            first last cons?]])
 (require test-engine/racket-tests)
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
@@ -36,6 +40,10 @@
 
 (provide [rename-out (app-recorder #%app)
                      (check-expect-recorder check-expect)
+                     (check-within-recorder check-within)
+                     (check-error-recorder check-error)
+                     (check-range-recorder check-range)
+                     (check-member-of-recorder check-member-of)
                      (custom-define define)
                      (custom-lambda lambda)
                      (custom-lambda λ)])
@@ -93,80 +101,140 @@
 (define ((constantly val) any)
   val)
 
-(define-syntax (check-expect-recorder e)
-  (with-syntax ([linum (syntax-line e)]
-                [idx (syntax-position e)]
-                [span (syntax-span e)]
-                [actual 'actual]
-                [expected 'expected])
-    (syntax-case e ()
-      [(_ actualStx expectedStx)
-       (let* ([datum (syntax-e #'actualStx)]
-              [func (if (pair? datum)
-                        (car datum)
-                        datum)]
-              [ce-name func]
-              [args (when (pair? datum)
-                      (cdr datum))])
-         #`(begin 
-             (define parent-node (create-node '#,ce-name #f empty empty linum idx span 0 0))
-             (check-expect 
-             (let ([actual-node (create-node 'actual 
-                                              #f
-                                              (list 'actualStx)
-                                              empty
-                                              #,(syntax-line #'actualStx)
-                                              #,(syntax-position #'actualStx)
-                                              #,(syntax-span #'actualStx)
-                                              0
-                                              0)])
-                (add-kid parent-node actual-node)
-                (parameterize ([current-call actual-node])
-                  (set-node-result! actual-node (with-handlers ([exn? exn-wrapper])
-                                                  actualStx)))
-                ;Check if actual and expected are the same
-               (let ([ce-correct? (and (not (exn-wrapper?
-                                             (node-result actual-node)))
-                                       (apply equal?
-                                              (map node-result
-                                                   (node-kids parent-node))))])
-                  
-                  ;add to hash
-                  #,(when (pair? datum)
-                      #`(add-to-hash ce-hash
-                                     (list #,func (node-result actual-node) (list . #,args))
-                                     idx
-                                     span
-                                     ce-correct?))
-                  ;When ce is false, create a ce node
-                  (when (not ce-correct?)
-                    (set-node-result! parent-node #f)
-                    (set-node-kids! parent-node (reverse (node-kids parent-node)))
-                    (add-kid topCENode parent-node)))
-                (if (exn-wrapper? (node-result actual-node))
-                  (error "Error")
-                  (node-result actual-node)))
-              (let ([expected-node (create-node 'expected 
+(define-syntax-rule (generalized-check-expect-recorder name original-name
+                                                       passed? display-expected)
+  (define-syntax (name e)
+    (with-syntax ([linum (syntax-line e)]
+                  [idx (syntax-position e)]
+                  [span (syntax-span e)]
+                  [actual 'actual]
+                  [expected 'expected])
+      (syntax-case e ()
+        [(_ actualStx expectedStx (... ...))
+         (let* ([datum (syntax-e #'actualStx)]
+                [func (if (pair? datum)
+                          (car datum)
+                          datum)]
+                [ce-name func]
+                [args (when (pair? datum)
+                        (cdr datum))]
+                [expected-stxs (syntax-e #'(expectedStx (... ...)))])
+           #`(begin 
+               (define parent-node
+                 (create-node '#,ce-name #f empty empty
+                              linum idx span 0 0))
+               (define expected-node
+                 (create-node 'expected 
+                              #f
+                              (list 'expectedStx (... ...))
+                              empty
+                              #,(if (cons? expected-stxs)
+                                    (syntax-line e)
+                                    0)
+                              #,(if (cons? expected-stxs)
+                                    (syntax-position
+                                     (first expected-stxs))
+                                    0)
+                              #,(if (cons? expected-stxs)
+                                    (+ (syntax-span (last expected-stxs))
+                                       (- (syntax-position (last expected-stxs))
+                                          (syntax-position (first expected-stxs))))
+                                    0)
+                              0
+                              0))
+               (define expected-results (box empty))
+               (add-kid parent-node expected-node)
+               (original-name
+                (let ([actual-node (create-node 'actual 
                                                 #f
-                                                (list 'expectedStx)
+                                                (list 'actualStx)
                                                 empty
-                                                #,(syntax-line #'expectedStx)
-                                                #,(syntax-position #'expectedStx)
-                                                #,(syntax-span #'expectedStx)
+                                                #,(syntax-line #'actualStx)
+                                                #,(syntax-position #'actualStx)
+                                                #,(syntax-span #'actualStx)
                                                 0
-                                                0)])
-                (add-kid parent-node expected-node)
-                
+                                                0)]
+                      [expected-results (reverse (unbox expected-results))])
+                  (add-kid parent-node actual-node)
+                  (parameterize ([current-call actual-node])
+                    (set-node-result! actual-node (with-handlers ([exn? exn-wrapper])
+                                                    actualStx)))
+                  ;Check if actual and expected are the same
+                  (let ([ce-correct? (apply passed?
+                                            (node-result actual-node)
+                                            expected-results)])
+                    ;add to hash
+                    #,(when (pair? datum)
+                        #`(add-to-hash ce-hash
+                                       (list #,func (node-result actual-node) (list . #,args))
+                                       idx
+                                       span
+                                       ce-correct?))
+                    ;When ce is false, create a ce node
+                    (when (not ce-correct?)
+                      (set-node-result! parent-node #f)
+                      (set-node-kids! parent-node (reverse (node-kids parent-node)))
+                      (set-node-result! expected-node 
+                                        (apply display-expected
+                                               expected-results))
+                      (add-kid topCENode parent-node)))
+                  (if (exn-wrapper? (node-result actual-node))
+                      (error "Error")
+                      (node-result actual-node)))
                 (let ([result (parameterize ([current-call expected-node])
                                 (with-handlers ([exn? exn-wrapper])
                                   expectedStx))])
                   (set-node-result! expected-node result)
+                  (set-box! expected-results
+                            (cons result (unbox expected-results)))
                   (if (exn-wrapper? result)
                       (begin
                         (set-node-result! parent-node #f)
                         (add-kid topCENode parent-node)
                         (error "Error"))
-                      result))))))])))
+                      result)) (... ...))))]))))
+
+(generalized-check-expect-recorder
+ check-expect-recorder
+ check-expect
+ (lambda (actual expected)
+   (equal? actual expected))
+ identity)
+
+(generalized-check-expect-recorder
+ check-within-recorder
+ check-within
+ (lambda (actual value delta)
+   (<= (abs (- actual value))
+      delta))
+ (lambda (value delta)
+   (list value delta)))
+
+(generalized-check-expect-recorder
+ check-error-recorder
+ check-error
+ (lambda (actual [message #f])
+   (and (exn-wrapper? actual)
+        (or (not message)
+            (equal? (exn-wrapper-message actual) message))))
+ (lambda ([message "Error"])
+   (with-handlers ([exn? exn-wrapper])
+     (error message))))
+
+(generalized-check-expect-recorder
+ check-member-of-recorder
+ check-member-of
+ (lambda (actual . possibilities)
+   (member actual possibilities))
+ list)
+
+(generalized-check-expect-recorder
+ check-range-recorder
+ check-range
+ (lambda (actual low high)
+   (and (< actual high)
+        (> actual low)))
+ list)
 
 (define-for-syntax (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]
@@ -197,7 +265,7 @@
     [(_ args body)
      (let ([sym (gensym)])
        #`(letrec ([#,sym (lambda args
-                                    #,(lambda-body #'(list . args) #'body #'lambda e sym))])
+                           #,(lambda-body #'(list . args) #'body #'lambda e sym))])
            (procedure-rename #,sym 'lambda)))]))
 
 (define-syntax (custom-define e)
@@ -525,4 +593,3 @@
 #;(add-to-hash correct-ce-hash
                function-name
                (list (node-result actual-node) (+ sub-arg1 sub-arg2) arg2 arg3))
-
