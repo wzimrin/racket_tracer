@@ -149,13 +149,18 @@
                   ;Check if actual and expected are the same
                   (let ([ce-correct? (apply passed?
                                             (cons (node-result actual-node)
-                                                  (map node-result (node-kids parent-node))))])
+                                                  (reverse
+                                                   (map node-result
+                                                        (node-kids parent-node)))))])
+                    (displayln ce-correct?)
+                    (displayln (cons (node-result actual-node)
+                                                  (map node-result (node-kids parent-node))))
                     (set-node-kids! parent-node (append (node-kids parent-node) 
                                                         (list actual-node)))
                     ;add to hash
                     #,(when (pair? datum)
                         #`(add-to-hash ce-hash
-                                       (list #,func (node-result actual-node) (list . #,args))
+                                       (list #,func (list . #,args))
                                        idx
                                        span
                                        ce-correct?))
@@ -400,7 +405,7 @@
                'value (get-output-string p)))]))
 
 (define (ce-info n)
-  (let* ([key (list (node-func n) (node-result n)  (node-actual n))]
+  (let* ([key (list (node-func n) (node-actual n))]
          [l (hash-ref ce-hash key (list #f #f #f))])
     (values (first l) (second l) (third l))))
 
