@@ -11,7 +11,7 @@
                              define lambda let require local image? and or if]])
 (require [for-meta 1
                    [only-in racket/list
-                            first last cons?]])
+                            first last cons? take make-list]])
 (require test-engine/racket-tests)
 (require syntax-color/scheme-lexer)
 (require racket/pretty)
@@ -101,8 +101,16 @@
 (define ((constantly val) any)
   val)
 
+(define-for-syntax (fix-names count names)
+  (let ([name-count (length names)])
+    (if (>= name-count count)
+        (take names count)
+        (append (take names (sub1 name-count))
+                (make-list (- count name-count -1)
+                           (last names))))))
+
 (define-syntax-rule (generalized-check-expect-recorder name original-name
-                                                       passed? display-expected)
+                                                       passed? node-names-stx)
   (define-syntax (name e)
     (with-syntax ([linum (syntax-line e)]
                   [idx (syntax-position e)]
@@ -110,7 +118,7 @@
                   [actual 'actual]
                   [expected 'expected])
       (syntax-case e ()
-        [(_ actualStx expectedStx (... ...))
+        [(_ actual-stx . expected-stxs)
          (let* ([datum (syntax-e #'actualStx)]
                 [func (if (pair? datum)
                           (car datum)
@@ -118,51 +126,30 @@
                 [ce-name func]
                 [args (when (pair? datum)
                         (cdr datum))]
-                [expected-stxs (syntax-e #'(expectedStx (... ...)))])
+                [expected-datums (syntax-e #'expected-stxs)]
+                [node-names 'node-names-stx])
            #`(begin 
                (define parent-node
-                 (create-node '#,ce-name #f empty empty
-                              linum idx span 0 0))
-               (define expected-node
-                 (create-node 'expected 
-                              #f
-                              (list 'expectedStx (... ...))
-                              empty
-                              #,(if (cons? expected-stxs)
-                                    (syntax-line e)
-                                    0)
-                              #,(if (cons? expected-stxs)
-                                    (syntax-position
-                                     (first expected-stxs))
-                                    0)
-                              #,(if (cons? expected-stxs)
-                                    (+ (syntax-span (last expected-stxs))
-                                       (- (syntax-position (last expected-stxs))
-                                          (syntax-position (first expected-stxs))))
-                                    0)
-                              0
-                              0))
-               (define expected-results (box empty))
-               (add-kid parent-node expected-node)
+                 (create-node '#,ce-name #f empty empty linum idx span 0 0))
                (original-name
-                (let ([actual-node (create-node 'actual 
+                (let ([actual-node (create-node '#,(first node-names)
                                                 #f
-                                                (list 'actualStx)
+                                                (list 'actual-stx)
                                                 empty
-                                                #,(syntax-line #'actualStx)
-                                                #,(syntax-position #'actualStx)
-                                                #,(syntax-span #'actualStx)
+                                                #,(syntax-line #'actual-stx)
+                                                #,(syntax-position #'actual-stx)
+                                                #,(syntax-span #'actual-stx)
                                                 0
-                                                0)]
-                      [expected-results (reverse (unbox expected-results))])
-                  (add-kid parent-node actual-node)
+                                                0)])
                   (parameterize ([current-call actual-node])
                     (set-node-result! actual-node (with-handlers ([exn? exn-wrapper])
-                                                    actualStx)))
+                                                    actual-stx)))
                   ;Check if actual and expected are the same
                   (let ([ce-correct? (apply passed?
-                                            (node-result actual-node)
-                                            expected-results)])
+                                            (cons (node-result actual-node)
+                                                  (map node-result (node-kids parent-node))))])
+                    (set-node-kids! parent-node (append (node-kids parent-node) 
+                                                        (list actual-node)))
                     ;add to hash
                     #,(when (pair? datum)
                         #`(add-to-hash ce-hash
@@ -173,33 +160,43 @@
                     ;When ce is false, create a ce node
                     (when (not ce-correct?)
                       (set-node-result! parent-node #f)
-                      (set-node-kids! parent-node (reverse (node-kids parent-node)))
-                      (set-node-result! expected-node 
-                                        (apply display-expected
-                                               expected-results))
                       (add-kid topCENode parent-node)))
                   (if (exn-wrapper? (node-result actual-node))
                       (error "Error")
                       (node-result actual-node)))
-                (let ([result (parameterize ([current-call expected-node])
-                                (with-handlers ([exn? exn-wrapper])
-                                  expectedStx))])
-                  (set-node-result! expected-node result)
-                  (set-box! expected-results
-                            (cons result (unbox expected-results)))
-                  (if (exn-wrapper? result)
-                      (begin
-                        (set-node-result! parent-node #f)
-                        (add-kid topCENode parent-node)
-                        (error "Error"))
-                      result)) (... ...))))]))))
+                #,@(map (lambda (expected-stx name)
+                          #`(let* ([expected-node
+                                    (create-node '#,name
+                                                 #f
+                                                 'expected-stxs
+                                                 empty
+                                                 #,(syntax-line expected-stx)
+                                                 #,(syntax-position
+                                                    expected-stx)
+                                                 #,(syntax-span expected-stx)
+                                                 0
+                                                 0)]
+                                   [result (parameterize ([current-call expected-node])
+                                             (with-handlers ([exn? exn-wrapper])
+                                               #,expected-stx))])
+                              (add-kid parent-node expected-node)
+                              (set-node-result! expected-node result)
+                              (if (exn-wrapper? result)
+                                  (begin
+                                    (set-node-result! parent-node #f)
+                                    (add-kid topCENode parent-node)
+                                    (error "Error"))
+                                  result)))
+                        expected-datums
+                        (fix-names (length expected-datums)
+                                   (cdr node-names))))))]))))
 
 (generalized-check-expect-recorder
  check-expect-recorder
  check-expect
  (lambda (actual expected)
    (equal? actual expected))
- identity)
+ (test expected))
 
 (generalized-check-expect-recorder
  check-within-recorder
@@ -207,8 +204,7 @@
  (lambda (actual value delta)
    (<= (abs (- actual value))
       delta))
- (lambda (value delta)
-   (list value delta)))
+ (test expected delta))
 
 (generalized-check-expect-recorder
  check-error-recorder
@@ -217,16 +213,14 @@
    (and (exn-wrapper? actual)
         (or (not message)
             (equal? (exn-wrapper-message actual) message))))
- (lambda ([message "Error"])
-   (with-handlers ([exn? exn-wrapper])
-     (error message))))
+ (test msg))
 
 (generalized-check-expect-recorder
  check-member-of-recorder
  check-member-of
  (lambda (actual . possibilities)
    (member actual possibilities))
- list)
+ (test expected))
 
 (generalized-check-expect-recorder
  check-range-recorder
@@ -234,7 +228,7 @@
  (lambda (actual low high)
    (and (< actual high)
         (> actual low)))
- list)
+ (test min max))
 
 (define-for-syntax (lambda-body args body name orig fun)
   #`(let* ([app-call? (eq? #,fun (current-fun))]
