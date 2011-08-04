@@ -16,7 +16,7 @@ other
 
 body {
     margin: 0px;
-    overflow: auto;
+    overflow: hidden;
     font-family: "dejavu sans mono", "consolas", "courier new","monospace";
 }
 
@@ -229,19 +229,26 @@ td.arg.cell {
 
 div#messagebar {
     width: 100%;
-    float:top;
+    float:left;
     background-color: red;
 }
+
 div#messagebar:hover { font-weight:bold;}
+
+div#cebar {
+    color: red;
+    border-bottom-color: red;
+    border-bottom-style: none;
+}
 
 .tabsDiv {
     width: 100%;
     overflow: auto;
-    float: top;
+    float: left;
     border-style: none;
     border-bottom-style: solid;
     border-bottom-color: black;
-    border-bottom-weight: 3px;
+    border-bottom-width: 3px;
     overflow-y: hidden;
 }
 

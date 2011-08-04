@@ -85,7 +85,7 @@ function makeCallTable(node, checkExpect) {
     //Function name
     var nameTD = element("td")
     if (checkExpect)
-        nameTD.text("check-expect: "+node.name)
+        nameTD.text(node.prefix+": "+node.name)
     else
         nameTD.text(node.name)
     nameTD.addClass("name cell")
@@ -568,10 +568,16 @@ $(document).ready(function () {
         oldPicked.removeClass("picked")
         oldPicked.addClass("other")
         var child = target.data("child")
-        if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level"))
-            $("#cebar").css("display", "none")
-        else if (target.hasClass("check-expect-top-level"))
-            $("#cebar").css("display", "inline")
+        if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level")) {
+            $("#cebar").css("border-bottom-style", "none")
+            $("#cebar").css("height", "0px")
+            setContentSize()
+            }
+        else if (target.hasClass("check-expect-top-level")) {
+            $("#cebar").css("height", "auto")
+            $("#cebar").css("border-bottom-style", "solid")
+            setContentSize()
+            }
 
         target.addClass("picked")
         target.removeClass("other")
@@ -590,11 +596,21 @@ $(document).ready(function () {
     }
     
     function setContentSize() {
+        /*
+        console.log("tabbar outer height" + $("div#tabbar").outerHeight())
+        console.log("messagebar outer height: " + $("div#messagebar").outerHeight())
+        console.log("cebar outer height: "+$("div#cebar").outerHeight())
+        console.log("window height: " + $(window).height())*/
+        
+
+        setContentWidth() //set width first to ensure no scrollbar on bottom when setting height
+
+        console.log("document body margin top: " + $(document.body).css("margin-top"))
         $(".column").height($(window).height()-$("div#tabbar").outerHeight()-$("div#messagebar").outerHeight()
                                 -$("div#cebar").outerHeight()-2*parseInt($(document.body).css("margin-top")))
         codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
                         +codePane.height()-codePane.outerHeight(true))
-        setContentWidth()
+        
     }
 
 
