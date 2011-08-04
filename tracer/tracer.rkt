@@ -204,8 +204,11 @@
  check-within-recorder
  check-within
  (lambda (actual value delta)
-   (<= (abs (- actual value))
-      delta))
+   (and (number? actual)
+        (number? value)
+        (number? delta)
+        (<= (abs (- actual value))
+            delta)))
  (test expected delta))
 
 (generalized-check-expect-recorder
@@ -228,7 +231,10 @@
  check-range-recorder
  check-range
  (lambda (actual low high)
-   (and (< actual high)
+   (and (number? actual)
+        (number? low)
+        (number? high)
+        (< actual high)
         (> actual low)))
  (test min max))
 
