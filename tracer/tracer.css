@@ -92,8 +92,9 @@ div.call {
     border-width: 1px;
 }
 
-div.error {
-    color: purple
+div.error > table > tbody > tr > td.result {
+    color: white;
+    background-color: red;
 }
 
 .childTD {

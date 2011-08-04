@@ -109,7 +109,7 @@ function makeCallTable(node, checkExpect) {
         row.append(arrow)
 
         //Result
-        var resultTD = makeCell(node.resultShort,node.result,"")
+        var resultTD = makeCell(node.resultShort,node.result,"result")
         row.append(resultTD)
     }
 
@@ -366,7 +366,7 @@ $(document).ready(function () {
         ul.append(li)
         var exp = makeCall(theTrace.children[i],tabs)
         exp.addClass("toplevel")
-        if(theTrace.children[i].result.type == "error") {
+        if(errored && theTrace.children[i].result.type == "error") {
             first = li
             $("div#messagebar").text("Your program generated an error")
             $("div#messagebar").css({"padding": "2px 5px"})
@@ -393,8 +393,9 @@ $(document).ready(function () {
             ceRow.addClass("check-expect")
             var exp = makeCall(ceTrace.children[j], tabs, true)
             
-            if(ceTrace.children[j].children[0].result.type == "error" 
-                || ceTrace.children[j].children[1].result.type == "error") {
+            if(errored && 
+                (ceTrace.children[j].children[0].result.type == "error" 
+                || ceTrace.children[j].children[1].result.type == "error")) {
                 first = li
                 errorInCE=ceRow
                 $("div#messagebar").text("Your program generated an error")
