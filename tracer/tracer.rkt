@@ -66,14 +66,14 @@
 
 
 ;the actual struct that stores our data
-(struct node (name func formal result actual kids linum idx span src-idx src-span used?) #:mutable #:transparent)
+(struct node (name prefix func formal result actual kids linum idx span src-idx src-span used?) #:mutable #:transparent)
 
 (define src (box ""))
 
 ;creates a node with no result or children
 ;takes a name, a formals list, and an actuals list
 (define (create-node n func f a l i s s-i s-s)
-  (node n func f 'no-result a empty l i s s-i s-s #f))
+  (node n "" func f 'no-result a empty l i s s-i s-s #f))
 
 ;adds a kid k to node n
 (define (add-kid n k)
@@ -131,6 +131,8 @@
            #`(begin 
                (define parent-node
                  (create-node '#,ce-name #f empty empty linum idx span 0 0))
+               (set-node-prefix! parent-node
+                                 (format "~s" 'original-name))
                (original-name
                 (let ([actual-node (create-node '#,(first node-names)
                                                 #f
@@ -437,7 +439,8 @@
               ce-span
               'ceCorrect
               ce-correct?
-              ))))
+              'prefix
+              (node-prefix t)))))
     
 
 ; Why is this a macro and not a function?  Because make it a function
