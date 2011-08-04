@@ -229,13 +229,12 @@ td.arg.cell {
 
 div#messagebar {
     width: 100%;
-    /*padding: 2px 5px;*/
     float:top;
     background-color: red;
 }
 div#messagebar:hover { font-weight:bold;}
 
-div#tabbar {
+.tabsDiv {
     width: 100%;
     overflow: auto;
     float: top;
@@ -246,52 +245,28 @@ div#tabbar {
     overflow-y: hidden;
 }
 
-ul.tabs {
+ul.tabsFormatting {
     list-style-type: none;
     margin: 5px 0px; /*TB, LR*/
     padding-left: 0px
 }
 
-ul.tabs > li {
+ul.tabsFormatting > li {
     display: inline;
     padding: 7px;
     white-space: nowrap;
 }
 
-ul.tabs > li.picked {
+ul.tabsFormatting > li.picked {
     font-weight: bold;
 }
 
-ul.tabs > li.other:hover {
+ul.tabsFormatting > li.other:hover {
     font-weight: bold;
 }
 
-ul.tabs > li.check-expect-top-level {
+ul.tabsFormatting > li.check-expect-top-level {
     color: #F80000;
-}
-
-/* Check Expect Menu */
-
-ul.ce-list {
-    list-style-type: none;
-    float:left;
-    color: #DF1616;
-    margin: 10px 0px; /*TB, LR*/
-    /*margin-left: 10px;*/
-    padding-left: 0px
-}
-
-ul.ce-list > li {
-    white-space: nowrap;
-    margin: 0px 10px;
-}
-
-ul.ce-list > li.picked {
-    font-weight: bold;
-}
-
-ul.ce-list > li.other:hover {
-    font-weight: bold;
 }
 
 /* Code Pane */

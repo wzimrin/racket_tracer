@@ -313,10 +313,14 @@ $(document).ready(function () {
     }
 
     var tabs = $("#tabbar")
-    //var bodyWrapper = $("#tracerWrapper")
+    tabs.addClass("tabsDiv")
+    var cetabs = $("#cebar")
+    cetabs.addClass("tabsDiv")
+
     var bodyWrapper = $("#wrapper")
     var bodies = $("#tracer")
     var tracerWrapper = $("#tracerWrapper")
+    
 
     var codePane = $("#codePane")
     var codePaneWrapper = $("#codePaneWrapper")
@@ -353,7 +357,7 @@ $(document).ready(function () {
     var codePaneWidth
 
     var ul = element("ul")
-    ul.addClass("tabs")
+    ul.addClass("tabs tabsFormatting")
     tabs.append(ul)
 
     var first = false
@@ -368,13 +372,13 @@ $(document).ready(function () {
         exp.addClass("toplevel")
         if(errored && theTrace.children[i].result.type == "error") {
             first = li
-            $("div#messagebar").text("Your program generated an error")
-            $("div#messagebar").css({"padding": "2px 5px"})
+            $("div#messagebar").text(" Your program generated an error")
         }
         li.data("child",exp)
         bodies.append(exp)
     }
-    
+   
+
     if (ceTrace.children.length > 0) {
         var li = element("li")
         li.text("check-expect")
@@ -384,7 +388,8 @@ $(document).ready(function () {
         first = li
         
         var ceList = element("ul")
-        ceList.addClass("ce-list")
+        ceList.addClass("cetabs tabsFormatting")
+        cetabs.append(ceList)
         var errorInCE=false
 
         for(var j = 0; j < ceTrace.children.length; j++) {
@@ -398,8 +403,7 @@ $(document).ready(function () {
                 || ceTrace.children[j].children[1].result.type == "error")) {
                 first = li
                 errorInCE=ceRow
-                $("div#messagebar").text("Your program generated an error")
-                $("div#messagebar").css({"padding": "2px 5px"})
+                $("div#messagebar").text(" Your program generated an error")
                 ceRow.addClass("picked")
             }
             else
@@ -410,21 +414,11 @@ $(document).ready(function () {
             ceRow.data("child", exp)
         }
         if(!errorInCE)
+        {
             ceList.children().first().removeClass("other").addClass("picked")
-        $("#ceMenu").append(ceList)
-
-        var ceMenuWidth;
-        if($("#ceMenu").width() > 200)
-            ceMenuWidth = 200;
-        else
-            ceMenuWidth = $("#ceMenu").width()
-
-        $("#ceMenu").width(ceMenuWidth)
-        $("#ceMenu").css({"right": ceMenuWidth+"px"})
-
-        //var exp = makeCall(ceTrace,tabs)
-        //$(exp).css({background: "black"})
-        //exp.addClass("toplevel")
+            }
+        $("#cebar").append(ceList)
+        
         li.data("child",exp)
         bodies.append(exp)
     }
@@ -546,7 +540,7 @@ $(document).ready(function () {
     $('.check-expect').bind('click', function(event) {
         var target = $(this)
         var child = target.data("child")
-        var oldPicked = $("ul.ce-list li.picked")
+        var oldPicked = $("ul.cetabs li.picked") //$("ul.ce-list li.picked")
         oldPicked.removeClass("picked")
         oldPicked.addClass("other")
         target.removeClass("other")
@@ -574,25 +568,15 @@ $(document).ready(function () {
         oldPicked.removeClass("picked")
         oldPicked.addClass("other")
         var child = target.data("child")
-        if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level")) {
-            bodyWrapper.animate({"padding-left":0},
-                                {duration:"fast",
-                                 complete:function () {
-                                     $("#ceMenu").css("display","none")
-                                 },
-                                 step:setContentWidth})
-        }
-        else if (target.hasClass("check-expect-top-level")) {
-            $("#ceMenu").css("display","inline")
-            bodyWrapper.animate({"padding-left":ceMenuWidth+"px"},
-                                {duration:"fast",
-                                 step:setContentWidth})
-        }
+        if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level"))
+            $("#cebar").css("display", "none")
+        else if (target.hasClass("check-expect-top-level"))
+            $("#cebar").css("display", "inline")
 
         target.addClass("picked")
         target.removeClass("other")
         if (target.hasClass("check-expect-top-level"))
-            switchTo($("ul.ce-list li.picked").data("child"))
+            switchTo($("ul.cetabs li.picked").data("child")) 
         else
             switchTo(child)
     })
@@ -607,7 +591,7 @@ $(document).ready(function () {
     
     function setContentSize() {
         $(".column").height($(window).height()-$("div#tabbar").outerHeight()-$("div#messagebar").outerHeight()
-                            -2*parseInt($(document.body).css("margin-top")))
+                                -$("div#cebar").outerHeight()-2*parseInt($(document.body).css("margin-top")))
         codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
                         +codePane.height()-codePane.outerHeight(true))
         setContentWidth()
