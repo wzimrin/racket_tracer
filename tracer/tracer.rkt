@@ -62,8 +62,7 @@
 ;(provide struct-accessor-procedure?)
 
 (provide #%module-begin)
-
-
+(provide trace)
 
 ;the actual struct that stores our data
 (struct node (name prefix func formal result actual kids linum idx span src-idx src-span used?) #:mutable #:transparent)
@@ -83,9 +82,20 @@
 (define (exn-wrapper-message w)
   (exn-message (exn-wrapper-exn w)))
 
-;the current definition we are in
-(define current-call (make-parameter (create-node 'top-level #f empty empty 0 0 0 0 0)))
 (define topCENode (create-node 'CE-top-level #f empty empty 0 0 0 0 0))
+(define top-node (create-node 'top-level #f empty empty 0 0 0 0 0))
+
+;the current definition we are in
+(define current-call (make-parameter top-node))
+
+(define-syntax (trace e)
+  (syntax-case e ()
+    [(_ on? . bodies)
+     (with-syntax ([new-current #'(if on? top-node #f)])
+       (if (cons? (syntax-e #'bodies))
+           #'(parameterize ([current-call new-current])
+               . bodies)
+           #'(current-call new-current)))]))
 
 (define current-linum (make-parameter 0))
 (define current-idx (make-parameter 0))
@@ -244,28 +254,31 @@
  (test min max))
 
 (define-for-syntax (lambda-body args body name orig fun)
-  #`(let* ([app-call? (eq? #,fun (current-fun))]
-           [n (if app-call?
-                  (current-app-call)
-                  (create-node '#,name #,fun empty #,args
-                               0 0 0
-                               #,(syntax-position orig)
-                               #,(syntax-span orig)))])
-      (cond
-        [app-call?
-         (begin (set-node-src-idx! n #,(syntax-position orig))
-                (set-node-src-span! n #,(syntax-span orig)))]
-        [(node? (current-app-call))
-         (add-kid (current-app-call) n)]
-        [#t (add-kid (current-call) n)])
-      (set-node-used?! n #t)
-      (parameterize ([current-call n])
-        (let ([result (with-handlers ([exn? exn-wrapper])
-                        #,body)])
-          (set-node-result! n result)
-          (if (exn-wrapper? result)
-              (error "Error")
-              result)))))
+  #`(let ([body-thunk (lambda () #,body)])
+      (if (current-call)
+          (let* ([app-call? (eq? #,fun (current-fun))]
+                 [n (if app-call?
+                        (current-app-call)
+                        (create-node '#,name #,fun empty #,args
+                                     0 0 0
+                                     #,(syntax-position orig)
+                                     #,(syntax-span orig)))])
+            (cond
+              [app-call?
+               (begin (set-node-src-idx! n #,(syntax-position orig))
+                      (set-node-src-span! n #,(syntax-span orig)))]
+              [(node? (current-app-call))
+               (add-kid (current-app-call) n)]
+              [#t (add-kid (current-call) n)])
+            (set-node-used?! (current-app-call) #t)
+            (parameterize ([current-call n])
+              (let ([result (with-handlers ([exn? exn-wrapper])
+                              (body-thunk))])
+                (set-node-result! n result)
+                (if (exn-wrapper? result)
+                    (error "Error")
+                    result))))
+          (body-thunk))))
 
 (define-syntax (custom-lambda e)
   (syntax-case e ()
@@ -297,24 +310,26 @@
      (with-syntax ([linum (syntax-line e)]
                    [idx (syntax-position e)]
                    [span (syntax-span e)])
-     #'(let* ([fun fun-expr]
-              [args (list arg-expr ...)]       
-              [n (create-node (function-sym 'fun-expr) fun empty args
-                              linum idx span 0 0)]
-              [result (with-handlers ([exn? exn-wrapper])
-                        (parameterize ([current-linum linum]
-                                       [current-idx idx]
-                                       [current-span span]
-                                       [current-fun fun]
-                                       [current-app-call n])
-                          (apply fun args)))])
-         (when (or (node-used? n)
-                   (exn-wrapper? result))
-           (set-node-result! n result)
-           (add-kid (current-call) n))
-         (if (exn-wrapper? result)
-             (error "Error")
-             result)))]))
+       #'(let ([fun fun-expr]
+               [args (list arg-expr ...)])    
+           (if (current-call)
+               (let* ([n (create-node (function-sym 'fun-expr) fun empty args
+                                      linum idx span 0 0)]
+                      [result (with-handlers ([exn? exn-wrapper])
+                                (parameterize ([current-linum linum]
+                                               [current-idx idx]
+                                               [current-span span]
+                                               [current-fun fun]
+                                               [current-app-call n])
+                                  (apply fun args)))])
+                 (when (or (node-used? n)
+                           (exn-wrapper? result))
+                   (set-node-result! n result)
+                   (add-kid (current-call) n))
+                 (if (exn-wrapper? result)
+                     (error "Error")
+                     result))
+               (apply fun args))))]))
 
 (define (print-right t)
   (node (node-formal t)
@@ -542,7 +557,7 @@
         [tracerJSPort (open-input-file (resolve-planet-path
                                          '(planet tracer/tracer/tracer.js)))]
         [tracerJS (port->string tracerJSPort)]
-        [theTrace (tree->json (current-call))]
+        [theTrace (tree->json top-node)]
         [ceTrace (tree->json topCENode)]
         [code (code->json)]
         [offset o]
@@ -559,7 +574,7 @@
 (define (after-body name offset errored)
   (display-results)
   ;If empty trace generate error message
-  (if (and (empty? (node-kids (current-call)))
+  (if (and (empty? (node-kids top-node))
            (empty? (node-kids topCENode)))
       (message-box "Error" 
                    "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
