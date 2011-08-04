@@ -119,7 +119,7 @@
                   [expected 'expected])
       (syntax-case e ()
         [(_ actual-stx . expected-stxs)
-         (let* ([datum (syntax-e #'actualStx)]
+         (let* ([datum (syntax-e #'actual-stx)]
                 [func (if (pair? datum)
                           (car datum)
                           datum)]
