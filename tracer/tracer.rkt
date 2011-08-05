@@ -119,6 +119,89 @@
                 (make-list (- count name-count -1)
                            (last names))))))
 
+(define-for-syntax (lambda-body args body name orig fun)
+  #`(let ([body-thunk (lambda () #,body)])
+      (if (current-call)
+          (let* ([app-call? (eq? #,fun (current-fun))]
+                 [n (if app-call?
+                        (current-app-call)
+                        (create-node '#,name #,fun empty #,args
+                                     0 0 0
+                                     #,(syntax-position orig)
+                                     #,(syntax-span orig)))])
+            (cond
+              [app-call?
+               (begin (set-node-src-idx! n #,(syntax-position orig))
+                      (set-node-src-span! n #,(syntax-span orig)))]
+              [(node? (current-app-call))
+               (add-kid (current-app-call) n)]
+              [#t (add-kid (current-call) n)])
+            (set-node-used?! (current-app-call) #t)
+            (parameterize ([current-call n])
+              (let ([result (with-handlers ([exn? exn-wrapper])
+                              (body-thunk))])
+                (set-node-result! n result)
+                (if (exn-wrapper? result)
+                    (error "Error")
+                    result))))
+          (body-thunk))))
+
+(define-syntax (custom-lambda e)
+  (syntax-case e ()
+    [(_ args body)
+     (let ([sym (gensym)])
+       #`(letrec ([#,sym (lambda args
+                           #,(lambda-body #'(list . args) #'body #'lambda e sym))])
+           (procedure-rename #,sym 'lambda)))]))
+
+(define-syntax (custom-define e)
+  (syntax-case e (lambda)
+    [(_ (fun-expr arg-expr ...) body)
+     #`(define (fun-expr arg-expr ...)
+         #,(lambda-body #'(list arg-expr ...) #'body #'fun-expr e #'fun-expr))]
+    [(_ fun-expr (lambda (arg-expr ...) body))
+     #'(custom-define (fun-expr arg-expr ...) body)]
+    [(_ id val)
+     #'(define id val)]))
+
+(define (function-sym datum)
+  (if (cons? datum)
+      (function-sym (first datum))
+      datum))
+
+(define-syntax (apply-recorder e)
+  (syntax-case e ()
+    [(_ fun args e fun-expr)
+     (with-syntax ([linum (syntax-line #'e)]
+                   [idx (syntax-position #'e)]
+                   [span (syntax-span #'e)])
+       #'(if (current-call)
+             (let* ([n (create-node (function-sym 'fun-expr) fun empty args
+                                    linum idx span 0 0)]
+                    [result (with-handlers ([exn? exn-wrapper])
+                              (parameterize ([current-linum linum]
+                                             [current-idx idx]
+                                             [current-span span]
+                                             [current-fun fun]
+                                             [current-app-call n])
+                                (apply fun args)))])
+               (when (or (node-used? n)
+                         (exn-wrapper? result))
+                 (set-node-result! n result)
+                 (add-kid (current-call) n))
+               (if (exn-wrapper? result)
+                   (error "Error")
+                   result))
+             (apply fun args)))]))
+
+;records all function calls we care about - redefinition of #%app
+(define-syntax (app-recorder e)
+  (syntax-case e ()
+    [(_ fun-expr arg-expr ...)
+     #`(let ([fun fun-expr]
+             [args (list arg-expr ...)])    
+         (apply-recorder fun args #,e fun-expr))]))
+
 (define-syntax-rule (generalized-check-expect-recorder name original-name
                                                        passed? node-names-stx)
   (define-syntax (name e)
@@ -130,12 +213,12 @@
       (syntax-case e ()
         [(_ actual-stx . expected-stxs)
          (let* ([datum (syntax-e #'actual-stx)]
-                [func (if (pair? datum)
-                          (car datum)
-                          datum)]
-                [ce-name func]
-                [args (when (pair? datum)
-                        (cdr datum))]
+                [func-stx (if (pair? datum)
+                              (car datum)
+                              datum)]
+                [ce-name func-stx]
+                [args-stx (when (pair? datum)
+                            (cdr datum))]
                 [expected-datums (syntax-e #'expected-stxs)]
                 [node-names 'node-names-stx])
            #`(begin 
@@ -144,40 +227,54 @@
                (set-node-prefix! parent-node
                                  (format "~s" 'original-name))
                (original-name
-                (let ([actual-node (create-node '#,(first node-names)
-                                                #f
-                                                (list 'actual-stx)
-                                                empty
-                                                #,(syntax-line #'actual-stx)
-                                                #,(syntax-position #'actual-stx)
-                                                #,(syntax-span #'actual-stx)
-                                                0
-                                                0)])
-                  (parameterize ([current-call actual-node])
-                    (set-node-result! actual-node (with-handlers ([exn? exn-wrapper])
-                                                    actual-stx)))
-                  ;Check if actual and expected are the same
-                  (let ([ce-correct? (apply passed?
-                                            (cons (node-result actual-node)
-                                                  (reverse
-                                                   (map node-result
-                                                        (node-kids parent-node)))))])
-                    (displayln ce-correct?)
-                    (displayln (cons (node-result actual-node)
-                                                  (map node-result (node-kids parent-node))))
-                    (set-node-kids! parent-node (append (node-kids parent-node) 
-                                                        (list actual-node)))
-                    ;add to hash
-                    #,(when (pair? datum)
-                        #`(add-to-hash ce-hash
-                                       (list #,func (list . #,args))
-                                       idx
-                                       span
-                                       ce-correct?))
-                    ;When ce is false, create a ce node
-                    (when (not ce-correct?)
-                      (set-node-result! parent-node #f)
-                      (add-kid topCENode parent-node)))
+                (let* ([actual-node (create-node '#,(first node-names)
+                                                 #f
+                                                 (list 'actual-stx)
+                                                 empty
+                                                 #,(syntax-line #'actual-stx)
+                                                 #,(syntax-position #'actual-stx)
+                                                 #,(syntax-span #'actual-stx)
+                                                 0
+                                                 0)])
+                  (let-values ([(func args)
+                                #,(if (pair? datum)
+                                      #`(parameterize ([current-call actual-node])
+                                          (with-handlers ([exn?
+                                                           (lambda (exn)
+                                                             (values
+                                                              (exn-wrapper exn)
+                                                              #f))])
+                                            (values #,func-stx (list . #,args-stx))))
+                                      #'(values #f #f))])
+                    (set-node-result! actual-node
+                                      (parameterize ([current-call actual-node])
+                                        (with-handlers ([exn? exn-wrapper])
+                                          #,(if (pair? datum)
+                                                #`(if (exn-wrapper? func)
+                                                      func
+                                                      (apply-recorder
+                                                       func args 
+                                                       actual-stx #,func-stx))
+                                                func-stx))))
+                    ;Check if actual and expected are the same
+                    (let ([ce-correct? (apply passed?
+                                              (cons (node-result actual-node)
+                                                    (reverse
+                                                     (map node-result
+                                                          (node-kids parent-node)))))])
+                      (set-node-kids! parent-node (append (node-kids parent-node) 
+                                                          (list actual-node)))
+                      ;add to hash
+                      #,(when (pair? datum)
+                          #`(add-to-hash ce-hash
+                                         (list func args)
+                                         idx
+                                         span
+                                         ce-correct?))
+                      ;When ce is false, create a ce node
+                      (when (not ce-correct?)
+                        (set-node-result! parent-node #f)
+                        (add-kid topCENode parent-node))))
                   (if (exn-wrapper? (node-result actual-node))
                       (error "Error")
                       (node-result actual-node)))
@@ -252,84 +349,6 @@
         (< actual high)
         (> actual low)))
  (test min max))
-
-(define-for-syntax (lambda-body args body name orig fun)
-  #`(let ([body-thunk (lambda () #,body)])
-      (if (current-call)
-          (let* ([app-call? (eq? #,fun (current-fun))]
-                 [n (if app-call?
-                        (current-app-call)
-                        (create-node '#,name #,fun empty #,args
-                                     0 0 0
-                                     #,(syntax-position orig)
-                                     #,(syntax-span orig)))])
-            (cond
-              [app-call?
-               (begin (set-node-src-idx! n #,(syntax-position orig))
-                      (set-node-src-span! n #,(syntax-span orig)))]
-              [(node? (current-app-call))
-               (add-kid (current-app-call) n)]
-              [#t (add-kid (current-call) n)])
-            (set-node-used?! (current-app-call) #t)
-            (parameterize ([current-call n])
-              (let ([result (with-handlers ([exn? exn-wrapper])
-                              (body-thunk))])
-                (set-node-result! n result)
-                (if (exn-wrapper? result)
-                    (error "Error")
-                    result))))
-          (body-thunk))))
-
-(define-syntax (custom-lambda e)
-  (syntax-case e ()
-    [(_ args body)
-     (let ([sym (gensym)])
-       #`(letrec ([#,sym (lambda args
-                           #,(lambda-body #'(list . args) #'body #'lambda e sym))])
-           (procedure-rename #,sym 'lambda)))]))
-
-(define-syntax (custom-define e)
-  (syntax-case e (lambda)
-    [(_ (fun-expr arg-expr ...) body)
-     #`(define (fun-expr arg-expr ...)
-         #,(lambda-body #'(list arg-expr ...) #'body #'fun-expr e #'fun-expr))]
-    [(_ fun-expr (lambda (arg-expr ...) body))
-     #'(custom-define (fun-expr arg-expr ...) body)]
-    [(_ id val)
-     #'(define id val)]))
-
-(define (function-sym datum)
-  (if (cons? datum)
-      (function-sym (first datum))
-      datum))
-
-;records all function calls we care about - redefinition of #%app
-(define-syntax (app-recorder e)
-  (syntax-case e ()
-    [(_ fun-expr arg-expr ...)
-     (with-syntax ([linum (syntax-line e)]
-                   [idx (syntax-position e)]
-                   [span (syntax-span e)])
-       #'(let ([fun fun-expr]
-               [args (list arg-expr ...)])    
-           (if (current-call)
-               (let* ([n (create-node (function-sym 'fun-expr) fun empty args
-                                      linum idx span 0 0)]
-                      [result (with-handlers ([exn? exn-wrapper])
-                                (parameterize ([current-linum linum]
-                                               [current-idx idx]
-                                               [current-span span]
-                                               [current-fun fun]
-                                               [current-app-call n])
-                                  (apply fun args)))])
-                 (when (or (node-used? n)
-                           (exn-wrapper? result))
-                   (set-node-result! n result)
-                   (add-kid (current-call) n))
-                 (if (exn-wrapper? result)
-                     (error "Error")
-                     result))
-               (apply fun args))))]))
 
 (define (print-right t)
   (node (node-formal t)
@@ -508,7 +527,7 @@
                                         'color type
                                         'html "&lambda;")]
                                [else
-                                (hasheq 'type 'string
+                                (hasheq 'type "string"
                                         'color type
                                         'text (format "~a" val))]))
                            (second lst)))))
@@ -573,6 +592,7 @@
 ;If code to trace, generates and displays page
 (define (after-body name offset errored)
   (display-results)
+  (printf "~a" topCENode)
   ;If empty trace generate error message
   (if (and (empty? (node-kids top-node))
            (empty? (node-kids topCENode)))
