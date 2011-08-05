@@ -16,6 +16,7 @@ function element(tag) {
     return $("<"+tag+'/>')
 }
 
+
 //-----------------------------------------------------------------------------
 //                              CODE PANE HELPERS 
 //-----------------------------------------------------------------------------
@@ -28,7 +29,7 @@ function clearHighlight() {
 function highlightSpan(el,idx,span) {
     clearHighlight()
     var hi = element("span")
-    hi.addClass("highlight")
+    hi.newAddClass("highlight")
     el.children().slice(idx-codeOffset,span+idx-codeOffset).wrapAll(hi)
 }
 
@@ -39,13 +40,13 @@ function setCodePaneWidth() {
 //Set the width of the code pane to a new value and animate
 function setCodePaneWrapperWidth(newWidth,speed, arrow, onComplete) {
     if (codePaneWidth != newWidth) {
-        codePane.addClass("hidden")
+        codePane.newAddClass("hidden")
         codePaneWidth = newWidth            
         codePaneWrapper.animate({"width":newWidth+"%"},
             {duration:speed, 
                 complete: function() {
                     setCodePaneWidth()
-                    codePane.removeClass("hidden")
+                    codePane.newRemoveClass("hidden")
                     codePaneButton.html(arrow)
                     onComplete()
                 }})
@@ -107,7 +108,7 @@ function toggleExpandable(html) {
 
 //Makes a cell on the call table, either an actual or a result
 function makeCell(formShort, formFull, cssClass) {
-    var cell = element("td").addClass(cssClass + " cell")
+    var cell = element("td").newAddClass([cssClass, "cell"])
     var div = element("div")
     
     if (formFull.type=="image") {
@@ -120,7 +121,7 @@ function makeCell(formShort, formFull, cssClass) {
     else {
         //If a shortened form exists 
         if (formShort.value != formFull.value) {
-            div.addClass("expandable")
+            div.newAddClass("expandable")
             div.data({short: formShort.value, full: formFull.value, expanded: false})
             updateExpandable(div)
         }
@@ -134,7 +135,7 @@ function makeCell(formShort, formFull, cssClass) {
 //Formats function name, actuals and result into table form
 function makeCallTable(node, checkExpect) {
     var table = element("table")
-    table.addClass("callTable")
+    table.newAddClass("callTable")
     var row = element("tr")
 
     //Function name
@@ -143,10 +144,10 @@ function makeCallTable(node, checkExpect) {
         nameTD.text(node.prefix+": "+node.name)
     else
         nameTD.text(node.name)
-    nameTD.addClass("name cell")
+    nameTD.newAddClass(["name", "cell"])
     nameTD.data({idx: node.idx, span: node.span})
     if(!(node.idx == 0 && node.span == 0))
-        nameTD.addClass("hasSource")
+        nameTD.newAddClass("hasSource")
     row.append(nameTD)
 
     if (!checkExpect) {
@@ -160,7 +161,7 @@ function makeCallTable(node, checkExpect) {
         //Arrow
         var arrow = element('td')
         arrow.html("&rarr;")
-        arrow.addClass("arrow cell")
+        arrow.newAddClass(["arrow", "cell"])
         row.append(arrow)
 
         //Result
@@ -179,31 +180,31 @@ function makeCall(traceNode, parent, checkExpect) {
 
     var call = element("div")
     if (parent.hasClass("background1"))
-        call.addClass("background2")
+        call.newAddClass("background2")
     else
-        call.addClass("background1")
+        call.newAddClass("background1")
 
     var ceButton = element("td")
     if (checkExpect) {
-        call.addClass("failed-ce")
+        call.newAddClass("failed-ce")
     } else if (traceNode.ceIdx) {
         if (traceNode.ceCorrect) {
-            call.addClass("passed-ce")
+            call.newAddClass("passed-ce")
             addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
         }
         else {
-            call.addClass("failed-ce")
+            call.newAddClass("failed-ce")
             addIcon(ceButton, failedCEImageSrc, failedCEImageSelSrc)
         }
-        ceButton.addClass("button to-src-button hasSource")
+        ceButton.newAddClass(["button", "to-src-button","hasSource"])
         ceButton.data({idx: traceNode.ceIdx,
                        span: traceNode.ceSpan})
     }
-    call.addClass("call")
+    call.newAddClass("call")
 
     var expand = false;
     if(traceNode.result.type == "error") {
-        call.addClass("error")
+        call.newAddClass("error")
         expand = true
     }
     
@@ -211,25 +212,25 @@ function makeCall(traceNode, parent, checkExpect) {
 
     var childrenButton = element("td")
     addIcon(childrenButton, downImageSrc, downImageSrc)
-    childrenButton.addClass("button ec-button")
+    childrenButton.newAddClass(["button", "ec-button"])
 
     var bodyButton = element('td')
     addIcon(bodyButton, toDefImageSrc, toDefImageSelSrc)
-    bodyButton.addClass("to-src-button button")
+    bodyButton.newAddClass(["to-src-button", "button"])
     if(!(traceNode.srcIdx == 0 && traceNode.srcSpan == 0)) {
-        bodyButton.addClass("hasSource")
+        bodyButton.newAddClass("hasSource")
         bodyButton.data({idx:traceNode.srcIdx,
                      span:traceNode.srcSpan})
     }
     
     var hidable = []
     
-    var childTable = element('table').addClass("childTable")
+    var childTable = element('table').newAddClass("childTable")
     var lowerRow = element('tr');
     childTable.append(lowerRow)
     
     for (var i = 0; i < traceNode.children.length; i++) {
-        var cell = element('td').addClass("childTD")
+        var cell = element('td').newAddClass("childTD")
         var collapsedDiv = makeCall(traceNode.children[i],call, false);
         cell.append(collapsedDiv)
         lowerRow.append(cell);
@@ -237,7 +238,7 @@ function makeCall(traceNode, parent, checkExpect) {
     hidable.push(childTable)
     call.append(callTable)
 
-    var buttonTable = element('table').addClass("buttonTable")
+    var buttonTable = element('table').newAddClass("buttonTable")
     if (traceNode.children.length!=0 && !checkExpect)
         buttonTable.append(childrenButton)
     if(bodyButton.hasClass("hasSource")) 
@@ -295,7 +296,7 @@ function switchTo(child) {
     child.show()
     traceWrapper.scrollLeft(0)
     swapIcon($(".lastHighlighted").children("img"))
-    $(".lastHighlighted").removeClass("lastHighlighted")
+    $(".lastHighlighted").newRemoveClass("lastHighlighted")
     clearHighlight()
     collapseCodePane()
     refocusScreen()
@@ -368,8 +369,8 @@ function dragHandler(event) {
     var oldY=event.pageY
     var body = $(document.body)
     var target = $(this)
-    body.addClass("dragging")
-    trace.addClass("dragging")
+    body.newAddClass("dragging")
+    trace.newAddClass("dragging")
 
     function moveHandler(event) {
         var newTime = new Date().getTime()
@@ -389,7 +390,7 @@ function dragHandler(event) {
         body.unbind("mousemove",moveHandler)
         body.unbind("mouseup",endHandler)
         body.unbind("mouseleave",endHandler)
-        $(".dragging").removeClass("dragging")
+        $(".dragging").newRemoveClass("dragging")
         return false
     }
     trace.unbind("mousedown",dragHandler)
@@ -407,14 +408,14 @@ function hasSourceCallback() {
     if (lastFunctionHighlighted == this) {
         lastFunctionHighlighted = false;
         swapIcon($(".lastHighlighted").children("img"))
-        $(".lastHighlighted").removeClass("lastHighlighted")
+        $(".lastHighlighted").newRemoveClass("lastHighlighted")
         clearHighlight()
         collapseCodePane()
     } else {
         var target = $(this)
         swapIcon($(".lastHighlighted").children("img"))
-        $(".lastHighlighted").removeClass("lastHighlighted")
-        target.addClass("lastHighlighted")
+        $(".lastHighlighted").newRemoveClass("lastHighlighted")
+        target.newAddClass("lastHighlighted")
         swapIcon(target.children("img"))
         highlightSpan(codePane,target.data("idx"),target.data("span"))
         expandCodePane(showSpan)
@@ -425,6 +426,7 @@ function hasSourceCallback() {
 function ecButtonCallback() {
     var thisCall = $(this).parents(".call").first()
     toggleCall(thisCall,"slow")
+    return false;
 }
 
 //makes the expandables expand/collapse appropriately
@@ -432,42 +434,47 @@ function ecButtonCallback() {
 function expandableCallback() {//expand/collapse
     toggleExpandable($(this))
 }
+
 function cebarCallback() {
     var target = $(this)
-    var child = target.data("child")
-    var oldPicked = $("ul.cebar li.picked") 
-    oldPicked.removeClass("picked").addClass("other")
-    target.removeClass("other").addClass("picked")
-    console.log("check-expect bind")
-    switchTo(child)
+    if(!target.hasClass("picked")) {
+        var child = target.data("child")
+        var oldPicked = $("ul.cebar li.picked") 
+        oldPicked.newRemoveClass("picked").newAddClass("other")
+        target.newRemoveClass("other").newAddClass("picked")
+        console.log("check-expect bind")
+        switchTo(child)
+    }
 }
 
 //makes the tabs switch what is displayed and
 //highlight on hover
 function tabbarCallback() {//switch display
-    var target = $(this)
-    var div = trace
-    var oldPicked = $("ul.tabbar li.picked")
-    oldPicked.removeClass("picked")
-    oldPicked.addClass("other")
-    var child = target.data("child")
-    if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level")) {
-        cebar.css("border-bottom-style", "none")
-        cebar.css("height", "0px")
-        setContentSize()
-    }
-    else if (target.hasClass("check-expect-top-level")) {
-        cebar.css("height", "auto")
-        cebar.css("border-bottom-style", "solid")
-        setContentSize()
-    }
 
-    target.addClass("picked")
-    target.removeClass("other")
-    if (target.hasClass("check-expect-top-level"))
-        switchTo($("ul.cebar li.picked").data("child")) 
-    else
-        switchTo(child)
+    var target = $(this)
+    if(!target.hasClass("picked")) {
+        var oldPicked = $("ul.tabbar li.picked")
+        oldPicked.newRemoveClass("picked")
+        oldPicked.newAddClass("other")
+        var child = target.data("child")
+        if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level")) {
+            cebar.css("border-bottom-style", "none")
+            cebar.css("height", "0px")
+            setContentSize()
+        }
+        else if (target.hasClass("check-expect-top-level")) {
+            cebar.css("height", "auto")
+            cebar.css("border-bottom-style", "solid")
+            setContentSize()
+        }
+
+        target.newAddClass("picked")
+        target.newRemoveClass("other")
+        if (target.hasClass("check-expect-top-level"))
+            switchTo($("ul.cebar li.picked").data("child")) 
+        else
+            switchTo(child)
+    }
 }
 
 function setContentWidth() {
@@ -485,6 +492,39 @@ function setContentSize() {
     codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
         +codePane.height()-codePane.outerHeight(true))
 }
+
+var callbacks = {
+    "hasSource" : hasSourceCallback,
+    "ec-button" : ecButtonCallback,
+    "expandable" : expandableCallback
+};
+
+(function($) {
+        $.fn.newAddClass = function(classes) {
+            if(typeof(classes) == "string")
+                classes = [classes]
+
+            for (var i = 0; i < classes.length; i++) {
+                if(!this.hasClass(classes[i])) {
+                    if(callbacks[classes[i]])
+                        this.click(callbacks[classes[i]])
+                    this.addClass(classes[i])
+                }
+            }
+            return this
+        }
+        $.fn.newRemoveClass = function(classes) {
+            if(typeof(classes) == "string")
+                classes = [classes]
+
+            for (var i = 0; i < classes.length; i++) {
+                if(callbacks[classes[i]])
+                    this.unbind("click", callbacks[classes[i]])
+                this.removeClass(classes[i])
+            }
+            return this
+        }
+    })(jQuery)
 
 //-----------------------------------------------------------------------------
 //                              CREATING PAGE
@@ -508,8 +548,8 @@ $(document).ready(function () {
         alert("The Tracer has not been tested on your browser and may have compatibility issues. We suggest using Firefox, Chrome or Safari.")
     }
 
-    tabbar = $("#tabbar").addClass("tabsDiv")
-    cebar = $("#cebar").addClass("tabsDiv")
+    tabbar = $("#tabbar").newAddClass("tabsDiv")
+    cebar = $("#cebar").newAddClass("tabsDiv")
     messagebar = $("#messagebar")
 
     wrapper = $("#wrapper")
@@ -525,35 +565,35 @@ $(document).ready(function () {
             for (var j = 0; j < code[i].text.length; j++) {
                 var el = element("span")
                 el.text(code[i].text[j])
-                el.addClass(code[i].color + " codeChar codeElem")
+                el.newAddClass([code[i].color, "codeChar", "codeElem"])
                 if (el.text() != "\r")
                     codePane.append(el)
             }
         } else if (code[i].type=="image") {
             var el = element("img")
             el.attr("src",code[i].src)
-            el.addClass(code[i].color + " codeImg codeElem")
+            el.newAddClass([code[i].color, "codeImg", "codeElem"])
             codePane.append(el)
         } else if (code[i].type=="html") {
             var el = element("span")
             el.html(code[i].html)
-            el.addClass(code[i].color + " codeChar codeElem")
+            el.newAddClass([code[i].color, "codeChar", "codeElem"])
             codePane.append(el)
         }
     }
 
-    var tabsList = element("ul").addClass("tabbar tabsFormatting")
+    var tabsList = element("ul").newAddClass(["tabbar", "tabsFormatting"])
     tabbar.append(tabsList)
 
     var first = false
     for (var i = 0; i < theTrace.children.length; i++) {
-        var li = element("li").addClass("other")
+        var li = element("li").newAddClass("other")
         if (!first)
             first = li
         li.text(theTrace.children[i].name)
         tabsList.append(li)
         
-        var exp = makeCall(theTrace.children[i],tabbar).addClass("toplevel")
+        var exp = makeCall(theTrace.children[i],tabbar).newAddClass("toplevel")
         if(errored && theTrace.children[i].result.type == "error") {
             first = li
             messagebar.text(" Your program generated an error")
@@ -563,7 +603,7 @@ $(document).ready(function () {
     }
    
     if (ceTrace.children.length > 0) {
-        var li = element("li").addClass("other check-expect-top-level")
+        var li = element("li").newAddClass(["other", "check-expect-top-level"])
         console.log("li from ceTrace")
         console.log(li)
         li.text("check-expect")
@@ -571,12 +611,12 @@ $(document).ready(function () {
 
         first = li
         
-        var ceList = element("ul").addClass("cebar tabsFormatting")
+        var ceList = element("ul").newAddClass(["cebar", "tabsFormatting"])
         cebar.append(ceList)
         var errorInCE=false
         
         for(var j = 0; j < ceTrace.children.length; j++) {
-            var ceEl = element("li").addClass("check-expect")
+            var ceEl = element("li").newAddClass("check-expect")
             ceEl.text(ceTrace.children[j].name)
 
             var exp = makeCall(ceTrace.children[j], tabbar, true)
@@ -587,17 +627,17 @@ $(document).ready(function () {
                 first = li
                 errorInCE=ceEl
                 messagebar.text(" Your program generated an error")
-                ceEl.addClass("picked")
+                ceEl.newAddClass("picked")
             }
             else
-                ceEl.addClass("other")
-            exp.addClass("toplevel")
+                ceEl.newAddClass("other")
+            exp.newAddClass("toplevel")
             trace.append(exp)
             ceList.append(ceEl)
             ceEl.data("child", exp)
         }
         if(!errorInCE)
-            ceList.children().first().removeClass("other").addClass("picked")
+            ceList.children().first().newRemoveClass("other").newAddClass("picked")
         cebar.append(ceList)
 
         li.data("child",exp)
@@ -627,11 +667,7 @@ $(document).ready(function () {
             if(errorInCE)
                 errorInCE.trigger("click")
         })
-
     
-    $(".hasSource").bind('click', hasSourceCallback)
-    $('.ec-button').bind('click', ecButtonCallback)
-    $(".expandable").bind("click",expandableCallback)
     $("ul.cebar li").bind("click", cebarCallback)
     $("ul.tabbar li").bind("click", tabbarCallback) 
         
