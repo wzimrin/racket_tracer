@@ -31,19 +31,19 @@ body {
 }
 
 /*ce-menu/rest of page positioning*/
-
+/*
 div#middle .column {
     position: relative;
 }
-
 div#middle {
     position: relative;
     width: 100%;
     overflow: visible;
     float: left;
 }
-
+    */
 div#wrapper {
+    position: relative;
     overflow: visible;
     float: left;
     width: 100%;
@@ -66,8 +66,8 @@ div#ceMenu {
 
 /* Trace */
 
-div#tracerWrapper {
-    float: right;
+div#traceWrapper {
+    float: left;
     position: relative;
     /*width: 90%;*/
     width: 100%;
@@ -75,7 +75,7 @@ div#tracerWrapper {
     overflow: auto;
 }
 
-div#tracer {
+div#trace {
     /*position: absolute;
     top:0px;
     left:0px;*/ 
@@ -135,16 +135,16 @@ div.error > table > tbody > tr > td.result {
     border-color: #3cc305;
 }
 
-.passed-ce.background1>table>tbody>tr>td.arg {
+.passed-ce.background1>table.callTable>tbody>tr>td.arg {
     background: #3cc305;
 }
 
-.passed-ce.background2>table>tbody>tr>td.arg {
+.passed-ce.background2>table.callTable>tbody>tr>td.arg {
     background: #4af406;
 }
 
 /* Failed Check Expects */
-.failed-ce>table>tbody>tr>td {
+.failed-ce>table.callTable>tbody>tr>td {
     color: white;
 }
 
@@ -158,11 +158,11 @@ div.error > table > tbody > tr > td.result {
     border-color: red;
 }
 
-.failed-ce.background1>table>tbody>tr>td.arg {
+.failed-ce.background1>table.callTable>tbody>tr>td.arg {
     background: #e60000;
 }
 
-.failed-ce.background2>table>tbody>tr>td.arg {
+.failed-ce.background2>table.callTable>tbody>tr>td.arg {
     background: #ff4d4d;
 }
 
