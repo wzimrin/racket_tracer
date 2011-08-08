@@ -211,7 +211,7 @@ function makeCall(traceNode, parent, checkExpect) {
     var callTable = makeCallTable(traceNode, checkExpect)
 
     var childrenButton = element("td")
-    addIcon(childrenButton, downImageSrc, downImageSrc)
+    addIcon(childrenButton, sideImageSrc, sideImageSrc)
     childrenButton.newAddClass(["button", "ec-button"])
 
     var bodyButton = element('td')
@@ -223,19 +223,24 @@ function makeCall(traceNode, parent, checkExpect) {
                      span:traceNode.srcSpan})
     }
     
-    var hidable = []
+    var hidable //= []
     
+    var lowerDiv = element("div")
     var childTable = element('table').newAddClass("childTable")
-    var lowerRow = element('tr');
+    var lowerRow = element('tr')
     childTable.append(lowerRow)
-    
-    for (var i = 0; i < traceNode.children.length; i++) {
+    lowerDiv.append(childTable)
+
+    /*
+     for (var i = 0; i < traceNode.children.length; i++) {
         var cell = element('td').newAddClass("childTD")
         var collapsedDiv = makeCall(traceNode.children[i],call, false);
         cell.append(collapsedDiv)
         lowerRow.append(cell);
-    }
-    hidable.push(childTable)
+    }*/
+    hidable = lowerDiv
+    hidable.hide()
+    //hidable.push(lowerDiv)
     call.append(callTable)
 
     var buttonTable = element('table').newAddClass("buttonTable")
@@ -247,11 +252,14 @@ function makeCall(traceNode, parent, checkExpect) {
         buttonTable.append(ceButton)
     call.append(buttonTable)
     
-    call.append(childTable)
+    call.append(lowerDiv)
     call.data({expanded: checkExpect || expand,
             hidable: hidable,
-            button: childrenButton})
-    updateCall(call)
+            button: childrenButton,
+            node: traceNode,
+            childrenCreated: false,
+        childRow: lowerRow})
+    //updateCall(call, false, "fast")
     return call
 }
 
@@ -260,35 +268,49 @@ function makeCall(traceNode, parent, checkExpect) {
 //-----------------------------------------------------------------------------
 
 //sets whether obj is hidden
-function setHide(obj,hidden,animate) {
-    if (hidden)
-        obj.hide(animate)
-    else
-        obj.show(animate)
+function setHide(obj,show,animateSpeed) {
+    if (show)
+    {   console.log("showing object")
+        console.log(obj.css("display"))
+        obj.show(1200)
+    }//animateSpeed)
+    else 
+        obj.hide(1200) //animateSpeed)
 }
 
 //Makes a call display the appropriate amount of info
-function updateCall(html,animate) {
+//And adds the children if this was called from the ec button callback 
+function updateCall(html, createChildren, animateSpeed) {
+    if(createChildren && !html.data("childrenCreated")) {
+        var traceNode = html.data("node")
+        var childRow = html.data("childRow")
+        for (var i = 0; i < traceNode.children.length; i++) {
+            var cell = element('td').newAddClass("childTD")
+            var collapsedDiv = makeCall(traceNode.children[i],html, false)
+            cell.append(collapsedDiv)
+            childRow.append(cell)
+        }
+        html.data("childrenCreated", true)
+        html.data("expanded", true)
+    }
+    
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var button = html.data("button")
     var buttonImg = button.children("img")
-    
-    for (var i = 0; i < hidable.length; i++) {
-        setHide(hidable[i],!expanded,animate)
-    }
-    
+    setHide(hidable, expanded, "slow")
+    /*for (var i = 0; i < hidable.length; i++) 
+        setHide(hidable[i],expanded,"slow")*/
     if (expanded) 
         buttonImg.attr("src", downImageSrc)
     else 
         buttonImg.attr("src", sideImageSrc)
-
 }
 
 //Expand/collapses a call
 function toggleCall(html,animate) {
     html.data("expanded",!html.data("expanded"))
-    updateCall(html,animate)
+    updateCall(html,true, animate)
 }
 
 function switchTo(child) {
@@ -310,37 +332,37 @@ function refocusScreen()
 
     //Check the alignment of each visible call
     visibleCalls.each(function(index) {
-        var callTable = $(this).children(".callTable").first()
-        var buttonTable = $(this).children(".buttonTable")
-        //var bodyButton = $(this).children(".body-button").first()
-        var callTableMarL = toInt(callTable.css('marginLeft'))
-        var fromLeft = $(this).position().left
-                        + toInt($(this).css('marginLeft'))
-                        + callTableMarL
-                        - wrapper.scrollLeft()
-        
-        //only move callTables that are less wide than the current width
-        //of the call (will this condition always be true?)
-        if(callTable.width() < $(this).width()) {
-            //This call is off the screen to the left
-            if(fromLeft < 0) {
-                //Want a maximum margin with right edge of callTable aligned
-                //to right edge of call
-                var shiftBy = Math.min($(this).width()-callTable.width(), 
-                                        callTableMarL-fromLeft)
-                callTable.css('marginLeft', shiftBy)
-                buttonTable.css('marginLeft', shiftBy)
+            var callTable = $(this).children(".callTable").first()
+            var buttonTable = $(this).children(".buttonTable")
+            //var bodyButton = $(this).children(".body-button").first()
+            var callTableMarL = toInt(callTable.css('marginLeft'))
+            var fromLeft = $(this).position().left
+                + toInt($(this).css('marginLeft'))
+                + callTableMarL
+                - wrapper.scrollLeft()
+
+            //only move callTables that are less wide than the current width
+            //of the call (will this condition always be true?)
+            if(callTable.width() < $(this).width()) {
+                //This call is off the screen to the left
+                if(fromLeft < 0) {
+                    //Want a maximum margin with right edge of callTable aligned
+                    //to right edge of call
+                    var shiftBy = Math.min($(this).width()-callTable.width(), 
+                        callTableMarL-fromLeft)
+                    callTable.css('marginLeft', shiftBy)
+                    buttonTable.css('marginLeft', shiftBy)
+                }
+                //This call is to the right of the left edge of the screen
+                //And not aligned with its left edge
+                else if (fromLeft > 0 && callTableMarL > 0) {
+                    //Want a minimum margin of 3
+                    var shiftBy = Math.max(3, callTableMarL-fromLeft)
+                    callTable.css('marginLeft', shiftBy)
+                    buttonTable.css('marginLeft', shiftBy)
+                }
             }
-            //This call is to the right of the left edge of the screen
-            //And not aligned with its left edge
-            else if (fromLeft > 0 && callTableMarL > 0) {
-                //Want a minimum margin of 3
-                var shiftBy = Math.max(3, callTableMarL-fromLeft)
-                callTable.css('marginLeft', shiftBy)
-                buttonTable.css('marginLeft', shiftBy)
-            }
-        }
-    })
+        })
 }
 
 function addIcon(container, src, srcSel ) {
@@ -442,7 +464,6 @@ function cebarCallback() {
         var oldPicked = $("ul.cebar li.picked") 
         oldPicked.newRemoveClass("picked").newAddClass("other")
         target.newRemoveClass("other").newAddClass("picked")
-        console.log("check-expect bind")
         switchTo(child)
     }
 }
@@ -604,8 +625,6 @@ $(document).ready(function () {
    
     if (ceTrace.children.length > 0) {
         var li = element("li").newAddClass(["other", "check-expect-top-level"])
-        console.log("li from ceTrace")
-        console.log(li)
         li.text("check-expect")
         tabsList.append(li)
 
