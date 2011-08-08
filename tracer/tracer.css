@@ -284,6 +284,7 @@ div#codePaneWrapper {
 }
 
 div#codePane {
+    position: relative; /* makes scrolling work */
     width: 100%;
     background: black;
     height: 100%;
