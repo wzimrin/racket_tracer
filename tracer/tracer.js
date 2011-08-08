@@ -258,8 +258,8 @@ function makeCall(traceNode, parent, checkExpect) {
             button: childrenButton,
             node: traceNode,
             childrenCreated: false,
-        childRow: lowerRow})
-    //updateCall(call, false, "fast")
+            childRow: lowerRow,
+            scroll: 0})
     return call
 }
 
@@ -270,17 +270,14 @@ function makeCall(traceNode, parent, checkExpect) {
 //sets whether obj is hidden
 function setHide(obj,show,animateSpeed) {
     if (show)
-    {   console.log("showing object")
-        console.log(obj.css("display"))
-        obj.show(1200)
-    }//animateSpeed)
+        obj.show(animateSpeed)
     else 
-        obj.hide(1200) //animateSpeed)
+        obj.hide(animateSpeed) 
 }
 
 //Makes a call display the appropriate amount of info
 //And adds the children if this was called from the ec button callback 
-function updateCall(html, createChildren, animateSpeed) {
+function updateCall(html, createChildren) {
     if(createChildren && !html.data("childrenCreated")) {
         var traceNode = html.data("node")
         var childRow = html.data("childRow")
@@ -298,25 +295,26 @@ function updateCall(html, createChildren, animateSpeed) {
     var hidable = html.data("hidable")
     var button = html.data("button")
     var buttonImg = button.children("img")
-    setHide(hidable, expanded, "slow")
-    /*for (var i = 0; i < hidable.length; i++) 
-        setHide(hidable[i],expanded,"slow")*/
+    setHide(hidable, expanded, "fast")
+    
     if (expanded) 
         buttonImg.attr("src", downImageSrc)
     else 
         buttonImg.attr("src", sideImageSrc)
 }
-
+/*
 //Expand/collapses a call
-function toggleCall(html,animate) {
+function toggleCall(html) {
     html.data("expanded",!html.data("expanded"))
-    updateCall(html,true, animate)
+    updateCall(html,true)
 }
-
+*/
 function switchTo(child) {
     $(".toplevel").hide()
+    //$(".picked").data("child").data("scroll", traceWrapper.scrollLeft())
     child.show()
-    traceWrapper.scrollLeft(0)
+    console.log("child.data scroll" + child.data("scroll"))
+    traceWrapper.scrollLeft(child.data("scroll"))
     swapIcon($(".lastHighlighted").children("img"))
     $(".lastHighlighted").newRemoveClass("lastHighlighted")
     clearHighlight()
@@ -447,7 +445,8 @@ function hasSourceCallback() {
 //makes the expand/collapse buttons work
 function ecButtonCallback() {
     var thisCall = $(this).parents(".call").first()
-    toggleCall(thisCall,"slow")
+    thisCall.data("expanded",!thisCall.data("expanded"))
+    updateCall(thisCall,true)
     return false;
 }
 
@@ -462,6 +461,7 @@ function cebarCallback() {
     if(!target.hasClass("picked")) {
         var child = target.data("child")
         var oldPicked = $("ul.cebar li.picked") 
+        oldPicked.data("child").data("scroll", traceWrapper.scrollLeft())
         oldPicked.newRemoveClass("picked").newAddClass("other")
         target.newRemoveClass("other").newAddClass("picked")
         switchTo(child)
@@ -475,6 +475,11 @@ function tabbarCallback() {//switch display
     var target = $(this)
     if(!target.hasClass("picked")) {
         var oldPicked = $("ul.tabbar li.picked")
+        console.log("tabbar callback")
+        console.log(oldPicked)
+        console.log($("ul.tabbar li"))
+        if(oldPicked.length != 0)
+            oldPicked.data("child").data("scroll", traceWrapper.scrollLeft())
         oldPicked.newRemoveClass("picked")
         oldPicked.newAddClass("other")
         var child = target.data("child")
@@ -614,7 +619,7 @@ $(document).ready(function () {
         li.text(theTrace.children[i].name)
         tabsList.append(li)
         
-        var exp = makeCall(theTrace.children[i],tabbar).newAddClass("toplevel")
+        var exp = makeCall(theTrace.children[i],tabbar, false).newAddClass("toplevel")
         if(errored && theTrace.children[i].result.type == "error") {
             first = li
             messagebar.text(" Your program generated an error")
@@ -663,6 +668,8 @@ $(document).ready(function () {
         trace.append(exp)
     }
 
+
+    
     // -------------------------------------------------------------------------
     //                          BINDING CALLBACKS
     // -------------------------------------------------------------------------
