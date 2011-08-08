@@ -67,7 +67,10 @@
 ;and an exception that we caught and used as the return value
 (struct exn-wrapper (exn))
 (define (exn-wrapper-message w)
-  (exn-message (exn-wrapper-exn w)))
+  (let ([unwrapped (exn-wrapper-exn w)])
+    (if (exn? unwrapped)
+        (exn-message unwrapped)
+        (format "~s" unwrapped))))
 
 ;the parent node for all failing check expects
 (define top-ce-node (create-node 'CE-top-level #f empty 0 0 0 0))
@@ -116,6 +119,9 @@
 (define (add-to-ce-hash key idx span success)
   (hash-set! ce-hash key (list idx span success))) 
 
+(define (identity . vals)
+  (apply values vals))
+
 ;generates the interior of an annotated function definition
 ;takes a syntax object of a list of arguments, a syntax object for the body,
 ;a syntax object that is the display name of the function, the original syntax object
@@ -139,7 +145,7 @@
               [#t (add-kid (current-call) n)])
             (set-node-used?! (current-app-call) #t)
             (parameterize ([current-call n])
-              (let ([result (with-handlers ([exn? exn-wrapper])
+              (let ([result (with-handlers ([identity exn-wrapper])
                               (body-thunk))])
                 (set-node-result! n result)
                 (if (exn-wrapper? result)
@@ -185,7 +191,7 @@
        #'(if (current-call)
              (let* ([n (create-node (function-sym 'fun-expr) fun args
                                     idx span 0 0)]
-                    [result (with-handlers ([exn? exn-wrapper])
+                    [result (with-handlers ([identity exn-wrapper])
                               (parameterize ([current-idx idx]
                                              [current-span span]
                                              [current-fun fun]
@@ -259,7 +265,7 @@
                                 ;we also need to check if there the actual is an application - if not, don't do anything here
                                 #,(if (pair? datum)
                                       #`(parameterize ([current-call actual-node])
-                                          (with-handlers ([exn?
+                                          (with-handlers ([identity
                                                            ;on error, we can just store a wrapped exception in func
                                                            (lambda (exn)
                                                              (values
@@ -272,7 +278,7 @@
                     ;otherwise, just evaluate actual-stx
                     (set-node-result! actual-node
                                       (parameterize ([current-call actual-node])
-                                        (with-handlers ([exn? exn-wrapper])
+                                        (with-handlers ([identity exn-wrapper])
                                           #,(if (pair? datum)
                                                 #`(if (exn-wrapper? func)
                                                       func
@@ -320,7 +326,7 @@
                                                  0)]
                                    ;calculate its result (no need to worry about function/arguments, since we don't use them individually)
                                    [result (parameterize ([current-call expected-node])
-                                             (with-handlers ([exn? exn-wrapper])
+                                             (with-handlers ([identity exn-wrapper])
                                                #,expected-stx))])
                               (add-kid parent-node expected-node)
                               (set-node-result! expected-node result)
