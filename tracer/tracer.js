@@ -13,7 +13,7 @@ function toInt(cssString) {
 
 //creates a dom element of the type tag
 function element(tag) {
-    return $("<"+tag+'/>')
+    return $("<"+tag+"/>")
 }
 
 
@@ -22,12 +22,21 @@ function element(tag) {
 //-----------------------------------------------------------------------------
 
 function clearHighlight() {
+    swapIcon($(".lastHighlighted").children("img"))
+    $(".lastHighlighted").newRemoveClass("lastHighlighted")
     $(".highlight").children().unwrap()
 }
 
 //Highlight the span of text beginning at idx in el
-function highlightSpan(el,idx,span) {
+function highlightSpan(el,toHighlight) {
     clearHighlight()
+    
+    var idx = toHighlight.data("idx")
+    var span = toHighlight.data("span")
+
+    toHighlight.newAddClass("lastHighlighted")
+    swapIcon(toHighlight.children("img"))
+
     var hi = element("span")
     hi.newAddClass("highlight")
     el.children().slice(idx-codeOffset,span+idx-codeOffset).wrapAll(hi)
@@ -39,6 +48,10 @@ function setCodePaneWidth() {
 
 //Set the width of the code pane to a new value and animate
 function setCodePaneWrapperWidth(newWidth,speed, arrow, onComplete) {
+    if($("ul.tabbar li.picked").hasClass("check-expect-top-level"))
+        $("ul.cebar li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
+    $("ul.tabbar li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
+    
     if (codePaneWidth != newWidth) {
         codePane.newAddClass("hidden")
         codePaneWidth = newWidth            
@@ -65,9 +78,10 @@ function expandCodePane(onComplete) {
 }
 
 //Collapse the code pane
-function collapseCodePane() {
+function collapseCodePane(onComplete) {
+    clearHighlight()
     setCodePaneWrapperWidth(collapsedCodePaneWidth,"fast", "&laquo;",
-        function(){})
+        onComplete)
 }
 
 //Animate to move to new highlighted code if necessary
@@ -80,7 +94,7 @@ function showSpan() {
         //If new span is off the displayed portion of the code
         codePane.animate({scrollTop: pos.top-(height/2)+codePane.scrollTop(),
                 scrollLeft: pos.left-(width/2)+codePane.scrollLeft()}, 
-            'slow')
+            "slow")
     }
 }
 
@@ -159,7 +173,7 @@ function makeCallTable(node, checkExpect) {
         }
 
         //Arrow
-        var arrow = element('td')
+        var arrow = element("td")
         arrow.html("&rarr;")
         arrow.newAddClass(["arrow", "cell"])
         row.append(arrow)
@@ -214,7 +228,7 @@ function makeCall(traceNode, parent, checkExpect) {
     addIcon(childrenButton, sideImageSrc, sideImageSrc)
     childrenButton.newAddClass(["button", "ec-button"])
 
-    var bodyButton = element('td')
+    var bodyButton = element("td")
     addIcon(bodyButton, toDefImageSrc, toDefImageSelSrc)
     bodyButton.newAddClass(["to-src-button", "button"])
     if(!(traceNode.srcIdx == 0 && traceNode.srcSpan == 0)) {
@@ -223,27 +237,19 @@ function makeCall(traceNode, parent, checkExpect) {
                      span:traceNode.srcSpan})
     }
     
-    var hidable //= []
+    var hidable 
     
     var lowerDiv = element("div")
-    var childTable = element('table').newAddClass("childTable")
-    var lowerRow = element('tr')
+    var childTable = element("table").newAddClass("childTable")
+    var lowerRow = element("tr")
     childTable.append(lowerRow)
     lowerDiv.append(childTable)
 
-    /*
-     for (var i = 0; i < traceNode.children.length; i++) {
-        var cell = element('td').newAddClass("childTD")
-        var collapsedDiv = makeCall(traceNode.children[i],call, false);
-        cell.append(collapsedDiv)
-        lowerRow.append(cell);
-    }*/
     hidable = lowerDiv
     hidable.hide()
-    //hidable.push(lowerDiv)
     call.append(callTable)
 
-    var buttonTable = element('table').newAddClass("buttonTable")
+    var buttonTable = element("table").newAddClass("buttonTable")
     if (traceNode.children.length!=0 && !checkExpect)
         buttonTable.append(childrenButton)
     if(bodyButton.hasClass("hasSource")) 
@@ -258,23 +264,16 @@ function makeCall(traceNode, parent, checkExpect) {
             button: childrenButton,
             node: traceNode,
             childrenCreated: false,
-            childRow: lowerRow,
-            scroll: 0})
+            childRow: lowerRow})
+    if(checkExpect)
+        updateCall(call, true)
     return call
 }
 
 //-----------------------------------------------------------------------------
 //                              VISIBILITY HELPERS 
 //-----------------------------------------------------------------------------
-/*
-//sets whether obj is hidden
-function setHide(obj,show,animateSpeed) {
-    if (show)
-        obj.show(animateSpeed)
-    else 
-        obj.hide(animateSpeed) 
-}
-*/
+
 //Makes a call display the appropriate amount of info
 //And adds the children if this was called from the ec button callback 
 function updateCall(html, createChildren) {
@@ -282,19 +281,18 @@ function updateCall(html, createChildren) {
         var traceNode = html.data("node")
         var childRow = html.data("childRow")
         for (var i = 0; i < traceNode.children.length; i++) {
-            var cell = element('td').newAddClass("childTD")
+            var cell = element("td").newAddClass("childTD")
             var collapsedDiv = makeCall(traceNode.children[i],html, false)
             cell.append(collapsedDiv)
             childRow.append(cell)
         }
-        html.data("childrenCreated", true)
-        html.data("expanded", true)
+        html.data({"childrenCreated": true, "expanded": true})
     }
-    
+
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
     var buttonImg = html.data("button").children("img")
-    
+
     if(expanded) {
         hidable.show("fast")
         buttonImg.attr("src", downImageSrc)
@@ -303,29 +301,48 @@ function updateCall(html, createChildren) {
         hidable.hide("fast")
         buttonImg.attr("src", sideImageSrc)
     }
-    //setHide(hidable, expanded, "fast")
-   /* 
-    if (expanded) 
-        buttonImg.attr("src", downImageSrc)
-    else 
-        buttonImg.attr("src", sideImageSrc)
-*/
-    }
-/*
-//Expand/collapses a call
-function toggleCall(html) {
-    html.data("expanded",!html.data("expanded"))
-    updateCall(html,true)
 }
-*/
-function switchTo(child) {
+
+function storePageState(tabLi) {
+    if(tabLi.length != 0) {
+        if(tabLi.hasClass("check-expect-top-level"))
+            tabLi = $("ul.cebar li.picked")
+        tabLi.data("scroll", traceWrapper.scrollLeft())
+        tabLi.data({"codePaneExpanded": codePaneWidth == expandedCodePaneWidth,
+                    "codePaneX": codePane.scrollLeft(),
+                    "codePaneY": codePane.scrollTop()})
+        tabLi.data("lastHighlighted", $(".lastHighlighted"))
+        }
+}
+
+function restorePageState(tabLi) {
+    if(tabLi.length != 0) {
+        if(tabLi.hasClass("check-expect-top-level"))
+            tabLi = $("ul.cebar li.picked")
+        if(tabLi.data("lastHighlighted").length != 0) {
+            var toHighlight = tabLi.data("lastHighlighted")
+            highlightSpan(codePane, toHighlight)
+        }
+        if(tabLi.data("codePaneExpanded")) 
+            expandCodePane(function(){
+                    codePane.scrollLeft(tabLi.data("codePaneX"))
+                    codePane.scrollTop(tabLi.data("codePaneY"))
+                })
+        else 
+            collapseCodePane(function() {
+                    codePane.scrollLeft(tabLi.data("codePaneX"))
+                    codePane.scrollTop(tabLi.data("codePaneY"))
+                })
+        
+        traceWrapper.scrollLeft(tabLi.data("scroll"))
+    }
+}
+
+function switchTo(tab) {
     $(".toplevel").hide()
-    child.show()
-    traceWrapper.scrollLeft(child.data("scroll"))
-    swapIcon($(".lastHighlighted").children("img"))
-    $(".lastHighlighted").newRemoveClass("lastHighlighted")
+    tab.data("child").show()
     clearHighlight()
-    collapseCodePane()
+    restorePageState(tab) 
     refocusScreen()
 }
 
@@ -340,9 +357,9 @@ function refocusScreen()
             var callTable = $(this).children(".callTable").first()
             var buttonTable = $(this).children(".buttonTable")
             //var bodyButton = $(this).children(".body-button").first()
-            var callTableMarL = toInt(callTable.css('marginLeft'))
+            var callTableMarL = toInt(callTable.css("marginLeft"))
             var fromLeft = $(this).position().left
-                + toInt($(this).css('marginLeft'))
+                + toInt($(this).css("marginLeft"))
                 + callTableMarL
                 - wrapper.scrollLeft()
 
@@ -355,16 +372,16 @@ function refocusScreen()
                     //to right edge of call
                     var shiftBy = Math.min($(this).width()-callTable.width(), 
                         callTableMarL-fromLeft)
-                    callTable.css('marginLeft', shiftBy)
-                    buttonTable.css('marginLeft', shiftBy)
+                    callTable.css("marginLeft", shiftBy)
+                    buttonTable.css("marginLeft", shiftBy)
                 }
                 //This call is to the right of the left edge of the screen
                 //And not aligned with its left edge
                 else if (fromLeft > 0 && callTableMarL > 0) {
                     //Want a minimum margin of 3
                     var shiftBy = Math.max(3, callTableMarL-fromLeft)
-                    callTable.css('marginLeft', shiftBy)
-                    buttonTable.css('marginLeft', shiftBy)
+                    callTable.css("marginLeft", shiftBy)
+                    buttonTable.css("marginLeft", shiftBy)
                 }
             }
         })
@@ -432,23 +449,16 @@ function dragHandler(event) {
 
 //Callback for buttons that link to source
 function hasSourceCallback() {
-    if (lastFunctionHighlighted == this) {
-        lastFunctionHighlighted = false;
-        swapIcon($(".lastHighlighted").children("img"))
-        $(".lastHighlighted").newRemoveClass("lastHighlighted")
+    var target = $(this)
+    if (target.hasClass("lastHighlighted")) {
         clearHighlight()
-        collapseCodePane()
+        collapseCodePane(function(){})
     } else {
-        var target = $(this)
-        swapIcon($(".lastHighlighted").children("img"))
-        $(".lastHighlighted").newRemoveClass("lastHighlighted")
-        target.newAddClass("lastHighlighted")
-        swapIcon(target.children("img"))
-        highlightSpan(codePane,target.data("idx"),target.data("span"))
+        highlightSpan(codePane,target) 
         expandCodePane(showSpan)
-        lastFunctionHighlighted = this;
     }
 }
+
 //makes the expand/collapse buttons work
 function ecButtonCallback() {
     var thisCall = $(this).parents(".call").first()
@@ -459,19 +469,22 @@ function ecButtonCallback() {
 
 //makes the expandables expand/collapse appropriately
 //and highlight on hover
-function expandableCallback() {//expand/collapse
+function expandableCallback() {
     toggleExpandable($(this))
 }
 
 function cebarCallback() {
+    console.log("cebar callback")
     var target = $(this)
     if(!target.hasClass("picked")) {
         var child = target.data("child")
         var oldPicked = $("ul.cebar li.picked") 
-        oldPicked.data("child").data("scroll", traceWrapper.scrollLeft())
+        
+        storePageState(oldPicked)
+        
         oldPicked.newRemoveClass("picked").newAddClass("other")
         target.newRemoveClass("other").newAddClass("picked")
-        switchTo(child)
+        switchTo(target) 
     }
 }
 
@@ -482,8 +495,7 @@ function tabbarCallback() {//switch display
     var target = $(this)
     if(!target.hasClass("picked")) {
         var oldPicked = $("ul.tabbar li.picked")
-        if(oldPicked.length != 0)
-            oldPicked.data("child").data("scroll", traceWrapper.scrollLeft())
+        storePageState(oldPicked)
         oldPicked.newRemoveClass("picked")
         oldPicked.newAddClass("other")
         var child = target.data("child")
@@ -501,9 +513,9 @@ function tabbarCallback() {//switch display
         target.newAddClass("picked")
         target.newRemoveClass("other")
         if (target.hasClass("check-expect-top-level"))
-            switchTo($("ul.cebar li.picked").data("child")) 
+            switchTo($("ul.cebar li.picked"))
         else
-            switchTo(child)
+            switchTo(target) 
     }
 }
 
@@ -628,7 +640,12 @@ $(document).ready(function () {
             first = li
             messagebar.text(" Your program generated an error")
         }
-        li.data("child",exp)
+        li.data({"child": exp,
+                "scroll": 0,
+                "codePaneExpanded": false,
+                "codePaneX": 0,
+                "codePaneY": 0,
+                "lastHighlighted": []})
         trace.append(exp)
     }
    
@@ -662,7 +679,12 @@ $(document).ready(function () {
             exp.newAddClass("toplevel")
             trace.append(exp)
             ceList.append(ceEl)
-            ceEl.data("child", exp)
+            ceEl.data({"child": exp,
+                    "scroll": 0,
+                    "codePaneExpanded": false,
+                    "codePaneX": 0,
+                    "codePaneY": 0,
+                    "lastHighlighted": []})
         }
         if(!errorInCE)
             ceList.children().first().newRemoveClass("other").newAddClass("picked")
@@ -681,7 +703,7 @@ $(document).ready(function () {
     //Expand and collapse codePane on click 
     codePaneButton.click(function () {
         if (codePaneWidth==expandedCodePaneWidth)
-            collapseCodePane()
+            collapseCodePane(function(){})
         else
             expandCodePane(function(){})
     })
