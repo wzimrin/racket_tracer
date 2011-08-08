@@ -119,9 +119,6 @@
 (define (add-to-ce-hash key idx span success)
   (hash-set! ce-hash key (list idx span success))) 
 
-(define (identity . vals)
-  (apply values vals))
-
 ;generates the interior of an annotated function definition
 ;takes a syntax object of a list of arguments, a syntax object for the body,
 ;a syntax object that is the display name of the function, the original syntax object
