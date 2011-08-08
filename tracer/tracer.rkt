@@ -568,7 +568,7 @@
         ;Set exception handler to allow tracing of functions that error out
         (uncaught-exception-handler (lambda (x)
                                       (displayln (exn-message x))
-                                      (after-body name offset #t)
+                                      (after-body name offset #t source)
                                       ((error-escape-handler))))
         body ...
         (run-tests)

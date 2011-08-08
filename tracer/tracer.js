@@ -266,7 +266,7 @@ function makeCall(traceNode, parent, checkExpect) {
 //-----------------------------------------------------------------------------
 //                              VISIBILITY HELPERS 
 //-----------------------------------------------------------------------------
-
+/*
 //sets whether obj is hidden
 function setHide(obj,show,animateSpeed) {
     if (show)
@@ -274,7 +274,7 @@ function setHide(obj,show,animateSpeed) {
     else 
         obj.hide(animateSpeed) 
 }
-
+*/
 //Makes a call display the appropriate amount of info
 //And adds the children if this was called from the ec button callback 
 function updateCall(html, createChildren) {
@@ -293,15 +293,24 @@ function updateCall(html, createChildren) {
     
     var expanded = html.data("expanded")
     var hidable = html.data("hidable")
-    var button = html.data("button")
-    var buttonImg = button.children("img")
-    setHide(hidable, expanded, "fast")
+    var buttonImg = html.data("button").children("img")
     
+    if(expanded) {
+        hidable.show("fast")
+        buttonImg.attr("src", downImageSrc)
+    }
+    else {
+        hidable.hide("fast")
+        buttonImg.attr("src", sideImageSrc)
+    }
+    //setHide(hidable, expanded, "fast")
+   /* 
     if (expanded) 
         buttonImg.attr("src", downImageSrc)
     else 
         buttonImg.attr("src", sideImageSrc)
-}
+*/
+    }
 /*
 //Expand/collapses a call
 function toggleCall(html) {
@@ -311,9 +320,7 @@ function toggleCall(html) {
 */
 function switchTo(child) {
     $(".toplevel").hide()
-    //$(".picked").data("child").data("scroll", traceWrapper.scrollLeft())
     child.show()
-    console.log("child.data scroll" + child.data("scroll"))
     traceWrapper.scrollLeft(child.data("scroll"))
     swapIcon($(".lastHighlighted").children("img"))
     $(".lastHighlighted").newRemoveClass("lastHighlighted")
@@ -475,9 +482,6 @@ function tabbarCallback() {//switch display
     var target = $(this)
     if(!target.hasClass("picked")) {
         var oldPicked = $("ul.tabbar li.picked")
-        console.log("tabbar callback")
-        console.log(oldPicked)
-        console.log($("ul.tabbar li"))
         if(oldPicked.length != 0)
             oldPicked.data("child").data("scroll", traceWrapper.scrollLeft())
         oldPicked.newRemoveClass("picked")
