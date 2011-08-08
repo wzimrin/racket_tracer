@@ -6,7 +6,6 @@
                 [(in in-copy) (clone-port in)]
                 [(port-text) 
                  (datum->syntax #f (cons 'list (port->list read-char-or-special in-copy)) #f)])
-    (port-count-lines! in)
     (let ([reloc-in (relocate-input-port in 1 1 offset)])
       (port-count-lines! reloc-in)
       (let* ([mod (rd reloc-in)]
@@ -35,6 +34,8 @@
 (define (clone-port in)
   (define-values (in1 out1) (make-pipe-with-specials))
   (define-values (in2 out2) (make-pipe-with-specials))
+  (port-count-lines! in1)
+  (port-count-lines! in2)
   (copy-port in out1 out2)
   (close-output-port out1)
   (close-output-port out2)
