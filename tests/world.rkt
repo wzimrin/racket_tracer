@@ -36,7 +36,7 @@
 |#
 (define (make-circle x)
   (circle x "outline" "black"))
-(make-circle 4)
+;(make-circle 4)
 (big-bang '(20 10)
           [on-tick (lambda (lst)
                      (cons (+ 10 (first lst))
