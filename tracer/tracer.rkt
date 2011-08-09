@@ -21,8 +21,11 @@
                   resolve-planet-path]
          [only-in web-server/templates
                   include-template]
-         [only-in 2htdp/image
-                  image?]
+         2htdp/image
+         [except-in 2htdp/universe big-bang]
+         [prefix-in universe:
+                    [only-in 2htdp/universe
+                             big-bang]]
          [only-in racket/gui
                   message-box]
          syntax/toplevel
@@ -32,7 +35,7 @@
          mzlib/pconvert
          (planet dherman/json:3:0))
 
-(provide let local let* letrec require only-in except-in prefix-in
+(provide local let* letrec require only-in except-in prefix-in let
          [rename-out (app-recorder #%app)
                      (check-expect-recorder check-expect)
                      (check-within-recorder check-within)
@@ -42,22 +45,24 @@
                      (custom-define define)
                      (custom-lambda lambda)
                      (custom-lambda λ)
+                     (big-bang-recorder big-bang)
                      
                      (isl:and and)
                      (isl:or or)
-                     (isl:if if)
-                     (isl:image? image?)]
-         [all-from-out lang/htdp-intermediate-lambda]
+                     (isl:if if)]
+         [all-from-out lang/htdp-intermediate-lambda
+                       2htdp/image
+                       2htdp/universe]
          #%module-begin
          trace)
 
 ;the actual struct that stores our data
-(struct node (name prefix func result actual kids idx span src-idx src-span used?) #:mutable #:transparent)
+(struct node (name prefix func result actual kids idx span src-idx src-span used? title has-title) #:mutable #:transparent)
 
 ;creates a node with no result or children
 ;takes a name, function object, a list of the arguments, a call index and span, and a definition index and span
 (define (create-node name func actual idx span src-idx src-span)
-  (node name "" func 'no-result actual empty idx span src-idx src-span #f))
+  (node name "" func 'no-result actual empty idx span src-idx src-span #f #f #f))
 
 ;adds a kid k to node n
 (define (add-kid n k)
@@ -74,6 +79,10 @@
 
 ;the parent node for all failing check expects
 (define top-ce-node (create-node 'CE-top-level #f empty 0 0 0 0))
+
+;the parent node for all big-bangs
+(define top-big-bang-node
+  (create-node 'top-big-bang-node #f empty 0 0 0 0))
 
 ;the parent node for all normal traces
 (define top-node (create-node 'top-level #f empty 0 0 0 0))
@@ -140,7 +149,8 @@
               [(node? (current-app-call))
                (add-kid (current-app-call) n)]
               [#t (add-kid (current-call) n)])
-            (set-node-used?! (current-app-call) #t)
+            (when (node? (current-app-call))
+              (set-node-used?! (current-app-call) #t))
             (parameterize ([current-call n])
               (let ([result (with-handlers ([identity exn-wrapper])
                               (body-thunk))])
@@ -151,13 +161,17 @@
           (body-thunk))))
 
 ;traces a lambda
-(define-syntax (custom-lambda e)
+(define-syntax (custom-lambda-name e)
+  (displayln e)
   (syntax-case e ()
-    [(_ args body)
+    [(_ name args body)
      (let ([sym (gensym)])
        #`(letrec ([#,sym (lambda args
-                           #,(lambda-body #'(list . args) #'body #'lambda e sym))])
-           (procedure-rename #,sym 'lambda)))]))
+                           #,(lambda-body #'(list . args) #'body #'name e sym))])
+           (procedure-rename #,sym 'name)))]))
+
+(define-syntax-rule (custom-lambda args body)
+  (custom-lambda-name lambda args body))
 
 ;traces a define
 (define-syntax (custom-define e)
@@ -221,6 +235,41 @@
         (append (take names (sub1 name-count))
                 (make-list (- count name-count -1)
                            (last names))))))
+
+(define-syntax (big-bang-recorder e)
+  ;(with-syntax ([current-big-bang-node (gensym)])
+    (syntax-case e ()
+      [(_ world (name fun other ...) ...)
+       #`(begin 
+           (define current-big-bang-node
+             (create-node 'big-bang #f empty
+                          #,(syntax-position e)
+                          #,(syntax-span e)
+                          0 0))
+           (add-kid top-big-bang-node current-big-bang-node)
+           (universe:big-bang
+            world
+            #,@(map (lambda (f n o)
+                      #`[#,n (let ([f-value #,f])
+                               (lambda args
+                                 (let* ([node (create-node '#,n #f args
+                                                           #,(syntax-position f) #,(syntax-span f) 0 0)]
+                                        [result (parameterize ([current-call node])
+                                                  (with-handlers ([identity exn-wrapper])
+                                                    (apply f-value args)))])
+                                   (set-node-result! node result)
+                                   #,@(if (equal? (syntax->datum n) 'to-draw)
+                                          #'((set-node-title! node result)
+                                             (set-node-has-title! node #t))
+                                          #'())
+                                   (add-kid current-big-bang-node node)
+                                   (if (exn-wrapper? result)
+                                       (error "Error")
+                                       result))))])
+                    
+                    (syntax-e #'(fun ...))
+                    (syntax-e #'(name ...))
+                    (syntax-e #'((other ...) ...)))))]))
 
 ;a macro that, when called, defines a macro to replace a check-* form
 ;takes the name that the new macro should be called, the check-* form it is supposed to replace
@@ -457,7 +506,11 @@
               'ceCorrect
               ce-correct?
               'prefix
-              (node-prefix t)))))
+              (node-prefix t)
+              'title
+              (if (node-has-title t)
+                  (format-nicely (node-title t) #f 40 #t)
+                  (hasheq 'type "none"))))))
 
 ;takes a port and a list of characters/specials
 ;returns a list of (list syntax-type content)
@@ -540,6 +593,7 @@
         [tracerJS (port->string tracerJSPort)]
         [theTrace (tree->json top-node)]
         [ceTrace (tree->json top-ce-node)]
+        [bigBangTrace (tree->json top-big-bang-node)]
         [code (code->json src)]
         [offset o]
         [errored (jsexpr->json errored)]
