@@ -265,7 +265,8 @@
                                    (add-kid current-big-bang-node node)
                                    (if (exn-wrapper? result)
                                        (error "Error")
-                                       result))))])
+                                       result))))
+                             #,@o])
                     
                     (syntax-e #'(fun ...))
                     (syntax-e #'(name ...))
