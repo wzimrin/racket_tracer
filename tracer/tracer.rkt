@@ -162,7 +162,6 @@
 
 ;traces a lambda
 (define-syntax (custom-lambda-name e)
-  (displayln e)
   (syntax-case e ()
     [(_ name args body)
      (let ([sym (gensym)])
@@ -611,7 +610,8 @@
   (display-results)
   ;If empty trace generate error message
   (if (and (empty? (node-kids top-node))
-           (empty? (node-kids top-ce-node)))
+           (empty? (node-kids top-ce-node))
+           (empty? (node-kids top-big-bang-node)))
       (message-box "Error" 
                    "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
                    #f 
