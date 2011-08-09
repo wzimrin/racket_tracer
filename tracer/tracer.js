@@ -4,6 +4,21 @@
 "use strict";
 
 //-----------------------------------------------------------------------------
+//                              Global Variables
+//-----------------------------------------------------------------------------
+
+var tabbar, cebar, messagebar, bigbangbar
+var wrapper, trace, traceWrapper
+var codePane, codePaneWrapper, codePaneButton
+
+var collapsedCodePaneWidth = 10
+var expandedCodePaneWidth = 50
+var codePaneWidth
+
+var hideAnimateDuration = 200
+var lastFunctionHighlighted
+
+//-----------------------------------------------------------------------------
 //                              GENERAL HELPERS 
 //-----------------------------------------------------------------------------
 
@@ -690,17 +705,6 @@ var callbacks = {
 //-----------------------------------------------------------------------------
 //                              CREATING PAGE
 //-----------------------------------------------------------------------------
-
-var tabbar, cebar, messagebar, bigbangbar
-var wrapper, trace, traceWrapper
-var codePane, codePaneWrapper, codePaneButton
-
-var collapsedCodePaneWidth = 10
-var expandedCodePaneWidth = 50
-var codePaneWidth
-
-var hideAnimateDuration = 200
-var lastFunctionHighlighted
 
 $(document).ready(function () {
     
