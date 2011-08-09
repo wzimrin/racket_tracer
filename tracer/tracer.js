@@ -58,13 +58,16 @@ function addSpecialTopTab(topLevelClass, name, tabsList, bar) {
 //and add the child it links to to trace
 function createNewTab(classToAdd, node, tabsList, bar, isCE) {
     var li = element("li").newAddClass(classToAdd)
-    if(node.title == undefined)
+    if(node.title.type == "none")
         li.text(node.name)
-    else {
+    else if (node.title.type == "image") {
         var img = element("img")
-        img.attr("src", node.title)
+        img.attr("src", node.title.src)
         li.append(img)
-    }
+    } else if (node.title.type == "value") {
+        li.text(node.title.value)
+    } else
+        alert("something wrong in title")
     tabsList.append(li)
     var exp = makeCall(node, bar, isCE)
     exp.newAddClass("toplevel")
@@ -437,6 +440,7 @@ function restorePageState(tabLi) {
 
 function switchTo(tab) {
     $(".toplevel").hide()
+    console.log(tab)
     tab.data("child").show()
     clearHighlight()
     restorePageState(tab) 
@@ -581,6 +585,7 @@ function secondTabBarCallback(barName) {
 
             oldPicked.newRemoveClass("picked").newAddClass("other")
             target.newRemoveClass("other").newAddClass("picked")
+            console.log("secondTabBarCallback " + barName)
             switchTo(target) 
         }
     }
@@ -604,9 +609,9 @@ function secondTabBarCallback(barName) {
 
 function handleSecondTabBars(oldPickedLi, targetLi) {
 
-    if(oldPicked.data("secondTabBar") != targetLi.data("secondTabBar")) {
-        if(oldPicked.data("secondTabBar")) {
-            var bar = oldPicked.data("secondTabBar")
+    if(oldPickedLi.data("secondTabBar") != targetLi.data("secondTabBar")) {
+        if(oldPickedLi.data("secondTabBar")) {
+            var bar = oldPickedLi.data("secondTabBar")
             bar.css("border-bottom-style", "none")
             bar.css("height", "0px")
         }
@@ -647,7 +652,10 @@ function tabbarCallback() {//switch display
         if (target.hasClass("check-expect-top-level"))
             switchTo($("ul.cebar li.picked"))
         else if (target.hasClass("big-bang-top-level"))
+        {
+            console.log("tabbarcallback bigbangbar")
             switchTo($("ul.bigbangbar li.picked"))
+        }
         else
             switchTo(target) 
     }
@@ -750,8 +758,8 @@ $(document).ready(function () {
 
         //Will eventually need to repeat this for multiple children, not just bigBangTrace.children[0]
         //To support multiple big-bangs in the same file
-        for(var k = 0; k < bigBangTrace.children[0].length; k++) {
-            var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[0][k], bigBangList, bigbangbar, false)
+        for(var k = 0; k < bigBangTrace.children[0].children.length; k++) {
+            var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[0].children[k], bigBangList, bigbangbar, false)
 
             if(errored && bigBangTrace.children[0][k].result.type == error) {
                 first = topBigBangTabLi
@@ -763,8 +771,7 @@ $(document).ready(function () {
         }
         if(!errorInBigBang)
             bigBangList.children().first().newRemoveClass("other").newAddClass("picked")
-        }
-
+       
     }
     
     //check-expect to tabbar and creating cebar
@@ -820,7 +827,8 @@ $(document).ready(function () {
             else if(errorInCE)
                 errorInCE.trigger("click")
         })
-    
+  
+    bigbangbar.css({"height": "0px", "border-bottom-style":"none"})
     $("ul.cebar li").bind("click", secondTabBarCallback("cebar")/*cebarCallback*/)
     $("ul.bigbangbar li").bind("click", secondTabBarCallback("bigbangbar")/*cebarCallback*/)
     $("ul.tabbar li").bind("click", tabbarCallback) 
