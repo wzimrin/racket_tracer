@@ -19,4 +19,5 @@
 (define (make-heap ns)
   (foldl insert empty ns))
 
+(make-heap (list 4 7 1 2))
 (make-heap (list 8 4 3 9 1 6 12 14))

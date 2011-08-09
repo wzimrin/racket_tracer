@@ -42,7 +42,7 @@
                      (cons (+ 10 (first lst))
                            lst)) 1]
           [stop-when (lambda (lst)
-                       (= (first lst) 100))]
+                       (= (first lst) 50))]
           [to-draw (compose (curry apply overlay)
                             reverse
                             (curry map
