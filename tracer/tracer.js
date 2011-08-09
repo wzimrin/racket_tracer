@@ -56,7 +56,7 @@ function addSpecialTopTab(topLevelClass, name, tabsList, bar) {
         
 //Creates the list element to go in a new tab, adds that element to the tabbar
 //and add the child it links to to trace
-function createNewTab(classToAdd, node, tabsList, bar, isCE) {
+function createNewTab(classToAdd, node, tabsList, bar) {
     var li = element("li").newAddClass(classToAdd)
     if(node.title.type == "none")
         li.text(node.name)
@@ -64,12 +64,15 @@ function createNewTab(classToAdd, node, tabsList, bar, isCE) {
         var img = element("img")
         img.attr("src", node.title.src)
         li.append(img)
+        img.newAddClass("tabBarImage")
     } else if (node.title.type == "value") {
         li.text(node.title.value)
     } else
         alert("something wrong in title")
     tabsList.append(li)
-    var exp = makeCall(node, bar, isCE)
+    if(classToAdd != "check-expect" || classToAdd != "big-bang")
+        classToAdd == false
+    var exp = makeCall(node, bar, classToAdd)
     exp.newAddClass("toplevel")
     addInitialData(li, exp)
     trace.append(exp)
@@ -243,14 +246,14 @@ function makeCell(formShort, formFull, cssClass) {
 }
 
 //Formats function name, actuals and result into table form
-function makeCallTable(node, checkExpect) {
+function makeCallTable(node, type) {
     var table = element("table")
     table.newAddClass("callTable")
     var row = element("tr")
 
     //Function name
     var nameTD = element("td")
-    if (checkExpect)
+    if (type == "check-expect")
         nameTD.text(node.prefix+": "+node.name)
     else
         nameTD.text(node.name)
@@ -260,7 +263,7 @@ function makeCallTable(node, checkExpect) {
         nameTD.newAddClass("hasSource")
     row.append(nameTD)
 
-    if (!checkExpect) {
+    if (type != "check-expect") {
         //Formals and actuals
         for (var i = 0; i < node.actuals.length; i++) {
             //Display in collapsed form if actualsExpanded is undefined or false
@@ -285,7 +288,7 @@ function makeCallTable(node, checkExpect) {
 
 //Makes an expandedCall: delete button, function, formals, actuals and result
 //All in their appropriate expanded or unexpanded form
-function makeCall(traceNode, parent, checkExpect) {
+function makeCall(traceNode, parent, type) {
     parent = $(parent)
 
     var call = element("div")
@@ -295,9 +298,9 @@ function makeCall(traceNode, parent, checkExpect) {
         call.newAddClass("background1")
 
     var ceButton = element("td")
-    if (checkExpect) {
+    if (type == "check-expect") 
         call.newAddClass("failed-ce")
-    } else if (traceNode.ceIdx) {
+    else if (traceNode.ceIdx) {
         if (traceNode.ceCorrect) {
             call.newAddClass("passed-ce")
             addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
@@ -308,8 +311,11 @@ function makeCall(traceNode, parent, checkExpect) {
         }
         ceButton.newAddClass(["button", "to-src-button","hasSource"])
         ceButton.data({idx: traceNode.ceIdx,
-                       span: traceNode.ceSpan})
+                span: traceNode.ceSpan})
     }
+    else if (type == "big-bang")
+        call.newAddClass("big-bang")
+
     call.newAddClass("call")
 
     var expand = false;
@@ -318,7 +324,7 @@ function makeCall(traceNode, parent, checkExpect) {
         expand = true
     }
     
-    var callTable = makeCallTable(traceNode, checkExpect)
+    var callTable = makeCallTable(traceNode, type)
 
     var childrenButton = element("td")
     addIcon(childrenButton, sideImageSrc, sideImageSrc)
@@ -346,7 +352,7 @@ function makeCall(traceNode, parent, checkExpect) {
     call.append(callTable)
 
     var buttonTable = element("table").newAddClass("buttonTable")
-    if (traceNode.children.length!=0 && !checkExpect)
+    if (traceNode.children.length!=0 && !type) //type is false if not "check-expect" or "big-bang"
         buttonTable.append(childrenButton)
     if(bodyButton.hasClass("hasSource")) 
         buttonTable.append(bodyButton)
@@ -355,13 +361,13 @@ function makeCall(traceNode, parent, checkExpect) {
     call.append(buttonTable)
     
     call.append(lowerDiv)
-    call.data({expanded: checkExpect || expand,
+    call.data({expanded: type == "check-expect" || type == "big-bang" || expand,
             hidable: hidable,
             button: childrenButton,
             node: traceNode,
             childrenCreated: false,
             childRow: lowerRow})
-    if(checkExpect)
+    if(type == "check-expect" || type == "big-bang")
         updateCall(call, true)
     return call
 }
@@ -591,22 +597,6 @@ function secondTabBarCallback(barName) {
     }
 }
 
-/*
- function cebarCallback() {
-    var target = $(this)
-    if(!target.hasClass("picked")) {
-        var child = target.data("child")
-        var oldPicked = $("ul.cebar li.picked") 
-        
-        storePageState(oldPicked)
-        
-        oldPicked.newRemoveClass("picked").newAddClass("other")
-        target.newRemoveClass("other").newAddClass("picked")
-        switchTo(target) 
-    }
-}
-*/
-
 function handleSecondTabBars(oldPickedLi, targetLi) {
 
     if(oldPickedLi.data("secondTabBar") != targetLi.data("secondTabBar")) {
@@ -635,17 +625,7 @@ function tabbarCallback() {//switch display
         oldPicked.newRemoveClass("picked")
         oldPicked.newAddClass("other")
         var child = target.data("child")
-        /*    if(oldPicked.hasClass("check-expect-top-level") && !target.hasClass("check-expect-top-level")) {
-         cebar.css("border-bottom-style", "none")
-         cebar.css("height", "0px")
-         setContentSize()
-     }
-     else if (target.hasClass("check-expect-top-level")) {
-     cebar.css("height", "auto")
-     cebar.css("border-bottom-style", "solid")
-     setContentSize()
- }
- */
+        
         handleSecondTabBars(oldPicked, target)
         target.newAddClass("picked")
         target.newRemoveClass("other")
@@ -741,7 +721,7 @@ $(document).ready(function () {
     //Adding top level calls to the tabbar
     var first = false
     for (var i = 0; i < theTrace.children.length; i++) {
-        var tabLi = createNewTab("other", theTrace.children[i], tabsList, tabbar, false)
+        var tabLi = createNewTab("other", theTrace.children[i], tabsList, tabbar)
         
         if(errored && theTrace.children[i].result.type == "error") {
             first = tabLi
@@ -759,19 +739,20 @@ $(document).ready(function () {
         //Will eventually need to repeat this for multiple children, not just bigBangTrace.children[0]
         //To support multiple big-bangs in the same file
         for(var k = 0; k < bigBangTrace.children[0].children.length; k++) {
-            var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[0].children[k], bigBangList, bigbangbar, false)
+            var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[0].children[k], bigBangList, bigbangbar)
 
             if(errored && bigBangTrace.children[0][k].result.type == error) {
                 first = topBigBangTabLi
                 errorInBigBang = bigBangTabLi
                 messagebar.text("Your program generated an error")
                 bigBangTabLi.newAddClass("picked")
-            } else
-            bigBangTabLi.newAddClass("other")
+            } 
+            else
+                bigBangTabLi.newAddClass("other")
         }
+        if (!first) {first = topBigBangTabLi}
         if(!errorInBigBang)
             bigBangList.children().first().newRemoveClass("other").newAddClass("picked")
-       
     }
     
     //check-expect to tabbar and creating cebar
@@ -782,7 +763,7 @@ $(document).ready(function () {
         var ceList = createTabsList("cebar", cebar) 
         
         for(var j = 0; j < ceTrace.children.length; j++) {
-            var ceTabLi = createNewTab("check-expect", ceTrace.children[j], ceList, cebar, true) 
+            var ceTabLi = createNewTab("check-expect", ceTrace.children[j], ceList, cebar) 
             
             if(errored && 
                 (ceTrace.children[j].children[0].result.type == "error" 
@@ -829,10 +810,12 @@ $(document).ready(function () {
         })
   
     bigbangbar.css({"height": "0px", "border-bottom-style":"none"})
-    $("ul.cebar li").bind("click", secondTabBarCallback("cebar")/*cebarCallback*/)
-    $("ul.bigbangbar li").bind("click", secondTabBarCallback("bigbangbar")/*cebarCallback*/)
+    $("ul.cebar li").bind("click", secondTabBarCallback("cebar"))
+    $("ul.bigbangbar li").bind("click", secondTabBarCallback("bigbangbar"))
     $("ul.tabbar li").bind("click", tabbarCallback) 
-        
+       
+    console.log("first:")
+    console.log(first)
     first.trigger("click")
 
     setContentSize()
