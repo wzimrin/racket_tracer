@@ -7,8 +7,9 @@
     [#t (+ (fib (- x 1))
            (fib (- x 2)))]))
 
-;(check-expect (fib 2) 1)
+(check-expect (fib 2) 1)
 
+#|
 (check-within (fib 1) 0 1)
 (check-within (fib 1) 0 0)
 
@@ -22,3 +23,4 @@
 (check-range 3 2 5)
 (check-range 2 3 5)
 (check-range 5 2 3)
+|#
