@@ -235,41 +235,41 @@
                 (make-list (- count name-count -1)
                            (last names))))))
 
+;records a big-bang call - it wraps each passed in function in its own node
 (define-syntax (big-bang-recorder e)
-  ;(with-syntax ([current-big-bang-node (gensym)])
-    (syntax-case e ()
-      [(_ world (name fun other ...) ...)
-       #`(begin 
-           (define current-big-bang-node
-             (create-node 'big-bang #f empty
-                          #,(syntax-position e)
-                          #,(syntax-span e)
-                          0 0))
-           (add-kid top-big-bang-node current-big-bang-node)
-           (universe:big-bang
-            world
-            #,@(map (lambda (f n o)
-                      #`[#,n (let ([f-value #,f])
-                               (lambda args
-                                 (let* ([node (create-node '#,n #f args
-                                                           #,(syntax-position f) #,(syntax-span f) 0 0)]
-                                        [result (parameterize ([current-call node])
-                                                  (with-handlers ([identity exn-wrapper])
-                                                    (apply f-value args)))])
-                                   (set-node-result! node result)
-                                   #,@(if (equal? (syntax->datum n) 'to-draw)
-                                          #'((set-node-title! node result)
-                                             (set-node-has-title! node #t))
-                                          #'())
-                                   (add-kid current-big-bang-node node)
-                                   (if (exn-wrapper? result)
-                                       (error "Error")
-                                       result))))
-                             #,@o])
-                    
-                    (syntax-e #'(fun ...))
-                    (syntax-e #'(name ...))
-                    (syntax-e #'((other ...) ...)))))]))
+  (syntax-case e ()
+    [(_ world (name fun other ...) ...)
+     #`(begin 
+         (define current-big-bang-node
+           (create-node 'big-bang #f empty
+                        #,(syntax-position e)
+                        #,(syntax-span e)
+                        0 0))
+         (add-kid top-big-bang-node current-big-bang-node)
+         (universe:big-bang
+          world
+          #,@(map (lambda (f n o)
+                    #`[#,n (let ([f-value #,f])
+                             (lambda args
+                               (let* ([node (create-node '#,n #f args
+                                                         #,(syntax-position f) #,(syntax-span f) 0 0)]
+                                      [result (parameterize ([current-call node])
+                                                (with-handlers ([identity exn-wrapper])
+                                                  (apply f-value args)))])
+                                 (set-node-result! node result)
+                                 #,@(if (equal? (syntax->datum n) 'to-draw)
+                                        #'((set-node-title! node result)
+                                           (set-node-has-title! node #t))
+                                        #'())
+                                 (add-kid current-big-bang-node node)
+                                 (if (exn-wrapper? result)
+                                     (error "Error")
+                                     result))))
+                           #,@o])
+                  
+                  (syntax-e #'(fun ...))
+                  (syntax-e #'(name ...))
+                  (syntax-e #'((other ...) ...)))))]))
 
 ;a macro that, when called, defines a macro to replace a check-* form
 ;takes the name that the new macro should be called, the check-* form it is supposed to replace
@@ -471,6 +471,7 @@
        (hasheq 'type "value"
                'value (get-output-string p)))]))
 
+;converts a single node to a jsexpr
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
   ;javascript list
