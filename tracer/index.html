@@ -5,43 +5,52 @@
     <style type="text/css"> @tracerCSS
     </style>
     <script type = "text/javascript" id = "variables">
-        var downImageSrc = @downImageSrc
-        var sideImageSrc = @sideImageSrc
-        var toDefImageSrc = @toDefImageSrc
-        var toDefImageSelSrc = @toDefImageSelSrc
-        var correctCEImageSrc = @correctCEImageSrc
-        var correctCEImageSelSrc = @correctCEImageSelSrc
-        var failedCEImageSrc = @failedCEImageSrc
-        var failedCEImageSelSrc = @failedCEImageSelSrc
-        var imageSize = @button-size
-        var errored = @errored
+      var downImageSrc = @downImageSrc
+      var sideImageSrc = @sideImageSrc
+      var toDefImageSrc = @toDefImageSrc
+      var toDefImageSelSrc = @toDefImageSelSrc
+      var correctCEImageSrc = @correctCEImageSrc
+      var correctCEImageSelSrc = @correctCEImageSelSrc
+      var failedCEImageSrc = @failedCEImageSrc
+      var failedCEImageSelSrc = @failedCEImageSelSrc
+      var imageSize = @button-size
+      var errored = @errored
 
-        var theTrace = @theTrace
-        var ceTrace = @ceTrace
-        var bigBangTrace = @bigBangTrace
-        var code = @code
-        var codeOffset = @offset
+      var theTrace = @theTrace
+      var ceTrace = @ceTrace
+      var bigBangTrace = @bigBangTrace
+      var code = @code
+      var codeOffset = @offset
     </script>
     <script type="text/javascript" id="jQuery"> @jQuery
     </script>
 
-   <script type="text/javascript" id="tracerJS"> @tracerJS
+    <script type="text/javascript" id="tracerJS"> @tracerJS
     </script>
   </head>
 
   <body>
-      <div id="messagebar"></div>
-      <div id="tabbar"></div>
-      <div id="cebar"></div>
-      <div id = "wrapper">
-          <div id="codePaneWrapper" class = "column">
-              <div id="codePaneButton"></div>
-              <div id="codePane"></div>
-          </div>
-          <div id="traceWrapper" class = "background2 column">
-              <div id="trace" class="superparent"></div>
-          </div>
+    <!-- The top bar that shows up when the program errors out -->    
+    <div id="messagebar"></div>
+    <!-- The main tab bat -->
+    <div id="tabbar"></div>
+    <!-- The check-expect tab bar -->
+    <div id="cebar"></div>
+    <!-- Formatting aid - contains the code pane and the trace -->
+    <div id = "wrapper">
+      <!-- overall code pane div - contains the button and the actual code -->
+      <div id="codePaneWrapper" class = "column">
+        <!-- the open/close button for the code pane -->
+        <div id="codePaneButton"></div>
+        <!-- the actual pane that holds the code -->
+        <div id="codePane"></div>
       </div>
+      <!-- the div that holds the trace - it scrolls -->
+      <div id="traceWrapper" class = "background2 column">
+        <!-- the div that expands to fit the entire trace -->
+        <div id="trace" class="superparent"></div>
+      </div>
+    </div>
   </body>
 
 </html>

@@ -160,7 +160,7 @@
                     result))))
           (body-thunk))))
 
-;traces a lambda
+;traces a lambda, given a name for the lambda
 (define-syntax (custom-lambda-name e)
   (syntax-case e ()
     [(_ name args body)
@@ -169,6 +169,7 @@
                            #,(lambda-body #'(list . args) #'body #'name e sym))])
            (procedure-rename #,sym 'name)))]))
 
+;trace a lambda, using the name lambda
 (define-syntax-rule (custom-lambda args body)
   (custom-lambda-name lambda args body))
 
