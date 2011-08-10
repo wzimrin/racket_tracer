@@ -1,22 +1,14 @@
 /* William Zimrin and Jeanette Miranda
-   6/2011
-
-Whole Page
-Tracer
-Expand/collapse button
-Call table
-tab bar
-code pane
-scroll buttons
-other
-*/
+   6/2011 */
 
 
-/* Whole page */
+/* -------------------------------------------------------------------*/
+/*                            WHOLE PAGE                              */
+/* -------------------------------------------------------------------*/
 
 body {
     margin: 0px;
-    overflow: auto;
+    overflow: hidden;
     font-family: "dejavu sans mono", "consolas", "courier new","monospace";
 }
 
@@ -30,25 +22,12 @@ body {
     float: left;
 }
 
-/*ce-menu/rest of page positioning*/
-
-div#middle .column {
-    position: relative;
-}
-
-div#middle {
-    position: relative;
-    width: 100%;
-    overflow: visible;
-    float: left;
-}
-
 div#wrapper {
+    position: relative;
     overflow: visible;
     float: left;
     width: 100%;
     height: 10px;
-    /*padding-left: 200px;*/
 }
 
 div#ceMenu {
@@ -56,29 +35,28 @@ div#ceMenu {
     float: left;
     margin-left: -100%;
     position: relative;
-    /*right: 100px;*/
-    /*width: 10%;*/
-    /*width: 100px;*/
     height: 100%;
     overflow: auto;
     background: #C8D2DA;
 }
 
-/* Trace */
+.hidden {
+    display: none
+}
 
-div#tracerWrapper {
-    float: right;
+/* -------------------------------------------------------------------*/
+/*                            TRACE                                   */
+/* -------------------------------------------------------------------*/
+
+div#traceWrapper {
+    float: left;
     position: relative;
-    /*width: 90%;*/
     width: 100%;
     height: 100%;
     overflow: auto;
 }
 
-div#tracer {
-    /*position: absolute;
-    top:0px;
-    left:0px;*/ 
+div#trace {
     white-space: nowrap;
     cursor: pointer;
 }
@@ -92,8 +70,9 @@ div.call {
     border-width: 1px;
 }
 
-div.error {
-    color: purple
+div.error > table > tbody > tr > td.result {
+    color: white;
+    background-color: red;
 }
 
 .childTD {
@@ -104,7 +83,10 @@ div.error {
     overflow:hidden;
 }
 
-/* Background and Arg coloring */
+/* -------------------------------------------------------------------*/
+/*                    CALL BACKGROUND AND ARG COLORING                */
+/* -------------------------------------------------------------------*/
+
 .background1 {
     background: #e7ebef; 
     border-color: #e7ebef;
@@ -123,7 +105,6 @@ div.error {
     background: #e7ebef;
 }
 
-/* Passed Check Expects */
 .passed-ce.background1 {
     background: #2c9004;
     border-color: #2c9004;
@@ -134,16 +115,15 @@ div.error {
     border-color: #3cc305;
 }
 
-.passed-ce.background1>table>tbody>tr>td.arg {
+.passed-ce.background1>table.callTable>tbody>tr>td.arg {
     background: #3cc305;
 }
 
-.passed-ce.background2>table>tbody>tr>td.arg {
+.passed-ce.background2>table.callTable>tbody>tr>td.arg {
     background: #4af406;
 }
 
-/* Failed Check Expects */
-.failed-ce>table>tbody>tr>td {
+.failed-ce>table.callTable>tbody>tr>td {
     color: white;
 }
 
@@ -157,19 +137,19 @@ div.error {
     border-color: red;
 }
 
-.failed-ce.background1>table>tbody>tr>td.arg {
+.failed-ce.background1>table.callTable>tbody>tr>td.arg {
     background: #e60000;
 }
 
-.failed-ce.background2>table>tbody>tr>td.arg {
+.failed-ce.background2>table.callTable>tbody>tr>td.arg {
     background: #ff4d4d;
 }
 
-/* Buttons */
+/* -------------------------------------------------------------------*/
+/*                              BUTTONS                               */
+/* -------------------------------------------------------------------*/
 
 .button {
-    /*color:white;
-      background:black;*/
     background: black;
     vertical-align: middle;
 
@@ -181,13 +161,13 @@ div.error {
     padding: 0;
 }
 
-/* Expand/collapse button */
-
 td.button:hover {
     border-color: gray;
 }
 
-/* Call Table */
+/* -------------------------------------------------------------------*/
+/*                              CALL TABLE                            */
+/* -------------------------------------------------------------------*/
 
 .callTable {
     border-spacing: 5px 2px;
@@ -224,76 +204,74 @@ td.arg.cell {
     font-weight:bold;
 }
 
-/* Tab bar */
+div.expandable:hover {
+    font-weight: bold;
+}
+
+/* -------------------------------------------------------------------*/
+/*                              TAB BARS                              */
+/* -------------------------------------------------------------------*/
 
 div#messagebar {
     width: 100%;
-    /*padding: 2px 5px;*/
-    float:top;
+    float:left;
     background-color: red;
 }
+
 div#messagebar:hover { font-weight:bold;}
 
-div#tabbar {
+.tabBarImage {
+    border: 2px solid white;
+}
+
+.tabBarImage:hover {
+    border: 2px solid black;
+}
+
+div#cebar {
+    color: red;
+    border-bottom-color: red;
+    border-bottom-style: none;
+}
+
+.tabsDiv {
     width: 100%;
     overflow: auto;
-    float: top;
+    float: left;
     border-style: none;
     border-bottom-style: solid;
     border-bottom-color: black;
-    border-bottom-weight: 3px;
+    border-bottom-width: 3px;
     overflow-y: hidden;
 }
 
-ul.tabs {
+ul.tabsFormatting {
     list-style-type: none;
     margin: 5px 0px; /*TB, LR*/
     padding-left: 0px
 }
 
-ul.tabs > li {
+ul.tabsFormatting > li {
     display: inline;
     padding: 7px;
     white-space: nowrap;
 }
 
-ul.tabs > li.picked {
+ul.tabsFormatting > li.picked {
     font-weight: bold;
 }
 
-ul.tabs > li.other:hover {
+ul.tabsFormatting > li.other:hover {
     font-weight: bold;
 }
 
-ul.tabs > li.check-expect-top-level {
+ul.tabsFormatting > li.check-expect-top-level {
     color: #F80000;
 }
 
-/* Check Expect Menu */
-
-ul.ce-list {
-    list-style-type: none;
-    float:left;
-    color: #DF1616;
-    margin: 10px 0px; /*TB, LR*/
-    /*margin-left: 10px;*/
-    padding-left: 0px
-}
-
-ul.ce-list > li {
-    white-space: nowrap;
-    margin: 0px 10px;
-}
-
-ul.ce-list > li.picked {
-    font-weight: bold;
-}
-
-ul.ce-list > li.other:hover {
-    font-weight: bold;
-}
-
-/* Code Pane */
+/* -------------------------------------------------------------------*/
+/*                              CODE PANE                             */
+/* -------------------------------------------------------------------*/
 
 div#codePaneWrapper {
     float: right;
@@ -301,6 +279,7 @@ div#codePaneWrapper {
 }
 
 div#codePane {
+    position: relative; /* makes scrolling work */
     width: 100%;
     background: black;
     height: 100%;
@@ -311,22 +290,28 @@ div#codePane {
     padding:3px;
 }
 
+div#codePaneButton {
+    height: 28px;
+    font-size: 24px;
+    background: white;
+}
+
+div#codePaneButton:hover {
+    font-weight:bold;
+    background: #e7ebef;
+}
+
+
+/* -------------------------------------------------------------------*/
+/*                      HIGHLIGHTING ON CODE PANE                     */
+/* -------------------------------------------------------------------*/
+
 .highlight {
     background: #ffff61;
 }
 
 .highlight span {
     color: fireBrick !important;
-}
-
-.lastHighlighted {
-    background: #ffff61 /*#FF0*/;
-    border-color: #ffff61 /*#ff0*/;
-    color: fireBrick !important;
-}
-
-.to-src-button.lastHighlighted:hover {
-    border-color: #ffffdb !important;
 }
 
 span.error {
@@ -357,21 +342,18 @@ span.symbol {
     color: #47a1c2;
 }
 
-div#codePaneButton {
-    height: 28px;
-    font-size: 24px;
-    background: white;
+/* -------------------------------------------------------------------*/
+/*                          HIGHLIGHTING ON TRACE                     */
+/* -------------------------------------------------------------------*/
+
+.lastHighlighted {
+    background: #ffff61; 
+    border-color: #ffff61;
+    color: fireBrick !important;
 }
 
-div#codePaneButton:hover {
-    font-weight:bold;
-    background: #e7ebef;
+.to-src-button.lastHighlighted:hover {
+    border-color: #ffffdb !important;
 }
 
-div.expandable:hover {
-    font-weight: bold;
-}
 
-.hidden {
-    display: none
-}

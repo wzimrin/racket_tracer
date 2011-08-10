@@ -1,11 +1,10 @@
 #lang planet tracer/tracer
-
+(trace #f)
 (define (fib x)
   (if (< x 2)
       x
       (+ (fib (- x 1))
          (fib (- x 2)))))
-
 (define (add x y)
   (+ x y))
 
@@ -26,7 +25,8 @@
 
 (fib 10)
 
-(close-enough? 3 3)
+(trace #t 
+(close-enough? 3 3))
 
 (all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
 
