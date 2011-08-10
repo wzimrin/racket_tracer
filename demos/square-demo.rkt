@@ -1,4 +1,4 @@
-#lang planet tracer/tracer
+#lang htdp/isl+
 
 (require htdp/image)
 
