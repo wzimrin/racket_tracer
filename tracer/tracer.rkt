@@ -7,8 +7,7 @@
                     let* letrec image? λ and or if
                     check-expect check-within check-error check-member-of check-range]
          [prefix-in isl:
-                    [only-in lang/htdp-intermediate-lambda
-                             define lambda let require local image? and or if]]
+                    [only-in lang/htdp-intermediate-lambda and or if]]
          [for-meta 1
                    [only-in racket/list
                             first last cons? take make-list]]
@@ -28,14 +27,18 @@
                              big-bang]]
          [only-in racket/gui
                   message-box]
-         syntax/toplevel
+         ;syntax/toplevel
          [for-syntax racket/port]
+         ;images in source to browser
          net/base64
          file/convertible
-         mzlib/pconvert
+         mzlib/pconvert ;print-convert?
          (planet dherman/json:3:0))
 
-(provide local let* letrec require only-in except-in prefix-in let
+(provide local let* letrec let
+         require only-in except-in prefix-in combine-in
+         provide all-defined-out all-from-out 
+         rename-out except-out prefix-out struct-out combine-out protect-out
          [rename-out (app-recorder #%app)
                      (check-expect-recorder check-expect)
                      (check-within-recorder check-within)
@@ -70,6 +73,8 @@
 
 ;a wrapper for exceptions - it lets us distinguish between an exception that was created and returned by user code
 ;and an exception that we caught and used as the return value
+; not all exceptions that are handled by the exception handler are exn -- if the user uses
+; (raise v), v: any, not specifically an exn
 (struct exn-wrapper (exn))
 (define (exn-wrapper-message w)
   (let ([unwrapped (exn-wrapper-exn w)])
@@ -78,14 +83,14 @@
         (format "~s" unwrapped))))
 
 ;the parent node for all failing check expects
-(define top-ce-node (create-node 'CE-top-level #f empty 0 0 0 0))
+(define top-ce-node (create-node 'top-ce-node #f empty 0 0 0 0))
 
 ;the parent node for all big-bangs
 (define top-big-bang-node
   (create-node 'top-big-bang-node #f empty 0 0 0 0))
 
 ;the parent node for all normal traces
-(define top-node (create-node 'top-level #f empty 0 0 0 0))
+(define top-node (create-node 'top-node #f empty 0 0 0 0))
 
 ;the current definition we are in
 (define current-call (make-parameter top-node))
@@ -105,10 +110,6 @@
                . bodies)
            #'(current-call new-current)))]))
 
-;the position (ala syntax-position) of the last use of #%app
-(define current-idx (make-parameter 0))
-;the span of the last use of #%app
-(define current-span (make-parameter 0))
 ;the actual fun that was applied with the last use of #%app
 (define current-fun (make-parameter #f))
 ;the node that was created with the last use of #%app
@@ -160,29 +161,24 @@
                     result))))
           (body-thunk))))
 
-;traces a lambda, given a name for the lambda
-(define-syntax (custom-lambda-name e)
-  (syntax-case e ()
-    [(_ name args body)
-     (let ([sym (gensym)])
-       #`(letrec ([#,sym (lambda args
-                           #,(lambda-body #'(list . args) #'body #'name e sym))])
-           (procedure-rename #,sym 'name)))]))
-
-;trace a lambda, using the name lambda
-(define-syntax-rule (custom-lambda args body)
-  (custom-lambda-name lambda args body))
+;traces a lambda, need temp to know which function is currently being applied (the actual lambda)
+;not our lambda body. at runtime only have access to procedure, so knowing e doesn't help
+(define-syntax (custom-lambda e)
+ (syntax-case e ()
+    [(_ args body)
+       #`(letrec ([temp (lambda args
+                           #,(lambda-body #'(list . args) #'body #'lambda e #'temp))])
+           (procedure-rename temp 'lambda))]))
 
 ;traces a define
 (define-syntax (custom-define e)
-  (syntax-case e (lambda)
+  (syntax-case e (custom-lambda)
     [(_ (fun-expr arg-expr ...) body)
      #`(define (fun-expr arg-expr ...)
          #,(lambda-body #'(list arg-expr ...) #'body #'fun-expr e #'fun-expr))]
-    [(_ fun-expr (lambda (arg-expr ...) body))
+    [(_ fun-expr (custom-lambda (arg-expr ...) body))
      #'(custom-define (fun-expr arg-expr ...) body)]
-    [(_ id val)
-     #'(define id val)]))
+    [_ e]))
 
 ;gets the leftmost element out of a nested list
 (define (function-sym datum)
@@ -203,9 +199,7 @@
              (let* ([n (create-node (function-sym 'fun-expr) fun args
                                     idx span 0 0)]
                     [result (with-handlers ([identity exn-wrapper])
-                              (parameterize ([current-idx idx]
-                                             [current-span span]
-                                             [current-fun fun]
+                              (parameterize ([current-fun fun]
                                              [current-app-call n])
                                 (apply fun args)))])
                (when (or (node-used? n)
@@ -274,7 +268,7 @@
 
 ;a macro that, when called, defines a macro to replace a check-* form
 ;takes the name that the new macro should be called, the check-* form it is supposed to replace
-;a function to determine if the check-* passed (it will recieve the arguments in order)
+;a function to determine if the check-* passed (it will receive the arguments in order)
 ;and a list of the names for the child nodes of the check-*
 (define-syntax-rule (generalized-check-expect-recorder name original-name
                                                        passed? node-names-stx)
