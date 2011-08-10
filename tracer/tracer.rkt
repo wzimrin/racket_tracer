@@ -129,37 +129,39 @@
 (define (add-to-ce-hash key idx span success)
   (hash-set! ce-hash key (list idx span success))) 
 
+(define (lambda-body-fun args body name fun idx span)
+  (if (current-call)
+      (let* ([app-call? (eq? fun (current-fun))]
+             [n (if app-call?
+                    (current-app-call)
+                    (create-node name fun args
+                                 0 0
+                                 idx
+                                 span))])
+        (cond
+          [app-call?
+           (begin (set-node-src-idx! n idx)
+                  (set-node-src-span! n span))]
+          [(node? (current-app-call))
+           (add-kid (current-app-call) n)]
+          [#t (add-kid (current-call) n)])
+        (when (node? (current-app-call))
+          (set-node-used?! (current-app-call) #t))
+        (parameterize ([current-call n])
+          (let ([result (with-handlers ([identity exn-wrapper])
+                          (body))])
+            (set-node-result! n result)
+            (if (exn-wrapper? result)
+                (error "Error")
+                result))))
+      (body)))
+
 ;generates the interior of an annotated function definition
 ;takes a syntax object of a list of arguments, a syntax object for the body,
 ;a syntax object that is the display name of the function, the original syntax object
 ;of the function definition, and a syntax object that can be used to refer to the function
 (define-for-syntax (lambda-body args body name orig fun)
-  #`(let ([body-thunk (lambda () #,body)])
-      (if (current-call)
-          (let* ([app-call? (eq? #,fun (current-fun))]
-                 [n (if app-call?
-                        (current-app-call)
-                        (create-node '#,name #,fun #,args
-                                     0 0
-                                     #,(syntax-position orig)
-                                     #,(syntax-span orig)))])
-            (cond
-              [app-call?
-               (begin (set-node-src-idx! n #,(syntax-position orig))
-                      (set-node-src-span! n #,(syntax-span orig)))]
-              [(node? (current-app-call))
-               (add-kid (current-app-call) n)]
-              [#t (add-kid (current-call) n)])
-            (when (node? (current-app-call))
-              (set-node-used?! (current-app-call) #t))
-            (parameterize ([current-call n])
-              (let ([result (with-handlers ([identity exn-wrapper])
-                              (body-thunk))])
-                (set-node-result! n result)
-                (if (exn-wrapper? result)
-                    (error "Error")
-                    result))))
-          (body-thunk))))
+  #`(lambda-body-fun #,args (lambda () #,body) '#,name #,fun #,(syntax-position orig) #,(syntax-span orig)))
 
 ;traces a lambda, need temp to know which function is currently being applied (the actual lambda)
 ;not our lambda body. at runtime only have access to procedure, so knowing e doesn't help
@@ -178,13 +180,30 @@
          #,(lambda-body #'(list arg-expr ...) #'body #'fun-expr e #'fun-expr))]
     [(_ fun-expr (custom-lambda (arg-expr ...) body))
      #'(custom-define (fun-expr arg-expr ...) body)]
-    [_ e]))
+    [(_ name value) #'(define name value)]))
 
 ;gets the leftmost element out of a nested list
 (define (function-sym datum)
   (if (cons? datum)
       (function-sym (first datum))
       datum))
+
+(define (custom-apply fun args name idx span)
+  (if (current-call)
+      (let* ([n (create-node (function-sym name) fun args
+                             idx span 0 0)]
+             [result (with-handlers ([identity exn-wrapper])
+                       (parameterize ([current-fun fun]
+                                      [current-app-call n])
+                         (apply fun args)))])
+        (when (or (node-used? n)
+                  (exn-wrapper? result))
+          (set-node-result! n result)
+          (add-kid (current-call) n))
+        (if (exn-wrapper? result)
+            (error "Error")
+            result))
+      (apply fun args)))
 
 ;takes a syntax object that will be bound at runtime to a the evaluated form of the function,
 ;a syntax object that will be bound at runtime to an evaluated list of the arguments to the function
@@ -195,29 +214,13 @@
     [(_ fun args e fun-expr)
      (with-syntax ([idx (syntax-position #'e)]
                    [span (syntax-span #'e)])
-       #'(if (current-call)
-             (let* ([n (create-node (function-sym 'fun-expr) fun args
-                                    idx span 0 0)]
-                    [result (with-handlers ([identity exn-wrapper])
-                              (parameterize ([current-fun fun]
-                                             [current-app-call n])
-                                (apply fun args)))])
-               (when (or (node-used? n)
-                         (exn-wrapper? result))
-                 (set-node-result! n result)
-                 (add-kid (current-call) n))
-               (if (exn-wrapper? result)
-                   (error "Error")
-                   result))
-             (apply fun args)))]))
+       #'(custom-apply fun args 'fun-expr idx span))]))
 
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)
   (syntax-case e ()
     [(_ fun-expr arg-expr ...)
-     #`(let ([fun fun-expr]
-             [args (list arg-expr ...)])    
-         (apply-recorder fun args #,e fun-expr))]))
+     #`(apply-recorder fun-expr (list arg-expr ...) #,e fun-expr)]))
 
 ;helper function - takes a list of names and how long the list should be, and
 ;returns a list of names of the correct length, dropping names off the back of the list
@@ -599,31 +602,30 @@
     (close-input-port tracerJSPort)
     template))
 
-;Code to run after users program has run
-;If nothing to trace, message to user
-;If code to trace, generates and displays page
-(define (after-body name offset errored src)
-  (display-results)
-  ;If empty trace generate error message
-  (if (and (empty? (node-kids top-node))
-           (empty? (node-kids top-ce-node))
-           (empty? (node-kids top-big-bang-node)))
-      (message-box "Error" 
-                   "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
-                   #f 
-                   '(ok stop))
-      (send-url/contents (page name offset errored src))))
-
 ;adds after-body to the end, and deals with the extra information provided by the reader
 (define-syntax (#%module-begin stx)
   (syntax-case stx ()
     [(_ name source offset body ...)
      #`(#%plain-module-begin
+        ;Code to run after users program has run
+        ;If nothing to trace, message to user
+        ;If code to trace, generates and displays page
+        (define (final errored)
+          (display-results)
+          ;If empty trace generate error message
+          (if (and (empty? (node-kids top-node))
+                   (empty? (node-kids top-ce-node))
+                   (empty? (node-kids top-big-bang-node)))
+              (message-box "Error" 
+                           "There is nothing to trace in this file. Did you define any functions in this file? Are they called from this file?" 
+                           #f 
+                           '(ok stop))
+              (send-url/contents (page name offset errored source))))
         ;Set exception handler to allow tracing of functions that error out
         (uncaught-exception-handler (lambda (x)
                                       (displayln (exn-message x))
-                                      (after-body name offset #t source)
+                                      (final #t)
                                       ((error-escape-handler))))
         body ...
         (run-tests)
-        (after-body name offset #f source))]))
+        (final #f))]))
