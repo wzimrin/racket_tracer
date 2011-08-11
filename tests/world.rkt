@@ -36,11 +36,23 @@
 
 (define (make-circle x)
   (circle x "outline" "black"))
-;(make-circle 4)
+(make-circle 4)
 (big-bang '(20 10)
           [on-tick (lambda (lst)
                      (cons (+ 10 (first lst))
-                           lst)) 1]
+                           lst)) .3]
+          [stop-when (lambda (lst)
+                       (= (first lst) 50))]
+          [to-draw (compose (curry apply overlay)
+                            reverse
+                            (curry map
+                                   make-circle))
+                   200 200])
+
+(big-bang '(30 20)
+          [on-tick (lambda (lst)
+                     (cons (+ 10 (first lst))
+                           lst)) .3]
           [stop-when (lambda (lst)
                        (= (first lst) 50))]
           [to-draw (compose (curry apply overlay)

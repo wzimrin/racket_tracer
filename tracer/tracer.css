@@ -228,11 +228,10 @@ div#messagebar:hover { font-weight:bold;}
     border: 2px solid black;
 }
 
-div#cebar {
-    color: red;
-    border-bottom-color: red;
-    border-bottom-style: none;
+li.picked .tabBarImage {
+    border: 2px solid black;
 }
+
 
 .tabsDiv {
     width: 100%;
@@ -263,6 +262,10 @@ ul.tabsFormatting > li.picked {
 
 ul.tabsFormatting > li.other:hover {
     font-weight: bold;
+}
+
+li.check-expect {
+    color: red;
 }
 
 ul.tabsFormatting > li.check-expect-top-level {
