@@ -1,6 +1,5 @@
 ***** Actually Important issues *****
 - reworking function and result clickability
-- big bang with multiple big-bangs
 - reader: danny's planet line to match packages
 - require racket/class and racket/gui/base in reader no longer needed
 - get rid of old source buttons in button.rkt
@@ -10,7 +9,6 @@
 - js clear highlight comment
 - comment type is false ln 355 (js)
 - updateCall vs. toggleCall
-- remove console.logs and alerts
 - icon vs. button naming
 
 * CS19 language
@@ -81,6 +79,8 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- remove console.logs and alerts (8/11)
+- big bang with multiple big-bangs (8/11)
 - Catch exceptions so trace still shows up
 - Name of node from application of function that was an argument (a-func vs. my-add example)
 - Display of check expect traces (7/22)

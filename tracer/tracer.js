@@ -7,7 +7,7 @@
 //                              Global Variables
 //-----------------------------------------------------------------------------
 
-var tabbar, cebar, messagebar, bigbangbar
+var tabbar, messagebar, secondTabBar //bigbangbar
 var wrapper, trace, traceWrapper
 var codePane, codePaneWrapper, codePaneButton
 
@@ -46,12 +46,20 @@ function addInitialData(tabLi, htmlForCall) {
 }
 
 //Adds a special tab to the top level (big-bang or check-expect)
-function addSpecialTopTab(topLevelClass, name, tabsList, bar) {
+function addSpecialTopTab(topLevelClass, name, tabsList) {
     var topTabLi = element("li").newAddClass(["other", topLevelClass])
     topTabLi.text(name)
-    topTabLi.data("secondTabBar", bar)
+    var secondTabsList = createTabsList("secondTabBar", secondTabBar)
+    topTabLi.data("secondTabBarUL", secondTabsList)
     tabsList.append(topTabLi)
+    secondTabsList.hide()
     return topTabLi;
+}
+
+function createTabsList(barClass, bar) {
+    var tabsList = element("ul").newAddClass([barClass, "tabsFormatting"])
+    bar.append(tabsList)
+    return tabsList;
 }
         
 //Creates the list element to go in a new tab, adds that element to the tabbar
@@ -70,8 +78,8 @@ function createNewTab(classToAdd, node, tabsList, bar) {
     } else
         alert("something wrong in title")
     tabsList.append(li)
-    if(classToAdd != "check-expect" || classToAdd != "big-bang")
-        classToAdd == false
+    if(classToAdd != "check-expect" && classToAdd != "big-bang")
+        classToAdd = false
     var exp = makeCall(node, bar, classToAdd)
     exp.newAddClass("toplevel")
     addInitialData(li, exp)
@@ -79,13 +87,6 @@ function createNewTab(classToAdd, node, tabsList, bar) {
     return li;
 }
 
-//Creates an unorderered list, adds the appropriate classes, and makes the list the content
-//of a tabbar
-function createTabsList(barClass, bar) {
-    var tabsList = element("ul").newAddClass([barClass, "tabsFormatting"])
-    bar.append(tabsList)
-    return tabsList;
-}
 
 
 //-----------------------------------------------------------------------------
@@ -144,10 +145,8 @@ function setCodePaneWidth() {
 
 //Set the width of the code pane to a new value and animate
 function setCodePaneWrapperWidth(newWidth,speed, arrow, onComplete) {
-    if($("ul.tabbar li.picked").hasClass("check-expect-top-level"))
-        $("ul.cebar li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
-    else if($("ul.tabbar li.picked").hasClass("big-bang-top-level"))
-        $("ul.bigbangbag li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
+    if($("ul.tabbar li.picked").data("secondTabBar"))
+        $("ul.tabbar li.picked").data("secondTabBar").find("li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
 
     $("ul.tabbar li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
     
@@ -407,10 +406,8 @@ function updateCall(html, createChildren) {
 
 function storePageState(tabLi) {
     if(tabLi.length != 0) {
-        if(tabLi.hasClass("check-expect-top-level"))
-            tabLi = $("ul.cebar li.picked")
-        else if(tabLi.hasClass("big-bang-top-level"))
-            tabLi = $("ul.bigbangbar li.picked")
+        if(tabLi.data("secondTabBarUL"))
+            tabLi = tabLi.data("secondTabBarUL").find("li.picked") 
         tabLi.data("scroll", traceWrapper.scrollLeft())
         tabLi.data({"codePaneExpanded": codePaneWidth == expandedCodePaneWidth,
                     "codePaneX": codePane.scrollLeft(),
@@ -421,10 +418,8 @@ function storePageState(tabLi) {
 
 function restorePageState(tabLi) {
     if(tabLi.length != 0) {
-        if(tabLi.hasClass("check-expect-top-level"))
-            tabLi = $("ul.cebar li.picked")
-        else if(tabLi.hasClass("big-bang-top-level"))
-            tabLi = $("ul.bigbangbar li.picked")
+        if(tabLi.data("secondTabBar"))
+            tabLi = tabLi.data("secondTabBar").children("li.picked") 
         if(tabLi.data("lastHighlighted").length != 0) {
             var toHighlight = tabLi.data("lastHighlighted")
             highlightSpan(codePane, toHighlight)
@@ -446,7 +441,6 @@ function restorePageState(tabLi) {
 
 function switchTo(tab) {
     $(".toplevel").hide()
-    console.log(tab)
     tab.data("child").show()
     clearHighlight()
     restorePageState(tab) 
@@ -498,8 +492,6 @@ function addIcon(container, src, srcSel ) {
     var icon = element("img")
     icon.attr("src", src)
     icon.data("otherSrc", srcSel)
-    //icon.height(imageSize)
-    //icon.width(imageSize)
     container.append(icon)
 }
 
@@ -580,18 +572,16 @@ function expandableCallback() {
     toggleExpandable($(this))
 }
 
-function secondTabBarCallback(barName) {
+function secondTabBarCallback() {
     return function() {
         var target = $(this)
         if(!target.hasClass("picked")) {
-            var child = target.data("child")
-            var oldPicked = $("ul." + barName + " li.picked") 
+            var oldPicked = target.parent().find("li.picked")
 
             storePageState(oldPicked)
 
             oldPicked.newRemoveClass("picked").newAddClass("other")
             target.newRemoveClass("other").newAddClass("picked")
-            console.log("secondTabBarCallback " + barName)
             switchTo(target) 
         }
     }
@@ -599,16 +589,21 @@ function secondTabBarCallback(barName) {
 
 function handleSecondTabBars(oldPickedLi, targetLi) {
 
-    if(oldPickedLi.data("secondTabBar") != targetLi.data("secondTabBar")) {
-        if(oldPickedLi.data("secondTabBar")) {
-            var bar = oldPickedLi.data("secondTabBar")
-            bar.css("border-bottom-style", "none")
-            bar.css("height", "0px")
+    if(oldPickedLi.data("secondTabBarUL") != targetLi.data("secondTabBarUL")) {
+        if(oldPickedLi.data("secondTabBarUL")) {
+            secondTabBar.children("ul").hide()
+            secondTabBar.css("border-bottom-style", "none")
+            secondTabBar.css("height", "0px")
         }
-        if(targetLi.data("secondTabBar")) {
-            var bar = targetLi.data("secondTabBar")
-            bar.css("border-bottom-style", "solid")
-            bar.css("height", "auto")
+        if(targetLi.data("secondTabBarUL")) {
+            var newTabUL = targetLi.data("secondTabBarUL")
+            newTabUL.show()
+            if(targetLi.hasClass("check-expect-top-level"))
+                secondTabBar.css("border-bottom-color", "red")
+            else
+                secondTabBar.css("border-bottom-color", "black")
+            secondTabBar.css("border-bottom-style", "solid")
+            secondTabBar.css("height", "auto")
         }
         setContentSize()
     }
@@ -624,18 +619,12 @@ function tabbarCallback() {//switch display
         storePageState(oldPicked)
         oldPicked.newRemoveClass("picked")
         oldPicked.newAddClass("other")
-        var child = target.data("child")
         
         handleSecondTabBars(oldPicked, target)
         target.newAddClass("picked")
         target.newRemoveClass("other")
-        if (target.hasClass("check-expect-top-level"))
-            switchTo($("ul.cebar li.picked"))
-        else if (target.hasClass("big-bang-top-level"))
-        {
-            console.log("tabbarcallback bigbangbar")
-            switchTo($("ul.bigbangbar li.picked"))
-        }
+        if(target.data("secondTabBarUL"))
+            switchTo(target.data("secondTabBarUL").find("li.picked")) 
         else
             switchTo(target) 
     }
@@ -650,8 +639,8 @@ function setContentWidth() {
 function setContentSize() {
     setContentWidth() 
 
-    $(".column").height($(window).height()-tabbar.outerHeight()
-        -bigbangbar.outerHeight() - messagebar.outerHeight()-cebar.outerHeight()
+    $(".column").height($(window).height()-tabbar.outerHeight() - secondTabBar.outerHeight()
+        - messagebar.outerHeight() 
         -2*parseInt($(document.body).css("margin-top")))
     codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
         +codePane.height()-codePane.outerHeight(true))
@@ -703,8 +692,7 @@ $(document).ready(function () {
 
     //Initialize global variables
     tabbar = $("#tabbar").newAddClass("tabsDiv")
-    cebar = $("#cebar").newAddClass("tabsDiv")
-    bigbangbar = $("#bigbangbar").newAddClass("tabsDiv")
+    secondTabBar = $("#secondTabBar").newAddClass("tabsDiv")
     messagebar = $("#messagebar")
     wrapper = $("#wrapper")
     trace = $("#trace")
@@ -732,16 +720,17 @@ $(document).ready(function () {
     
     //Big bang to tabbar, and creating bigbangbar
     var errorInBigBang = false
-    if(bigBangTrace.children.length > 0) {
-        var topBigBangTabLi = addSpecialTopTab("big-bang-top-level", "big-bang", tabsList, bigbangbar)
-        var bigBangList = createTabsList("bigbangbar", bigbangbar)        
+    for (var l = 0; l < bigBangTrace.children.length; l++) {
+        var topBigBangTabLi = addSpecialTopTab("big-bang-top-level", "big-bang", tabsList)
+        var bigBangList =  topBigBangTabLi.data("secondTabBarUL")       
 
         //Will eventually need to repeat this for multiple children, not just bigBangTrace.children[0]
         //To support multiple big-bangs in the same file
-        for(var k = 0; k < bigBangTrace.children[0].children.length; k++) {
-            var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[0].children[k], bigBangList, bigbangbar)
+        
+        for(var k = 0; k < bigBangTrace.children[l].children.length; k++) {
+            var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[l].children[k], bigBangList, secondTabBar)
 
-            if(errored && bigBangTrace.children[0].children[k].result.type == error) {
+            if(errored && bigBangTrace.children[l].children[k].result.type == error) {
                 first = topBigBangTabLi
                 errorInBigBang = bigBangTabLi
                 messagebar.text("Your program generated an error")
@@ -753,17 +742,17 @@ $(document).ready(function () {
         if (!first) {first = topBigBangTabLi}
         if(!errorInBigBang)
             bigBangList.children().first().newRemoveClass("other").newAddClass("picked")
+        
     }
     
     //check-expect to tabbar and creating cebar
     var errorInCE = false
     if (ceTrace.children.length > 0) {
-        var topCeTabLi = addSpecialTopTab("check-expect-top-level", "check-expect", tabsList, cebar)
-       
-        var ceList = createTabsList("cebar", cebar) 
+        var topCeTabLi = addSpecialTopTab("check-expect-top-level", "check-expect", tabsList)
+        var ceList =  topCeTabLi.data("secondTabBarUL")
         
         for(var j = 0; j < ceTrace.children.length; j++) {
-            var ceTabLi = createNewTab("check-expect", ceTrace.children[j], ceList, cebar) 
+            var ceTabLi = createNewTab("check-expect", ceTrace.children[j], ceList, secondTabBar) 
             
             if(errored && 
                 (ceTrace.children[j].children[0].result.type == "error" 
@@ -809,13 +798,10 @@ $(document).ready(function () {
                 errorInCE.trigger("click")
         })
   
-    bigbangbar.css({"height": "0px", "border-bottom-style":"none"})
-    $("ul.cebar li").bind("click", secondTabBarCallback("cebar"))
-    $("ul.bigbangbar li").bind("click", secondTabBarCallback("bigbangbar"))
+    secondTabBar.css({"height": "0px", "border-bottom-style":"none"})
+    secondTabBar.find("li").bind("click", secondTabBarCallback())
     $("ul.tabbar li").bind("click", tabbarCallback) 
        
-    console.log("first:")
-    console.log(first)
     first.trigger("click")
 
     setContentSize()
