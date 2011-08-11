@@ -351,7 +351,7 @@ function makeCall(traceNode, parent, type) {
     call.append(callTable)
 
     var buttonTable = element("table").newAddClass("buttonTable")
-    if (traceNode.children.length!=0 && !type) //type is false if not "check-expect" or "big-bang"
+    if (traceNode.children.length!=0 && type != "check-expect" && type != "big-bang")
         buttonTable.append(childrenButton)
     if(bodyButton.hasClass("hasSource")) 
         buttonTable.append(bodyButton)
