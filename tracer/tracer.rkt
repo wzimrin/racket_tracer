@@ -101,7 +101,8 @@
       [(_ header . bodies)
        (begin
          (check-bodies #'bodies e 'orig-name)
-         #'(orig-name header . bodies))])))
+         (syntax/loc e
+           (orig-name header . bodies)))])))
 
 (no-begin-redef cs019:let let)
 (no-begin-redef cs019:let* let*)
