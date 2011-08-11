@@ -1,4 +1,18 @@
 ***** Actually Important issues *****
+- reworking function and result clickability
+- big bang with multiple big-bangs
+- reader: danny's planet line to match packages
+- require racket/class and racket/gui/base in reader no longer needed
+- get rid of old source buttons in button.rkt
+- comment custom-apply
+- to-draw vs. on-draw in world
+- move max-size to somewhere else in the file
+- js clear highlight comment
+- comment type is false ln 355 (js)
+- updateCall vs. toggleCall
+- remove console.logs and alerts
+- icon vs. button naming
+
 * CS19 language
 ^ Test on CS19 programs
 ^ Test on other people
