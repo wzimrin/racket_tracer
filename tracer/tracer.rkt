@@ -240,11 +240,15 @@
      (begin
        (check-bodies #'bodies e 'lambda)
        (if (unbox trace?)
-           #`(letrec ([temp (lambda args
-                              #,(lambda-body #'(list . args) #'bodies
+           (quasisyntax/loc e
+             (letrec ([temp (lambda args
+                              #,(lambda-body (syntax/loc e
+                                               (list . args))
+                                             #'bodies
                                              #'lambda e #'temp))])
-               (procedure-rename temp 'lambda))
-           #'(lambda args . bodies)))]))
+               (procedure-rename temp 'lambda)))
+           (syntax/loc e
+             (lambda args . bodies))))]))
 
 ;traces a define
 (define-syntax (custom-define e)
@@ -253,19 +257,23 @@
         [(_ (fun-expr arg-expr ...) . bodies)
          (begin 
            (check-bodies #'bodies e 'define)
-           #`(define (fun-expr arg-expr ...)
-               #,(lambda-body #'(list arg-expr ...) #'bodies
-                              #'fun-expr e #'fun-expr)))]
+           (quasisyntax/loc e
+             (define (fun-expr arg-expr ...)
+               #,(lambda-body (syntax/loc e
+                                (list arg-expr ...)) #'bodies
+                              #'fun-expr e #'fun-expr))))]
         [(_ fun-expr (custom-lambda (arg-expr ...) . bodies))
          (begin
            (check-bodies #'bodies e 'define)
-           #'(custom-define (fun-expr arg-expr ...) . bodies))]
+           (syntax/loc e
+             (custom-define (fun-expr arg-expr ...) . bodies)))]
         [(_ name value) #'(define name value)])
       (syntax-case e ()
         [(_ header . bodies)
          (begin
            (check-bodies #'bodies e 'define)
-           #'(define header . bodies))])))
+           (syntax/loc e
+             (define header . bodies)))])))
 
 ;gets the leftmost element out of a nested list
 (define (function-sym datum)
@@ -285,10 +293,6 @@
                   (exn-wrapper? result))
           (set-node-result! n result)
           (add-kid (current-call) n))
-        (displayln "custom-apply -------")
-        (displayln n)
-        (displayln (current-call))
-        (displayln top-node)
         (if (exn-wrapper? result)
             (error "Error")
             result))
@@ -300,18 +304,21 @@
 ;it traces the application of the function to its arguments
 (define-syntax (apply-recorder e)
   (syntax-case e ()
-    [(_ fun args e fun-expr)
-     (with-syntax ([idx (syntax-position #'e)]
-                   [span (syntax-span #'e)])
-       #'(custom-apply fun args 'fun-expr idx span))]))
+    [(_ fun args orig fun-expr)
+     (with-syntax ([idx (syntax-position #'orig)]
+                   [span (syntax-span #'orig)])
+       (syntax/loc #'orig
+         (custom-apply fun args 'fun-expr idx span)))]))
 
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)
   (syntax-case e ()
     [(_ fun-expr arg-expr ...)
      (if (unbox trace?)
-         #`(apply-recorder fun-expr (list arg-expr ...) #,e fun-expr)
-         #'(#%plain-app fun-expr arg-expr ...))]))
+         (quasisyntax/loc e
+           (apply-recorder fun-expr (list arg-expr ...) #,e fun-expr))
+         (syntax/loc e
+           (#%plain-app fun-expr arg-expr ...)))]))
 
 ;helper function - takes a list of names and how long the list should be, and
 ;returns a list of names of the correct length, dropping names off the back of the list
@@ -327,9 +334,10 @@
 ;records a big-bang call - it wraps each passed in function in its own node
 (define-syntax (big-bang-recorder e)
   (syntax-case e ()
-    [(_ world (name fun other ...) ...)
+    [(_ world . handlers)
      (if (unbox trace?)
-         #`(begin 
+         (quasisyntax/loc e
+           (begin 
              (define current-big-bang-node
                (create-node 'big-bang #f empty
                             #,(syntax-position e)
@@ -338,29 +346,35 @@
              (add-kid top-big-bang-node current-big-bang-node)
              (universe:big-bang
               world
-              #,@(map (lambda (f n o)
-                        #`[#,n (let ([f-value #,f])
-                                 (lambda args
-                                   (let* ([node (create-node '#,n #f args
-                                                             #,(syntax-position f) #,(syntax-span f) 0 0)]
-                                          [result (parameterize ([current-call node])
-                                                    (with-handlers ([identity exn-wrapper])
-                                                      (apply f-value args)))])
-                                     (set-node-result! node result)
-                                     #,@(if (equal? (syntax->datum n) 'to-draw)
-                                            #'((set-node-title! node result)
-                                               (set-node-has-title! node #t))
-                                            #'())
-                                     (add-kid current-big-bang-node node)
-                                     (if (exn-wrapper? result)
-                                         (error "Error")
-                                         result))))
-                               #,@o])
-                      
-                      (syntax-e #'(fun ...))
-                      (syntax-e #'(name ...))
-                      (syntax-e #'((other ...) ...)))))
-         #'(universe:big-bang world (name fun other ...) ...))]))
+              #,@(map (lambda (handler)
+                        (syntax-case handler ()
+                          [(n f . o)
+                           (quasisyntax/loc handler
+                             [n (let ([f-value f])
+                                    (lambda args
+                                      (let* ([node
+                                              (create-node 'n #f args
+                                                           #,(syntax-position handler)
+                                                           #,(syntax-span handler)
+                                                           0 0)]
+                                             [result
+                                              (parameterize ([current-call node])
+                                                (with-handlers ([identity exn-wrapper])
+                                                  (apply f-value args)))])
+                                        (set-node-result! node result)
+                                        #,@(if (member (syntax->datum #'n)
+                                                       '(to-draw on-draw))
+                                               #'((set-node-title! node result)
+                                                  (set-node-has-title! node #t))
+                                               #'())
+                                        (add-kid current-big-bang-node node)
+                                        (if (exn-wrapper? result)
+                                            (error "Error")
+                                            result))))
+                                . o])]))
+                      (syntax-e #'handlers)))))
+         (syntax/loc e 
+           (universe:big-bang world . handlers)))]))
 
 ;a macro that, when called, defines a macro to replace a check-* form
 ;takes the name that the new macro should be called, the check-* form it is supposed to replace
@@ -384,7 +398,8 @@
                                 (cdr datum))]
                     [expected-datums (syntax-e #'expected-stxs)]
                     [node-names 'node-names-stx])
-               #`(begin 
+               (quasisyntax/loc e
+                 (begin 
                    (define parent-node;the top node for the check-expect
                      (create-node '#,func-stx #f empty idx span 0 0))
                    (set-node-prefix! parent-node
@@ -476,8 +491,9 @@
                                       result)))
                             expected-datums
                             (fix-names (length expected-datums)
-                                       (cdr node-names))))))
-             #'(original-name actual-stx . expected-stxs))]))))
+                                       (cdr node-names)))))))
+             (syntax/loc e
+               (original-name actual-stx . expected-stxs)))]))))
 
 ;redefinition of check-expect
 (generalized-check-expect-recorder
