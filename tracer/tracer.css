@@ -158,7 +158,6 @@ div.error > table > tbody > tr > td.result {
     -moz-border-radius: 2 px;
     padding: 0px;
     float: top;
-    padding: 0;
 }
 
 td.button:hover {
@@ -204,9 +203,28 @@ td.arg.cell {
     font-weight:bold;
 }
 
-div.expandable:hover {
+.expandable {
+    position:absolute;
+    left:0px;
+    top:0px;
+    font-size: 16px;
     font-weight: bold;
+    opacity: 0;
+    border: 1px solid black;
+    border-radius: 2px;
+    -moz-border-radius: 2 px;
 }
+
+.expandableArg {
+    position: relative;
+}
+
+.expandableArg:hover .expandable {
+    background-color: black;
+    color: white;
+    opacity: 1 !important;
+}
+
 
 /* -------------------------------------------------------------------*/
 /*                              TAB BARS                              */
@@ -231,7 +249,6 @@ div#messagebar:hover { font-weight:bold;}
 li.picked .tabBarImage {
     border: 2px solid black;
 }
-
 
 .tabsDiv {
     width: 100%;
@@ -355,8 +372,8 @@ span.symbol {
     color: fireBrick !important;
 }
 
+
 .to-src-button.lastHighlighted:hover {
     border-color: #ffffdb !important;
 }
-
 

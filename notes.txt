@@ -1,11 +1,7 @@
 ***** Actually Important issues *****
 - reworking function and result clickability
-- require racket/class and racket/gui/base in reader no longer needed
 - comment custom-apply
-- to-draw vs. on-draw in world
 - move max-size to somewhere else in the file
-- js clear highlight comment
-- comment type is false ln 355 (js)
 - icon vs. button naming
 
 * CS19 language
@@ -76,6 +72,10 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- js clear highlight comment (8/11)
+- to-draw vs. on-draw in world (8/11)
+- require racket/class and racket/gui/base in reader no longer needed (8/11)
+- comment type is false ln 355 (js) (8/11)
 - updateCall vs. toggleCall (8/11)
 - reader: danny's planet line to match packages (8/11)
 - get rid of old source buttons in button.rkt (8/11)

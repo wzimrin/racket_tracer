@@ -118,8 +118,10 @@ function initializeCodePane() {
     }
 }
 
+//Clears the highlight from buttons or function names in the trace,
+//and the selected/highlighted code on the codePane
 function clearHighlight() {
-    swapIcon($(".lastHighlighted").children("img"))
+    swapIcon($(".lastHighlighted").children("img")) 
     $(".lastHighlighted").newRemoveClass("lastHighlighted")
     $(".highlight").children().unwrap()
 }
@@ -203,9 +205,20 @@ function showSpan() {
 //Choose to display the full or short version of an expandable argument
 function updateExpandable(html) {
     if (html.data("expanded"))
-        html.text(html.data("full"))
+    {
+        console.log("switching to expanded")
+        html.text(html.data("full")) }
     else
+    {
         html.text(html.data("short"))
+        console.log("switching to short")
+    }
+    var expandDiv = html.data("expandDiv").newRemoveClass("expandable").newAddClass("expandable")
+    if(html.data("expanded"))
+        expandDiv.html("&rArr;&lArr;")
+    else
+        expandDiv.html("&lArr;&rArr;")
+    html.append(expandDiv)
 }
 
 //Toggle between the full and short version of an expandable argument
@@ -222,6 +235,8 @@ function toggleExpandable(html) {
 function makeCell(formShort, formFull, cssClass) {
     var cell = element("td").newAddClass([cssClass, "cell"])
     var div = element("div")
+    var toExpandDiv //div for button in top left corner of expandable arguments/results
+    cell.append(div)
     
     if (formFull.type=="image") {
         var el = element("img")
@@ -233,14 +248,16 @@ function makeCell(formShort, formFull, cssClass) {
     else {
         //If a shortened form exists 
         if (formShort.value != formFull.value) {
-            div.newAddClass("expandable")
-            div.data({short: formShort.value, full: formFull.value, expanded: false})
-            updateExpandable(div)
+            div.newAddClass("expandableArg")
+            toExpandDiv = element("div").newAddClass("expandable")
+            div.data({short: formShort.value, full: formFull.value, expanded: false, expandDiv: toExpandDiv})
+            updateExpandable(div) 
+            div.append(toExpandDiv)
         }
         else 
             div.text(formFull.value)
     }
-    cell.append(div)
+
     return cell
 }
 
@@ -569,7 +586,8 @@ function ecButtonCallback() {
 //makes the expandables expand/collapse appropriately
 //and highlight on hover
 function expandableCallback() {
-    toggleExpandable($(this))
+    console.log($(this).parent())
+    toggleExpandable($($(this).parent()))
 }
 
 function secondTabBarCallback() {
