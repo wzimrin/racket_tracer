@@ -741,7 +741,7 @@ $(document).ready(function () {
         for(var k = 0; k < bigBangTrace.children[0].children.length; k++) {
             var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[0].children[k], bigBangList, bigbangbar)
 
-            if(errored && bigBangTrace.children[0][k].result.type == error) {
+            if(errored && bigBangTrace.children[0].children[k].result.type == error) {
                 first = topBigBangTabLi
                 errorInBigBang = bigBangTabLi
                 messagebar.text("Your program generated an error")

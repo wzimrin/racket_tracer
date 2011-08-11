@@ -1,5 +1,9 @@
 #lang planet tracer/tracer
-(trace #f)
+
+;(trace-failed-checks)
+(trace-all)
+;(trace-explicit)
+
 (define (fib x)
   (if (< x 2)
       x
@@ -23,14 +27,8 @@
             (close-enough? (first x) (second x)))
           xs))
 
-(fib 10)
-
-(trace #t 
-       (close-enough? 3 3))
-
-(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
-
 (check-expect (fib 5) (+ (fib 4) (fib 3)))
+
 (check-expect (fib 4) (+ (fib 3) (fib 3)))
 (check-expect (fib 3) 1)
 
@@ -77,4 +75,8 @@
                    empty)))]))
 
 ;9
+(trace
+ (fib 10))
+(close-enough? 3 3)
+(all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
 (how-many A)
