@@ -56,51 +56,12 @@
               5 13 13 5
               line-pen)))
 
-(define (make-src-button foreground-color background)
-  (c (add-line (overlay/offset (circle circle-size "outline"
-                                       (make-pen foreground-color source-stroke-width
-                                                 "solid" "round" "round"))
-                               2 2
-                               background)
-               10 10 15 15
-               (make-pen foreground-color source-stroke-width
-                         "solid" "butt" "miter"))))
-
-(define (make-src-button2 txt fg-color bg style)
+(define (make-src-button txt fg-color bg style)
   (c (overlay (text/font txt 12 fg-color
                     #f style
                     'normal
                     'bold
                     #f) bg)))
-
-;trapezoid book
-(define (make-src-button3 fgc bgc bg)
-  (let* ([triangle (right-triangle (/ button-size 2.5) 
-                                   (/ button-size 8) 
-                                   "solid" fgc)]
-         [rect (rectangle (/ button-size 2.5) (/ button-size 2) "solid" fgc)]
-         [trap (above triangle rect (flip-vertical triangle))]
-         [book (beside trap (flip-horizontal trap))])
-    (c (overlay book bg))))
-
-;ellipse book
-(define (make-src-button4 fgc bgc bg)
-  (let* ([t-el (ellipse (/ button-size 2.5) (/ button-size 5) "solid" fgc)]
-         [b-el (ellipse (/ button-size 2.5) (/ button-size 5) "solid" bgc)]
-         [top-semi (crop 0 0 (image-width t-el) (/ (image-height t-el) 3) t-el)]
-         [bottom-semi (crop 0 0 (image-width b-el) (/ (image-height b-el) 3) b-el)]
-         [bottom-semi (overlay bottom-semi (rectangle (image-width bottom-semi)
-                                                      (image-height bottom-semi)
-                                                      "solid"
-                                                      fgc))]
-         [rect (rectangle (/ button-size 2.5) (/ button-size 2) "solid" fgc)]
-         [rect (add-line rect
-                         (image-width rect) 0
-                         (image-width rect) (image-height rect)
-                         bgc)]
-         [side (above top-semi rect bottom-semi)]
-         [book (beside side (flip-horizontal side))])
-    (c (overlay book bg))))
 
 (define (c img)
   (freeze 0 0 button-size button-size img))
@@ -127,42 +88,9 @@
 (define normal-failed-checkbox
   (make-failed-checkbox failed-check-color normal-foreground-color normal-background))
 
-;;Options for source buttons
-
-;lowercase d
-(define normal-src-button2
-  (make-src-button2 "d" normal-foreground-color normal-background 'symbol))
-
-(define normal-src-button3
-  (make-src-button2 "d" normal-foreground-color normal-background 'decorative))
-
-(define normal-src-button4
-  (make-src-button2 "d" normal-foreground-color normal-background 'modern))
-
-;lowercase delta
-(define normal-src-button5
-  (make-src-button2 "δ" normal-foreground-color normal-background 'symbol))
-
-;book with straight sides
-(define normal-src-button6
-  (make-src-button3 normal-foreground-color normal-background-color normal-background))
-
-;book with curved sides
-(define normal-src-button7
-  (make-src-button4 normal-foreground-color normal-background-color normal-background))
-
-;Magnifying glass
-(define normal-src-button8
-  (make-src-button normal-foreground-color normal-background))
-
-;Sets which source buttons are used in the tracer
-;To change bind normal-src-button to the button you want
-;And highlight-src-button to the same buttom with highlight-foreground-color and highlight-background-color
-(define normal-src-button normal-src-button5)
+(define normal-src-button (make-src-button "δ" normal-foreground-color normal-background 'symbol))
 (define highlight-src-button
-  (make-src-button2 "δ" highlight-foreground-color highlight-background 'symbol))
-  
-;;End of source buttons
+  (make-src-button "δ" highlight-foreground-color highlight-background 'symbol))
 
 (define highlight-correct-checkbox
   (make-correct-checkbox correct-check-color highlight-foreground-color highlight-background))
