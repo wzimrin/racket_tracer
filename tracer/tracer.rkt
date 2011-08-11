@@ -434,9 +434,15 @@
         (> actual low)))
  (test min max))
 
+(define max-size 50)
+
 ;returns the base64 encoding of the image as a png byte string
 (define (get-base64 img)
-  (base64-encode (convert img 'png-bytes)))
+  (let* ([width (image-width img)]
+         [height (image-height img)]
+         [max-image-dim (max width height)]
+         [scale-factor 1 #;(min (/ max-size max-image-dim) 1)])
+    (base64-encode (convert (scale scale-factor img) 'png-bytes))))
 
 ;returns the data-uri encoding of an image
 (define (uri-string img)

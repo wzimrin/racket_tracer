@@ -286,7 +286,7 @@ function makeCallTable(node, type) {
     return table
 }
 
-//Makes an expandedCall: delete button, function, formals, actuals and result
+//Makes an expandedCall: delete button, function, actuals and result
 //All in their appropriate expanded or unexpanded form
 function makeCall(traceNode, parent, type) {
     parent = $(parent)
@@ -446,7 +446,6 @@ function restorePageState(tabLi) {
 
 function switchTo(tab) {
     $(".toplevel").hide()
-    console.log(tab)
     tab.data("child").show()
     clearHighlight()
     restorePageState(tab) 
@@ -741,7 +740,7 @@ $(document).ready(function () {
         for(var k = 0; k < bigBangTrace.children[0].children.length; k++) {
             var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[0].children[k], bigBangList, bigbangbar)
 
-            if(errored && bigBangTrace.children[0][k].result.type == error) {
+            if(errored && bigBangTrace.children[0].children[k].result.type == error) {
                 first = topBigBangTabLi
                 errorInBigBang = bigBangTabLi
                 messagebar.text("Your program generated an error")
