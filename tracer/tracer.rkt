@@ -252,28 +252,28 @@
 
 ;traces a define
 (define-syntax (custom-define e)
-  (if (unbox trace?)
-      (syntax-case e (custom-lambda)
-        [(_ (fun-expr arg-expr ...) . bodies)
-         (begin 
-           (check-bodies #'bodies e 'define)
-           (quasisyntax/loc e
-             (define (fun-expr arg-expr ...)
-               #,(lambda-body (syntax/loc e
-                                (list arg-expr ...)) #'bodies
-                              #'fun-expr e #'fun-expr))))]
-        [(_ fun-expr (custom-lambda (arg-expr ...) . bodies))
-         (begin
-           (check-bodies #'bodies e 'define)
-           (syntax/loc e
-             (custom-define (fun-expr arg-expr ...) . bodies)))]
-        [(_ name value) #'(define name value)])
+  (syntax-case e ()
+    [(_ header . tail)
+     (check-bodies #'tail e 'define)
+     (if (unbox trace?)
       (syntax-case e ()
-        [(_ header . bodies)
-         (begin
-           (check-bodies #'bodies e 'define)
-           (syntax/loc e
-             (define header . bodies)))])))
+        [(_ (fun-expr arg-expr ...) . bodies)
+         (quasisyntax/loc e
+           (define (fun-expr arg-expr ...)
+             #,(lambda-body (syntax/loc e
+                              (list arg-expr ...))
+                            #'bodies
+                            #'fun-expr e #'fun-expr)))]
+        [(_ name value)
+         (syntax-case #'value (custom-lambda)
+           [(custom-lambda (arg-expr ...) . bodies)
+            (begin
+              (check-bodies #'bodies e 'lambda)
+              (syntax/loc e
+                (custom-define (name arg-expr ...) . bodies)))]
+           [_ #'(define name value)])])
+      (syntax/loc e
+        (define header . tail)))]))
 
 ;gets the leftmost element out of a nested list
 (define (function-sym datum)
