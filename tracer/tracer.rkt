@@ -105,6 +105,11 @@
                . bodies)
            #'(current-call new-current)))]))
 
+(define-for-syntax trace? (box #f))
+
+(define-syntax (trace-on e)
+  (set-box! trace? #t))
+
 ;the position (ala syntax-position) of the last use of #%app
 (define current-idx (make-parameter 0))
 ;the span of the last use of #%app

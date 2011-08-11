@@ -26,7 +26,7 @@
 (fib 10)
 
 (trace #t 
-(close-enough? 3 3))
+       (close-enough? 3 3))
 
 (all-close-enough? '((1 1) (2 2) (3 3) (4 4)))
 

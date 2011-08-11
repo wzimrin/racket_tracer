@@ -4,7 +4,7 @@
 "use strict";
 
 //-----------------------------------------------------------------------------
-//                              Global Variables
+//                              GLOBAL VARIABLES
 //-----------------------------------------------------------------------------
 
 var tabbar, cebar, messagebar, bigbangbar
@@ -361,14 +361,14 @@ function makeCall(traceNode, parent, type) {
     call.append(buttonTable)
     
     call.append(lowerDiv)
-    call.data({expanded: type == "check-expect" || type == "big-bang" || expand,
+    call.data({expanded: false,
             hidable: hidable,
             button: childrenButton,
             node: traceNode,
             childrenCreated: false,
             childRow: lowerRow})
-    if(type == "check-expect" || type == "big-bang")
-        updateCall(call, true)
+    if (type == "check-expect" || type == "big-bang")
+        toggleCall(call)
     return call
 }
 
@@ -376,10 +376,11 @@ function makeCall(traceNode, parent, type) {
 //                              VISIBILITY HELPERS 
 //-----------------------------------------------------------------------------
 
-//Makes a call display the appropriate amount of info
+//toggles whether a call is expanded
 //And adds the children if this was called from the ec button callback 
-function updateCall(html, createChildren) {
-    if(createChildren && !html.data("childrenCreated")) {
+function toggleCall(html) {
+    html.data("expanded",!html.data("expanded"))
+    if(html.data("expanded") && !html.data("childrenCreated")) {
         var traceNode = html.data("node")
         var childRow = html.data("childRow")
         for (var i = 0; i < traceNode.children.length; i++) {
@@ -569,8 +570,7 @@ function hasSourceCallback() {
 //makes the expand/collapse buttons work
 function ecButtonCallback() {
     var thisCall = $(this).parents(".call").first()
-    thisCall.data("expanded",!thisCall.data("expanded"))
-    updateCall(thisCall,true)
+    toggleCall(thisCall)
     return false;
 }
 
