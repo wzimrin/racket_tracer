@@ -1,4 +1,9 @@
 ***** Actually Important issues *****
+- reworking function and result clickability
+- comment custom-apply
+- move max-size to somewhere else in the file
+- icon vs. button naming
+
 * CS19 language
 ^ Test on CS19 programs
 ^ Test on other people
@@ -67,6 +72,16 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- js clear highlight comment (8/11)
+- to-draw vs. on-draw in world (8/11)
+- require racket/class and racket/gui/base in reader no longer needed (8/11)
+- comment type is false ln 355 (js) (8/11)
+- updateCall vs. toggleCall (8/11)
+- reader: danny's planet line to match packages (8/11)
+- get rid of old source buttons in button.rkt (8/11)
+- trace macro (8/11)
+- remove console.logs and alerts (8/11)
+- big bang with multiple big-bangs (8/11)
 - Catch exceptions so trace still shows up
 - Name of node from application of function that was an argument (a-func vs. my-add example)
 - Display of check expect traces (7/22)

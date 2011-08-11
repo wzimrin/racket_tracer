@@ -1,5 +1,6 @@
 #lang s-exp syntax/module-reader
-(planet tracer/tracer/tracer)
+#:language (lambda ()
+            `(planet ,(this-package-version-symbol tracer)))
 #:wrapper2
 (lambda (in rd stx?)
   (let*-values ([(offset) (+ (file-position in) 1)]
@@ -27,8 +28,7 @@
         (if stx? r (syntax->datum r))))))
 
 (require racket/port)
-(require racket/class)
-(require racket/gui/base)
+(require planet/version)
 
 
 (define (clone-port in)
@@ -40,3 +40,4 @@
   (close-output-port out1)
   (close-output-port out2)
   (values in1 in2))
+

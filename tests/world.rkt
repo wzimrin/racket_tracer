@@ -1,21 +1,24 @@
 #lang planet tracer/tracer
+
+(trace-all)
+
 (require [only-in racket curry])
 #|
 (require 2htdp/universe)
 (require htdp/image)
-|#
+
 
 (define MAX-SIZE 25)
 
-#;(define-struct world (num))
+(define-struct world (num))
 
-#;(define (tick w)
+(define (tick w)
  (make-world (add1 (world-num w))))
 
-#;(define (DRAW w)
+(define (DRAW w)
   (circle (world-num w) "solid" "blue"))
 
-#;(define (key w a-key)
+(define (key w a-key)
   (cond
     [(key=? a-key "up") (if (< (world-num w) MAX-SIZE)
                             (make-world (add1 (world-num w)))
@@ -23,7 +26,7 @@
     [(key=? a-key "down") (if (> (world-num w) 0)
                               (make-world (sub1 (world-num w)))
                               w)]))
-#;(define (stop w)
+(define (stop w)
   (< MAX-SIZE (world-num w)))
   
 #;(big-bang (make-world 1)
@@ -33,7 +36,7 @@
                      100
                      100]
             [stop-when stop])
-
+|#
 (define (make-circle x)
   (circle x "outline" "black"))
 ;(make-circle 4)
@@ -43,7 +46,7 @@
                            lst)) 0.1]
           [stop-when (lambda (lst)
                        (= (first lst) 100))]
-          [to-draw (compose (curry apply overlay)
+          [on-draw (compose (curry apply overlay)
                             reverse
                             (curry map
                                    make-circle))
