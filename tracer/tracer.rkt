@@ -34,7 +34,7 @@
          net/base64
          file/convertible
          mzlib/pconvert ;print-convert?
-         (planet dherman/json:3:0))
+         "json.rkt")
 
 (provide require only-in except-in prefix-in combine-in
          provide all-defined-out all-from-out 
