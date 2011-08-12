@@ -121,7 +121,7 @@ function initializeCodePane() {
 //Clears the highlight from buttons or function names in the trace,
 //and the selected/highlighted code on the codePane
 function clearHighlight() {
-    swapIcon($(".lastHighlighted").children("img")) 
+    swapImage($(".lastHighlighted").children("img")) 
     $(".lastHighlighted").newRemoveClass("lastHighlighted")
     $(".highlight").children().unwrap()
 }
@@ -134,7 +134,7 @@ function highlightSpan(el,toHighlight) {
     var span = toHighlight.data("span")
 
     toHighlight.newAddClass("lastHighlighted")
-    swapIcon(toHighlight.children("img"))
+    swapImage(toHighlight.children("img"))
 
     var hi = element("span")
     hi.newAddClass("highlight")
@@ -205,14 +205,9 @@ function showSpan() {
 //Choose to display the full or short version of an expandable argument
 function updateExpandable(html) {
     if (html.data("expanded"))
-    {
-        console.log("switching to expanded")
-        html.text(html.data("full")) }
+        html.text(html.data("full")) 
     else
-    {
         html.text(html.data("short"))
-        console.log("switching to short")
-    }
     var expandDiv = html.data("expandDiv").newRemoveClass("expandable").newAddClass("expandable")
     if(html.data("expanded"))
         expandDiv.html("&rArr;&lArr;")
@@ -263,9 +258,30 @@ function makeCell(formShort, formFull, cssClass) {
 
 //Formats function name, actuals and result into table form
 function makeCallTable(node, type) {
-    var table = element("table")
-    table.newAddClass("callTable")
+    var table = element("table").newAddClass("callTable")
     var row = element("tr")
+   
+    var buttonTD = element("td").newAddClass("buttonTD")
+    if (node.ceIdx) {
+        var ceButton = element("div")
+        if (node.ceCorrect) 
+            addImages(ceButton, correctCEImageSrc, correctCEImageSelSrc)
+        else 
+            addImages(ceButton, failedCEImageSrc, failedCEImageSelSrc)
+        ceButton.newAddClass(["button", "to-src-button","hasSource"])
+        ceButton.data({idx: node.ceIdx,
+                span: node.ceSpan})
+        buttonTD.append(ceButton)
+    }
+    if (node.children.length!=0 && type != "check-expect" && type != "big-bang") {
+        var childrenButton = element("div")
+        addImages(childrenButton, sideImageSrc, sideImageSrc)
+        childrenButton.newAddClass(["button", "childrenButton"])
+        buttonTD.append(childrenButton)
+    }
+    if (buttonTD.children().length != 0) //one or more buttons was added
+        row.append(buttonTD) 
+        
 
     //Function name
     var nameTD = element("td")
@@ -273,10 +289,12 @@ function makeCallTable(node, type) {
         nameTD.text(node.prefix+": "+node.name)
     else
         nameTD.text(node.name)
+    
     nameTD.newAddClass(["name", "cell"])
-    nameTD.data({idx: node.idx, span: node.span})
-    if(!(node.idx == 0 && node.span == 0))
+    if(!(node.srcIdx == 0 && node.srcSpan == 0)) {
         nameTD.newAddClass("hasSource")
+        nameTD.data({idx: node.srcIdx, span: node.srcSpan})
+    }
     row.append(nameTD)
 
     if (type != "check-expect") {
@@ -296,13 +314,16 @@ function makeCallTable(node, type) {
         //Result
         var resultTD = makeCell(node.resultShort,node.result,"result")
         row.append(resultTD)
+        resultTD.data({idx: node.idx, span: node.span})
+        if(!(node.idx == 0 && node.span == 0))
+            resultTD.newAddClass("hasSource")
     }
 
     table.append(row)
     return table
 }
 
-//Makes an expandedCall: delete button, function, formals, actuals and result
+//Makes an expandedCall: delete button, function, actuals and result
 //All in their appropriate expanded or unexpanded form
 function makeCall(traceNode, parent, type) {
     parent = $(parent)
@@ -313,21 +334,13 @@ function makeCall(traceNode, parent, type) {
     else
         call.newAddClass("background1")
 
-    var ceButton = element("td")
     if (type == "check-expect") 
         call.newAddClass("failed-ce")
     else if (traceNode.ceIdx) {
-        if (traceNode.ceCorrect) {
+        if (traceNode.ceCorrect) 
             call.newAddClass("passed-ce")
-            addIcon(ceButton, correctCEImageSrc, correctCEImageSelSrc)
-        }
-        else {
+        else 
             call.newAddClass("failed-ce")
-            addIcon(ceButton, failedCEImageSrc, failedCEImageSelSrc)
-        }
-        ceButton.newAddClass(["button", "to-src-button","hasSource"])
-        ceButton.data({idx: traceNode.ceIdx,
-                span: traceNode.ceSpan})
     }
     else if (type == "big-bang")
         call.newAddClass("big-bang")
@@ -341,20 +354,6 @@ function makeCall(traceNode, parent, type) {
     }
     
     var callTable = makeCallTable(traceNode, type)
-
-    var childrenButton = element("td")
-    addIcon(childrenButton, sideImageSrc, sideImageSrc)
-    childrenButton.newAddClass(["button", "ec-button"])
-
-    var bodyButton = element("td")
-    addIcon(bodyButton, toDefImageSrc, toDefImageSelSrc)
-    bodyButton.newAddClass(["to-src-button", "button"])
-    if(!(traceNode.srcIdx == 0 && traceNode.srcSpan == 0)) {
-        bodyButton.newAddClass("hasSource")
-        bodyButton.data({idx:traceNode.srcIdx,
-                     span:traceNode.srcSpan})
-    }
-    
     var hidable 
     
     var lowerDiv = element("div")
@@ -367,19 +366,10 @@ function makeCall(traceNode, parent, type) {
     hidable.hide()
     call.append(callTable)
 
-    var buttonTable = element("table").newAddClass("buttonTable")
-    if (traceNode.children.length!=0 && type != "check-expect" && type != "big-bang")
-        buttonTable.append(childrenButton)
-    if(bodyButton.hasClass("hasSource")) 
-        buttonTable.append(bodyButton)
-    if (traceNode.ceIdx)
-        buttonTable.append(ceButton)
-    call.append(buttonTable)
-    
     call.append(lowerDiv)
     call.data({expanded: false,
             hidable: hidable,
-            button: childrenButton,
+            button: callTable.find(".childrenButton"),
             node: traceNode,
             childrenCreated: false,
             childRow: lowerRow})
@@ -474,8 +464,6 @@ function refocusScreen()
     //Check the alignment of each visible call
     visibleCalls.each(function(index) {
             var callTable = $(this).children(".callTable").first()
-            var buttonTable = $(this).children(".buttonTable")
-            //var bodyButton = $(this).children(".body-button").first()
             var callTableMarL = toInt(callTable.css("marginLeft"))
             var fromLeft = $(this).position().left
                 + toInt($(this).css("marginLeft"))
@@ -492,7 +480,6 @@ function refocusScreen()
                     var shiftBy = Math.min($(this).width()-callTable.width(), 
                         callTableMarL-fromLeft)
                     callTable.css("marginLeft", shiftBy)
-                    buttonTable.css("marginLeft", shiftBy)
                 }
                 //This call is to the right of the left edge of the screen
                 //And not aligned with its left edge
@@ -500,20 +487,19 @@ function refocusScreen()
                     //Want a minimum margin of 3
                     var shiftBy = Math.max(3, callTableMarL-fromLeft)
                     callTable.css("marginLeft", shiftBy)
-                    buttonTable.css("marginLeft", shiftBy)
                 }
             }
         })
 }
 
-function addIcon(container, src, srcSel ) {
-    var icon = element("img")
-    icon.attr("src", src)
-    icon.data("otherSrc", srcSel)
-    container.append(icon)
+function addImages(container, src, srcSel ) {
+    var image = element("img")
+    image.attr("src", src)
+    image.data("otherSrc", srcSel)
+    container.append(image)
 }
 
-function swapIcon(img)
+function swapImage(img)
 {
     var src = img.attr("src")
     img.attr("src", img.data("otherSrc"))
@@ -577,7 +563,7 @@ function hasSourceCallback() {
 }
 
 //makes the expand/collapse buttons work
-function ecButtonCallback() {
+function childrenButtonCallback() {
     var thisCall = $(this).parents(".call").first()
     toggleCall(thisCall)
     return false;
@@ -586,8 +572,8 @@ function ecButtonCallback() {
 //makes the expandables expand/collapse appropriately
 //and highlight on hover
 function expandableCallback() {
-    console.log($(this).parent())
     toggleExpandable($($(this).parent()))
+    return false;
 }
 
 function secondTabBarCallback() {
@@ -666,7 +652,7 @@ function setContentSize() {
 
 var callbacks = {
     "hasSource" : hasSourceCallback,
-    "ec-button" : ecButtonCallback,
+    "childrenButton" : childrenButtonCallback,
     "expandable" : expandableCallback
 };
 

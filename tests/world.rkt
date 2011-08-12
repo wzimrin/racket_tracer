@@ -43,7 +43,7 @@
 (big-bang '(20 10)
           [on-tick (lambda (lst)
                      (cons (+ 10 (first lst))
-                           lst)) 0.2]
+                           lst)) 0.1]
           [stop-when (lambda (lst)
                        (= (first lst) 100))]
           [on-draw (compose (curry apply overlay)

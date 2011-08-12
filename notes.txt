@@ -7,10 +7,8 @@
 * CS19 language
 ^ Test on CS19 programs
 ^ Test on other people
-* World framework
 ^ Planet package with latest version
 ^ Comment javascript
-- Definition button consistent across platforms
 - Better documentation online / tutorials (?)
 * Tests for racket 
 
@@ -72,6 +70,7 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+* World framework (8/11)
 - js clear highlight comment (8/11)
 - to-draw vs. on-draw in world (8/11)
 - require racket/class and racket/gui/base in reader no longer needed (8/11)

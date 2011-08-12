@@ -211,7 +211,7 @@
                   (set-node-src-span! n span))]
           [(node? (current-app-call))
            (add-kid (current-app-call) n)]
-          [#t (add-kid (current-call) n)])
+          [else (add-kid (current-call) n)])
         (when (node? (current-app-call))
           (set-node-used?! (current-app-call) #t))
         (parameterize ([current-call n])
@@ -546,9 +546,15 @@
         (> actual low)))
  (test min max))
 
+(define max-size 50)
+
 ;returns the base64 encoding of the image as a png byte string
 (define (get-base64 img)
-  (base64-encode (convert img 'png-bytes)))
+  (let* ([width (image-width img)]
+         [height (image-height img)]
+         [max-image-dim (max width height)]
+         [scale-factor 1 #;(min (/ max-size max-image-dim) 1)])
+    (base64-encode (convert (scale scale-factor img) 'png-bytes))))
 
 ;returns the data-uri encoding of an image
 (define (uri-string img)
@@ -568,7 +574,7 @@
     [(exn-wrapper? x)
      (hasheq 'type "error"
              'message (exn-wrapper-message x))]
-    [#t
+    [else
      (let* ([p (open-output-string "out")])
        ;set columns and depth
        (parameterize ([pretty-print-columns width]
