@@ -1,3 +1,7 @@
+#|
+Written by dherman.  Copied to here to avoid being forced to require an old version of cce
+that throws errors on install.
+|#
 #lang scheme/base
 (require (only-in scheme/base [read scheme:read] [write scheme:write]))
 (provide read-json write-json jsexpr->json json->jsexpr jsexpr?)
