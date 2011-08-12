@@ -300,7 +300,7 @@ div#codePaneWrapper {
 div#codePane {
     position: relative; /* makes scrolling work */
     width: 100%;
-    background: black;
+    background: #c3c9cc;
     height: 100%;
     color: white;
     white-space: pre;
@@ -338,27 +338,33 @@ span.error {
 }
 
 span.comment {
-    color: #f99428;
+    /*color: #f99428;*/
+    color: #c2741f;
 }
 
 span.sexp-comment {
-    color: #f99428;
+    /*color: #f99428;*/
+    color: #c2741f;
 }
 
 span.constant {
-    color: #47D600;
+    /*color: #47D600;*/
+    color: #298026;
 }
 
 span.string {
-    color: #33ae33;
+    /*color: #33ae33;*/
+    color: #298026;
 }
 
 span.parenthesis {
-    color: white;
+    /*color: white;*/
+    color: #843c24;
 }
 
 span.symbol {
-    color: #47a1c2;
+    /*color: #47a1c2;*/
+    color: #262680;
 }
 
 /* -------------------------------------------------------------------*/
