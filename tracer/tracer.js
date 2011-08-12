@@ -323,7 +323,7 @@ function makeCallTable(node, type) {
     return table
 }
 
-//Makes an expandedCall: delete button, function, formals, actuals and result
+//Makes an expandedCall: delete button, function, actuals and result
 //All in their appropriate expanded or unexpanded form
 function makeCall(traceNode, parent, type) {
     parent = $(parent)
