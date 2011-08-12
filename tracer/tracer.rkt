@@ -210,7 +210,7 @@
                   (set-node-src-span! n span))]
           [(node? (current-app-call))
            (add-kid (current-app-call) n)]
-          [else (add-kid (current-call) n)])
+          [#t (add-kid (current-call) n)])
         (when (node? (current-app-call))
           (set-node-used?! (current-app-call) #t))
         (parameterize ([current-call n])
@@ -545,15 +545,9 @@
         (> actual low)))
  (test min max))
 
-(define max-size 50)
-
 ;returns the base64 encoding of the image as a png byte string
 (define (get-base64 img)
-  (let* ([width (image-width img)]
-         [height (image-height img)]
-         [max-image-dim (max width height)]
-         [scale-factor 1 #;(min (/ max-size max-image-dim) 1)])
-    (base64-encode (convert (scale scale-factor img) 'png-bytes))))
+  (base64-encode (convert img 'png-bytes)))
 
 ;returns the data-uri encoding of an image
 (define (uri-string img)
@@ -582,9 +576,13 @@
          (if (and (procedure? x) (object-name x))
              (display (object-name x) p)            
              (pretty-write (print-convert x) p)))
+       (define output (get-output-string p))
        ;return what was printed
        (hasheq 'type "value"
-               'value (get-output-string p)))]))
+               'value (if (and depth
+                               (< 7 (length (regexp-match* "\n" output))))
+                          (string-append (first (regexp-match* #px"\\S*\\s" output)) "...)")
+                          output)))]))
 
 ;converts a single node to a jsexpr
 (define (node->json t)

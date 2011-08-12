@@ -79,10 +79,6 @@ div.error > table > tbody > tr > td.result {
     vertical-align: top
 }
 
-.childTableParent {
-    overflow:hidden;
-}
-
 /* -------------------------------------------------------------------*/
 /*                    CALL BACKGROUND AND ARG COLORING                */
 /* -------------------------------------------------------------------*/
