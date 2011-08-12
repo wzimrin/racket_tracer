@@ -290,7 +290,7 @@ ul.tabsFormatting > li.check-expect-top-level {
 
 div#codePaneWrapper {
     float: right;
-    background: black;
+    background: #c3c9cc;
 }
 
 div#codePane {
