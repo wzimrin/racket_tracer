@@ -1,8 +1,6 @@
 ***** Actually Important issues *****
-- reworking function and result clickability
 - comment custom-apply
 - move max-size to somewhere else in the file
-- icon vs. button naming
 
 * CS19 language
 ^ Test on CS19 programs
@@ -20,9 +18,6 @@
 - Some option to trace all and only display them sometimes
 - Trace compression
 - Let error
-- New button layout
-
-
 
 ***** CURRENT ISSUES*****
 - Bugs from emails
@@ -70,6 +65,9 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- New button layout (8/12)
+- icon vs. button naming (8/12)
+- reworking function and result clickability (8/12)
 * World framework (8/11)
 - js clear highlight comment (8/11)
 - to-draw vs. on-draw in world (8/11)

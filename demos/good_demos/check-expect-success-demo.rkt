@@ -1,5 +1,7 @@
 #lang planet tracer/tracer
 
+(trace-all)
+
 (check-expect (fib 3) 2)
 (check-expect (fib 4) (+ (fib 3) (fib 2)))
 
