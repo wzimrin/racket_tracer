@@ -1,23 +1,16 @@
 ***** Actually Important issues *****
-- comment custom-apply
-- move max-size to somewhere else in the file
 
 * CS19 language
 ^ Test on CS19 programs
 ^ Test on other people
 ^ Planet package with latest version
-^ Comment javascript
-- Better documentation online / tutorials (?)
 * Tests for racket 
 
 * Urgent, important, hard
 ^ urgent, important, easy
 
 - Integration with Dr. Racket (guillaume)
-- Compression of expressions in function position
-- Some option to trace all and only display them sometimes
 - Trace compression
-- Let error
 
 ***** CURRENT ISSUES*****
 - Bugs from emails
@@ -65,6 +58,12 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- Let error (8/12)
+- Compression of expressions in function position (8/12)
+- Better documentation online / tutorials (?) (8/12)
+- comment custom-apply (8/12)
+- move max-size to somewhere else in the file (8/12)
+^ Comment javascript (8/12)
 - New button layout (8/12)
 - icon vs. button naming (8/12)
 - reworking function and result clickability (8/12)

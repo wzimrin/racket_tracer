@@ -361,6 +361,7 @@ function makeCall(traceNode, parent, type) {
 
     var expand = false
     if(traceNode.result.type == "error") {
+        console.log("result type was error, setting expand to true")
         call.newAddClass("error")
         expand = true
     }
@@ -376,14 +377,14 @@ function makeCall(traceNode, parent, type) {
     
     call.append(callTable)
     call.append(lowerDiv)
-    call.data({expanded: false,
+    call.data({expanded: false, 
             hidable: lowerDiv, 
             button: callTable.find(".childrenButton"),
             node: traceNode,
             childrenCreated: false,
             childRow: lowerRow})
    //If it's a check-expect or big-bang, want it to start out expanded 
-    if (type == "check-expect" || type == "big-bang")
+    if (type == "check-expect" || type == "big-bang" || expand)
         toggleCall(call)
     return call
 }

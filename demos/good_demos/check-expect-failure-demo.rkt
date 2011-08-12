@@ -1,6 +1,5 @@
 #lang planet tracer/tracer
-
-
+(trace-all)
 (define (bad-fib x)
   (if (<= x 1)
       x

@@ -1,5 +1,6 @@
 #lang scribble/manual
 @(require scribble/eval)
+@(require "screenshots.rkt")
 @(require (for-label racket))
 
 @title{Tracer}
@@ -8,45 +9,102 @@ The Tracer provides an interface for exploring the execution of a program. It is
 
 @section{Getting Started}
 
-To use the Tracer, set your language to @litchar{#lang planet tracer/tracer}. When you run your code, your preferred browser (as selected in Dr Racket under Edit, Preferences, Browser) will open up with the trace. 
+To use the Tracer, set your language to @litchar{#lang planet tracer/tracer}. By default, nothing will be traced. To trace your code, insert one of the following expressions as the first expression in your file after the hash lang line: @(secref "trace-all"), @(secref "trace-failed-checks"), or @(secref "trace-explicit"). After adding one of these, when you run your code, your preferred browser (as selected in Dr Racket under Edit, Preferences, Browser) will open up with the trace.
+
+@(subsection @racket[(trace-failed-checks)] #:tag "trace-failed-checks")
+
+Adding @racket[(trace-failed-checks)] will trace only failing checks, including failed instances of @racket[check-expect], @racket[check-within], @racket[check-error], @racket[check-member-of], and @racket[check-range]. 
+
+@(subsection @racket[(trace-all)] #:tag "trace-all")
+
+Adding @racket[(trace-all)] will trace all top level expressions and failed checks.
+
+@(subsection @racket[(trace-explicit)] #:tag "trace-explicit")
+
+Adding @racket[(trace-explicit)] will trace failing checks and any expression wrapped in @racket[(trace ...)]. 
 
 @section{Understanding The Display}
 
-@subsection{The Tab Bar}
-The tab bar along the top displays the top level function calls. The body of the page shows the trace for a single top level function call. 
-
-@subsection{The Trace}
-
-Each box in the tracer corresponds to a call of a user-defined function.  A call is a child of another call if the child call appeared within the body of the parent function.
-
-Consider the code below:
+Running the following code:
 
 @codeblock|{
 #lang planet tracer/tracer
-(define (alpha a) (+ a a))
-(define (beta b) (* b 2))
-(define (gamma c) (+ (alpha c) (beta c)))
-(define (delta d) (+ (alpha (beta d))))
-(gamma 3)
-(delta 3)}|
+(trace-all)
+(define (fib n)
+  (if (<= n 1)
+      n
+      (+ (fib (- n 1))
+         (fib (- n 2)))))
+(define (fib-iterative n)
+  (local [(define (iter a b i)
+            (if (= i n)
+                a
+                (iter b (+ a b) (add1 i))))]
+    (iter 0 1 0)))
+(fib 5)
+(fib-iterative 5)}|
 
-The trace of this code would generate two top level calls: @racket[gamma] and @racket[delta]. Both of this calls would have alpha and beta as children at the same level. 
+would initially load the trace shown below.
+
+@initTracer
+
+To view the trace of @racket[(fib-iterative 5)] instead of the trace of @racket[(fib 5)], click on fib-iterative in the tab bar along the top.
+
+@clickIterative
+
+The tab bar along the top will display each of the top level function calls, whereas the body of the page shows the trace for a single top level function call. To see more detail about a function, including the subcalls that it made, click on the arrowhead to the left of the function name. 
+
+@clickChildrenButton
+
+Each box in the tracer corresponds to a call of a user-defined function. A call is a child of another call if the child call appeared within the body of the parent function. The top portion of a call shows its function name and the arguments passed to it.  Clicking on the function name will highlight the definition of that function in the code.
+
+@clickIter
+
+Clicking the function name again will close the code pane.
+
+@clickIterAgain
+
+If you want to see where a function was called, rather than it's definition, click on the result. 
+
+@clickResult
+
+You can also close the code pane by double clicking on it, or by clicking on the button along the top of the code pane.
+
+@clickCodePaneButton
 
 Once the trace is too large to display on the screen, you can move the trace by clicking and dragging, or by using the scroll bars. 
 
-@subsection{A Call}
-
-The top portion of a call shows its function name and the arguments passed to it.  Clicking on the function name will highlight the source of the function call in the code.  Underneath the call, there are up to three buttons.  The magnifying glass button highlights the function definition.  The up or down arrowhead button shows or hides the children of the call.  The checkbox button relates to check expects, and is discussed in @(secref "check-expect").
-
-@subsection{The Code}
-
-The right side of the display shows the source code of the file that was traced. Click anywhere along the bar above the code or on the code itself to expand or shrink the code. Clicking on a function name or the magnifying glass automatically expands the code pane. Clicking again on the same function name will shrink the code pane. 
+@movingTrace
 
 @(subsection "Check Expects" #:tag "check-expect")
 
-If a call in the trace corresponds to a check-expect (the function and the arguments passed to the function are both the same), the call is colored.  If the check-expect passed, the call is green, while if the check-expect failed, the call is red.  The checkbox button appears as well, which will highlight the check-expect that corresponds to the call.
+Note: this section shows traces of various pieces of code, not only the code explictly listed above.
 
-If there are any failed check-expects, a new check-expect tab appears in the tab bar.  Clicking on this tab shows a menu on the left with the failed check-expects.  Clicking on a check-expect brings up the trace of the check-expect, letting you look at how the actual value and the expected value were computed.
+If a call in the trace corresponds to a @racket[check-expect], the call is colored red if it failed. If the call is colored green if it passed. 
+
+@passedCE
+
+The checkbox button appears as well, which will highlight the check-expect that corresponds to the call.
+
+@passedCESource
+
+If there are any failed check-expects, a new check-expect tab appears in the tab bar.  Clicking on the check-expect tab shows a second tab bar with the failed check-expects.  The trace of the check-expect shows how the tested value and the expected value were computed.
+
+@failedCE
+
+@section{Big Bangs}
+
+Tracing a @racket[big-bang] will add a second tab bar with a timeline of all of the calls from the @racket[big-bang].
+
+@bigBang
+
+If the @racket[big-bang] includes a @racket[to-draw] function, the result of @racket[to-draw] will replace its name in the second tab bar.
+
+@section{Error Tracing}
+
+If the traced code throws an error, the trace up to that point will load. Clicking on the red bar along the top will bring you back to the call where the error occurred. 
+
+@error
 
 @section{Compatibility}
 Suggested browsers: Firefox, Chrome, or Safari.  Other browsers may work, but we don't test them. @litchar{#lang planet tracer/tracer} currently supports images generated in the code or embedded in the code.
