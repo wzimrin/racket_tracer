@@ -567,10 +567,6 @@ function dragHandler(event) {
         $(".dragging").newRemoveClass("dragging")
         return false
     }
-    trace.unbind("mousedown",dragHandler)
-    target.mousedown()
-    target.mouseup()
-    trace.mousedown(dragHandler)
     body.mousemove(moveHandler)
     body.mouseup(endHandler)
     body.mouseleave(endHandler)
@@ -856,6 +852,6 @@ $(document).ready(function () {
     //Bind handlers for window resize, scroll in the tracer, and click and drag in the trace
     $(window).resize(setContentSize)
     traceWrapper.scroll(refocusScreen)
-    trace.mousedown(dragHandler)
+    traceWrapper.mousedown(dragHandler)
 })
 

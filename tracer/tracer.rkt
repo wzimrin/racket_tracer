@@ -14,7 +14,6 @@
                             first last cons? take make-list]]
          test-engine/racket-tests
          syntax-color/scheme-lexer
-         ;racket/pretty
          [only-in net/sendurl
                   send-url/contents]
          [only-in planet/resolver
@@ -70,17 +69,20 @@
          trace-failed-checks
          trace-explicit)
 
-(define max-size 100) ;Maximum size in pixels of an image
-
 ;----------------------------------------------------------------
 ;                     cs019 lang definitions
 ;----------------------------------------------------------------
 
+;non-tracing module-begin
 (define-syntax (top-level body-exprs)
   (syntax-case body-exprs ()
     [(_ bodies ...)
      #'(#%module-begin bodies ... (run-tests) (display-results))]))
 
+;takes a syntax object that is a list of body-expressions, the original syntax, 
+;and the name of the original function.  checks to see if there if there is only
+;one body expression, and raises an appropriate exception if there isn't precisely
+;one expression
 (define-for-syntax (check-bodies bodies e name)
   (let ([body-stxs (syntax-e bodies)])
     (cond 
@@ -97,6 +99,8 @@
         e)]
       [else (void)])))
 
+;defines the macro name to be orig-name, but with precisely two expressions
+;(only one body)
 (define-syntax-rule (no-begin-redef name orig-name)
   (define-syntax (name e)
     (syntax-case e ()
@@ -123,8 +127,13 @@
 (define (create-node name func actual idx span src-idx src-span)
   (node name "" func 'no-result actual empty idx span src-idx src-span #f #f #f))
 
+;the maximum dimension of the images that have been put in the title field of a node
 (define max-title-img-size (box -1))
 
+;the maximum size a title image should appear as in the tracer
+(define max-size 100)
+
+;sets n's title to be v.  Also sets node-has-title and updates max-title-img-size if v is an image
 (define (add-title n v)
   (set-node-title! n v)
   (set-node-has-title! n #t)
@@ -210,33 +219,50 @@
 (define (add-to-ce-hash key idx span success)
   (hash-set! ce-hash key (list idx span success))) 
 
-(define (lambda-body-fun args body name fun idx span)
-  (if (current-call)
-      (let* ([app-call? (eq? fun (current-fun))]
-             [n (if app-call?
-                    (current-app-call)
-                    (create-node name fun args
-                                 0 0
-                                 idx
-                                 span))])
-        (cond
-          [app-call?
-           (begin (set-node-src-idx! n idx)
-                  (set-node-src-span! n span))]
-          [(node? (current-app-call))
-           (add-kid (current-app-call) n)]
-          [#t (add-kid (current-call) n)])
-        (when (node? (current-app-call))
-          (set-node-used?! (current-app-call) #t))
-        (parameterize ([current-call n])
-          (let ([result (with-handlers ([identity exn-wrapper])
-                          (body))])
-            (set-node-result! n result)
-            (if (exn-wrapper? result)
-                (error "Error")
-                result))))
-      (body)))
+(define-syntax (tracer-body e)
+  (syntax-case e ()
+    [(_ ([name value] ...
+         [node make-node]
+         [result fun . extra])
+        body ...)
+     #`(if (current-call)
+           (let* ([name value] ...
+                  [node make-node]
+                  [result (parameterize
+                              #,(if (empty? (syntax-e #'extra))
+                                    #'([current-call node])
+                                    #'extra)
+                            (with-handlers ([identity exn-wrapper])
+                              fun))])
+             body ...
+             (if (exn-wrapper? result)
+                 (error "Error")
+                 result))
+           fun)]))
 
+;the function that lambda-body compiles down to
+;takes a list of arguments, a thunk containing the body of the function, the name of the function,
+;the function itself, the index of the definition, and the span of the definition
+(define (lambda-body-fun args body name fun idx span)
+  (tracer-body
+   ([app-call? (eq? fun (current-fun))]
+    [n (if app-call?
+           (current-app-call)
+           (create-node name fun args
+                        0 0
+                        idx
+                        span))]
+    [result (body)])
+   (cond
+     [app-call?
+      (begin (set-node-src-idx! n idx)
+             (set-node-src-span! n span))]
+     [(node? (current-app-call))
+      (add-kid (current-app-call) n)]
+     [else (add-kid (current-call) n)])
+   (when (node? (current-app-call))
+     (set-node-used?! (current-app-call) #t))
+   (set-node-result! n result)))
 ;generates the interior of an annotated function definition
 ;takes a syntax object of a list of arguments, a syntax object for the body,
 ;a syntax object that is the display name of the function, the original syntax object
@@ -256,12 +282,14 @@
        (check-bodies #'bodies e 'lambda)
        (if (unbox trace?)
            (quasisyntax/loc e
-             (letrec ([temp (lambda args
-                              #,(lambda-body (syntax/loc e
-                                               (list . args))
-                                             #'bodies
-                                             #'lambda e #'temp))])
-               (procedure-rename temp 'lambda)))
+             (letrec ([temp (procedure-rename
+                             (lambda args
+                               #,(lambda-body (syntax/loc e
+                                                (list . args))
+                                              #'bodies
+                                              #'lambda e #'temp))
+                             'lambda)])
+               temp))
            (syntax/loc e
              (lambda args . bodies))))]))
 
@@ -296,22 +324,25 @@
       (function-sym (first datum))
       datum))
 
+;the function that apply-recorder compiles down to
+;takes the function, a list of arguments, and the index and span of the apply
 (define (custom-apply fun args name idx span)
-  (if (current-call)
-      (let* ([n (create-node (function-sym name) fun args
-                             idx span 0 0)]
-             [result (with-handlers ([identity exn-wrapper])
-                       (parameterize ([current-fun fun]
-                                      [current-app-call n])
-                         (apply fun args)))])
-        (when (or (node-used? n)
-                  (exn-wrapper? result))
-          (set-node-result! n result)
-          (add-kid (current-call) n))
-        (if (exn-wrapper? result)
-            (error "Error")
-            result))
-      (apply fun args)))
+  (tracer-body
+   ([n (if (cons? (syntax-e name))
+           (create-node (or (object-name fun)
+                            'lambda)
+                        fun args idx span
+                        (syntax-position name)
+                        (syntax-span name))
+           (create-node (syntax->datum name) fun args
+                        idx span 0 0))]
+    [result (apply fun args)
+            [current-fun fun]
+            [current-app-call n]])
+   (when (or (node-used? n)
+             (exn-wrapper? result))
+     (set-node-result! n result)
+     (add-kid (current-call) n))))
 
 ;takes a syntax object that will be bound at runtime to a the evaluated form of the function,
 ;a syntax object that will be bound at runtime to an evaluated list of the arguments to the function
@@ -323,7 +354,7 @@
      (with-syntax ([idx (syntax-position #'orig)]
                    [span (syntax-span #'orig)])
        (syntax/loc #'orig
-         (custom-apply fun args 'fun-expr idx span)))]))
+         (custom-apply fun args #'fun-expr idx span)))]))
 
 ;records all function calls we care about - redefinition of #%app
 (define-syntax (app-recorder e)
@@ -346,6 +377,20 @@
                 (make-list (- count name-count -1)
                            (last names))))))
 
+;takes the name of the handler, the function that will be used for the handler,
+;the index and span of the handler, whether the node created should have a title field,
+;and the current main big-bang node
+(define (make-handler-tracer name fun idx span title? current-big-bang-node)
+  (lambda args
+    (tracer-body
+     ([node (create-node name #f args
+                         idx span 0 0)]
+      [result (apply fun args)])
+     (set-node-result! node result)
+     (when title?
+       (add-title node result))
+     (add-kid current-big-bang-node node))))
+
 ;records a big-bang call - it wraps each passed in function in its own node
 (define-syntax (big-bang-recorder e)
   (syntax-case e ()
@@ -358,33 +403,21 @@
                             #,(syntax-position e)
                             #,(syntax-span e)
                             0 0))
-             (add-kid top-big-bang-node current-big-bang-node)
+             (when (current-call)
+               (add-kid top-big-bang-node current-big-bang-node))
              (universe:big-bang
               world
               #,@(map (lambda (handler)
                         (syntax-case handler ()
                           [(n f . o)
                            (quasisyntax/loc handler
-                             [n (let ([f-value f])
-                                    (lambda args
-                                      (let* ([node
-                                              (create-node 'n #f args
-                                                           #,(syntax-position handler)
-                                                           #,(syntax-span handler)
-                                                           0 0)]
-                                             [result
-                                              (parameterize ([current-call node])
-                                                (with-handlers ([identity exn-wrapper])
-                                                  (apply f-value args)))])
-                                        (set-node-result! node result)
-                                        #,@(if (member (syntax->datum #'n)
-                                                       '(to-draw on-draw))
-                                               #'((add-title node result))
-                                               #'())
-                                        (add-kid current-big-bang-node node)
-                                        (if (exn-wrapper? result)
-                                            (error "Error")
-                                            result))))
+                             [n (make-handler-tracer
+                                 'n f 
+                                 #,(syntax-position handler)
+                                 #,(syntax-span handler)
+                                 '#,(member (syntax->datum #'n)
+                                            '(to-draw on-draw))
+                                 current-big-bang-node)
                                 . o])]))
                       (syntax-e #'handlers)))))
          (syntax/loc e 
@@ -563,6 +596,7 @@
 (define (get-base64 img)
   (base64-encode (convert img 'png-bytes)))
 
+;like uri-string, but scales the image based on max-size and max-title-img-size
 (define (scaled-uri-string img)
   (let* ([scale-factor
           (if (<= (unbox max-title-img-size)
@@ -605,7 +639,7 @@
        (hasheq 'type "value"
                'value (if (and depth
                                (< 7 (length (regexp-match* "\n" output))))
-                          (string-append (first (regexp-match* #px"\\S*\\s" output)) "...)")
+                          (string-append (first (regexp-split #px"\\s+" output)) "...)")
                           output)))]))
 
 ;converts a single node to a jsexpr
