@@ -70,6 +70,8 @@
          trace-failed-checks
          trace-explicit)
 
+(define max-size 100) ;Maximum size in pixels of an image
+
 ;----------------------------------------------------------------
 ;                     cs019 lang definitions
 ;----------------------------------------------------------------
@@ -101,7 +103,8 @@
       [(_ header . bodies)
        (begin
          (check-bodies #'bodies e 'orig-name)
-         #'(orig-name header . bodies))])))
+         (syntax/loc e
+           (orig-name header . bodies)))])))
 
 (no-begin-redef cs019:let let)
 (no-begin-redef cs019:let* let*)
@@ -119,6 +122,18 @@
 ;takes a name, function object, a list of the arguments, a call index and span, and a definition index and span
 (define (create-node name func actual idx span src-idx src-span)
   (node name "" func 'no-result actual empty idx span src-idx src-span #f #f #f))
+
+(define max-title-img-size (box -1))
+
+(define (add-title n v)
+  (set-node-title! n v)
+  (set-node-has-title! n #t)
+  (when (image? v)
+    (set-box! max-title-img-size
+              (max (unbox max-title-img-size)
+                   (image-height v)
+                   (image-width v)))))
+  
 
 ;adds a kid k to node n
 (define (add-kid n k)
@@ -364,8 +379,7 @@
                                         (set-node-result! node result)
                                         #,@(if (member (syntax->datum #'n)
                                                        '(to-draw on-draw))
-                                               #'((set-node-title! node result)
-                                                  (set-node-has-title! node #t))
+                                               #'((add-title node result))
                                                #'())
                                         (add-kid current-big-bang-node node)
                                         (if (exn-wrapper? result)
@@ -549,21 +563,31 @@
 (define (get-base64 img)
   (base64-encode (convert img 'png-bytes)))
 
+(define (scaled-uri-string img)
+  (let* ([scale-factor
+          (if (<= (unbox max-title-img-size)
+                  max-size)
+              1
+              (/ max-size (unbox max-title-img-size)))])
+    (uri-string (scale scale-factor img))))
+
 ;returns the data-uri encoding of an image
 (define (uri-string img)
   (string-append "data:image/png;charset=utf-8;base64,"
                  (bytes->string/utf-8 (get-base64 img))))
 
 ;converts an image to a jsexpr
-(define (json-image img)
+(define (json-image img scale?)
   (hasheq 'type "image"
-          'src (uri-string img)))
+          'src ((if scale?
+                    scaled-uri-string
+                    uri-string) img)))
 
 ;print the result string readably
-(define (format-nicely x depth width literal)
+(define (format-nicely x depth width literal scale-image?)
   (cond
     [(image? x)
-     (json-image x)]
+     (json-image x scale-image?)]
     [(exn-wrapper? x)
      (hasheq 'type "error"
              'message (exn-wrapper-message x))]
@@ -588,21 +612,21 @@
 (define (node->json t)
   ;calls format-nicely on the elements of the list and formats that into a 
   ;javascript list
-  (local [(define (format-list lst depth literal)
+  (local [(define (format-list lst depth literal scale-image?)
             (map (lambda (x)
-                   (format-nicely x depth 40 literal))
+                   (format-nicely x depth 40 literal scale-image?))
                  lst))]
     (let-values ([(ce-idx ce-span ce-correct?) (ce-info t)])
       (hasheq 'name
               (format "~a" (node-name t))
               'actuals
-              (format-list (node-actual t) #f #t)
+              (format-list (node-actual t) #f #t #f)
               'actualsShort
-              (format-list (node-actual t) 2 #t)
+              (format-list (node-actual t) 2 #t #f)
               'result
-              (format-nicely (node-result t) #f 40 #t)
+              (format-nicely (node-result t) #f 40 #t #f)
               'resultShort
-              (format-nicely (node-result t) 2 40 #t)
+              (format-nicely (node-result t) 2 40 #t #f)
               'idx
               (node-idx t)
               'span
@@ -623,7 +647,7 @@
               (node-prefix t)
               'title
               (if (node-has-title t)
-                  (format-nicely (node-title t) #f 40 #t)
+                  (format-nicely (node-title t) #f 40 #t #t)
                   (hasheq 'type "none"))))))
 
 ;takes a port and a list of characters/specials
