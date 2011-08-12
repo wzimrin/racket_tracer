@@ -79,10 +79,6 @@ div.error > table > tbody > tr > td.result {
     vertical-align: top
 }
 
-.childTableParent {
-    overflow:hidden;
-}
-
 /* -------------------------------------------------------------------*/
 /*                    CALL BACKGROUND AND ARG COLORING                */
 /* -------------------------------------------------------------------*/
@@ -203,7 +199,7 @@ td.arg.cell {
     font-weight:bold;
 }
 
-.expandable {
+.expandButton {
     position:absolute;
     right: -5px;
     top: -5px;
@@ -219,7 +215,7 @@ td.arg.cell {
     position: relative;
 }
 
-.expandableArg:hover .expandable {
+.expandableArg:hover .expandButton {
     background-color: black;
     color: white;
     opacity: 0.7 !important;
@@ -294,7 +290,7 @@ ul.tabsFormatting > li.check-expect-top-level {
 
 div#codePaneWrapper {
     float: right;
-    background: black;
+    background: #c3c9cc;
 }
 
 div#codePane {

@@ -6,22 +6,25 @@
 //-----------------------------------------------------------------------------
 //                              GLOBAL VARIABLES
 //-----------------------------------------------------------------------------
-
-var tabbar, messagebar, secondTabBar //bigbangbar
-var wrapper, trace, traceWrapper
+//Various divs on the page -- see index.html for detailed description
+var tabbar, messagebar, secondTabBar
+var wrapper 
+var trace, traceWrapper 
 var codePane, codePaneWrapper, codePaneButton
 
+//Widths in percentages of total screen width for the code pane
 var collapsedCodePaneWidth = 10
 var expandedCodePaneWidth = 50
 var codePaneWidth
 
+//Length of animation for hiding and showing objects
 var hideAnimateDuration = 200
-var lastFunctionHighlighted
 
 //-----------------------------------------------------------------------------
 //                              GENERAL HELPERS 
 //-----------------------------------------------------------------------------
 
+//Turns a css width/height with units in px into a number
 function toInt(cssString) {
     return parseInt(cssString.substring(0, cssString.length - 2))
 }
@@ -46,9 +49,12 @@ function addInitialData(tabLi, htmlForCall) {
 }
 
 //Adds a special tab to the top level (big-bang or check-expect)
+//Sets the tabs name, data about the ul for it's sub/second tabbar and
+//returns the top tab
 function addSpecialTopTab(topLevelClass, name, tabsList) {
     var topTabLi = element("li").newAddClass(["other", topLevelClass])
     topTabLi.text(name)
+
     var secondTabsList = createTabsList("secondTabBar", secondTabBar)
     topTabLi.data("secondTabBarUL", secondTabsList)
     tabsList.append(topTabLi)
@@ -56,38 +62,36 @@ function addSpecialTopTab(topLevelClass, name, tabsList) {
     return topTabLi;
 }
 
+//Initializes and returns a ul for the elements of a tabbar
 function createTabsList(barClass, bar) {
     var tabsList = element("ul").newAddClass([barClass, "tabsFormatting"])
     bar.append(tabsList)
     return tabsList;
 }
         
-//Creates the list element to go in a new tab, adds that element to the tabbar
-//and add the child it links to to trace
+//Creates the li to go in a new tab, adds that element to the tabbar
+//and adds the child it links to to trace
 function createNewTab(classToAdd, node, tabsList, bar) {
     var li = element("li").newAddClass(classToAdd)
     if(node.title.type == "none")
         li.text(node.name)
     else if (node.title.type == "image") {
-        var img = element("img")
+        var img = element("img").newAddClass("tabBarImage")
         img.attr("src", node.title.src)
         li.append(img)
-        img.newAddClass("tabBarImage")
-    } else if (node.title.type == "value") {
+    } 
+    else if (node.title.type == "value") 
         li.text(node.title.value)
-    } else
+    else
         alert("something wrong in title")
     tabsList.append(li)
     if(classToAdd != "check-expect" && classToAdd != "big-bang")
         classToAdd = false
-    var exp = makeCall(node, bar, classToAdd)
-    exp.newAddClass("toplevel")
+    var exp = makeCall(node, bar, classToAdd).newAddClass("toplevel")
     addInitialData(li, exp)
     trace.append(exp)
     return li;
 }
-
-
 
 //-----------------------------------------------------------------------------
 //                              CODE PANE HELPERS 
@@ -141,16 +145,18 @@ function highlightSpan(el,toHighlight) {
     el.children().slice(idx-codeOffset,span+idx-codeOffset).wrapAll(hi)
 }
 
+//Sets the width of the codePane based on the wrapper
 function setCodePaneWidth() {
     codePane.width(codePaneWrapper.width()+codePane.width()-codePane.outerWidth(true))
 }
 
 //Set the width of the code pane to a new value and animate
 function setCodePaneWrapperWidth(newWidth,speed, arrow, onComplete) {
-    if($("ul.tabbar li.picked").data("secondTabBar"))
-        $("ul.tabbar li.picked").data("secondTabBar").find("li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
+    var pickedLI = $("ul.tabbar li.picked")
+    if(pickedLI.data("secondTabBar"))
+        pickedLI.data("secondTabBar").find("li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
 
-    $("ul.tabbar li.picked").data("codePaneExpanded", newWidth == expandedCodePaneWidth)
+    pickedLI.data("codePaneExpanded", newWidth == expandedCodePaneWidth)
     
     if (codePaneWidth != newWidth) {
         codePane.newAddClass("hidden")
@@ -170,7 +176,6 @@ function setCodePaneWrapperWidth(newWidth,speed, arrow, onComplete) {
         onComplete()
 }
 
-    
 //Expand the code pane
 function expandCodePane(onComplete) {
     setCodePaneWrapperWidth(expandedCodePaneWidth, "slow", "&raquo;", 
@@ -204,16 +209,18 @@ function showSpan() {
 
 //Choose to display the full or short version of an expandable argument
 function updateExpandable(html) {
-    if (html.data("expanded"))
+    var expandButton = html.data("expandButton")
+    
+    if (html.data("expanded")) {
         html.text(html.data("full")) 
-    else
+        expandButton.html("&rArr;&lArr;")
+    } else {
         html.text(html.data("short"))
-    var expandDiv = html.data("expandDiv").newRemoveClass("expandable").newAddClass("expandable")
-    if(html.data("expanded"))
-        expandDiv.html("&rArr;&lArr;")
-    else
-        expandDiv.html("&lArr;&rArr;")
-    html.append(expandDiv)
+        expandButton.html("&lArr;&rArr;")
+    }
+    //Setting the html removes the handler, so add it back
+    expandButton.newRemoveClass("expandButton").newAddClass("expandButton")
+    html.append(expandButton)
 }
 
 //Toggle between the full and short version of an expandable argument
@@ -230,7 +237,7 @@ function toggleExpandable(html) {
 function makeCell(formShort, formFull, cssClass) {
     var cell = element("td").newAddClass([cssClass, "cell"])
     var div = element("div")
-    var toExpandDiv //div for button in top left corner of expandable arguments/results
+    var expandButton //div for button in top left corner of expandable arguments/results
     cell.append(div)
     
     if (formFull.type=="image") {
@@ -244,15 +251,17 @@ function makeCell(formShort, formFull, cssClass) {
         //If a shortened form exists 
         if (formShort.value != formFull.value) {
             div.newAddClass("expandableArg")
-            toExpandDiv = element("div").newAddClass("expandable")
-            div.data({short: formShort.value, full: formFull.value, expanded: false, expandDiv: toExpandDiv})
+            expandButton = element("div").newAddClass("expandButton")
+            div.data({short: formShort.value, 
+                    full: formFull.value, 
+                    expanded: false, 
+                    expandButton: expandButton})
             updateExpandable(div) 
-            div.append(toExpandDiv)
+            div.append(expandButton)
         }
         else 
             div.text(formFull.value)
     }
-
     return cell
 }
 
@@ -262,6 +271,7 @@ function makeCallTable(node, type) {
     var row = element("tr")
    
     var buttonTD = element("td").newAddClass("buttonTD")
+   //If you want to add a passed check expect or failed check expect button 
     if (node.ceIdx) {
         var ceButton = element("div")
         if (node.ceCorrect) 
@@ -273,6 +283,9 @@ function makeCallTable(node, type) {
                 span: node.ceSpan})
         buttonTD.append(ceButton)
     }
+    //If this node has children and you want to be able to expand and collapse it
+    //Top level check-expect and big-bang nodes are permanently expanded so don't
+    //want a childrenButton
     if (node.children.length!=0 && type != "check-expect" && type != "big-bang") {
         var childrenButton = element("div")
         addImages(childrenButton, sideImageSrc, sideImageSrc)
@@ -289,14 +302,15 @@ function makeCallTable(node, type) {
         nameTD.text(node.prefix+": "+node.name)
     else
         nameTD.text(node.name)
-    
     nameTD.newAddClass(["name", "cell"])
+   //If this node has information about the definition/src of this function 
     if(!(node.srcIdx == 0 && node.srcSpan == 0)) {
         nameTD.newAddClass("hasSource")
         nameTD.data({idx: node.srcIdx, span: node.srcSpan})
     }
     row.append(nameTD)
 
+    //Don't want to display arguments at top level of check expects
     if (type != "check-expect") {
         //Formals and actuals
         for (var i = 0; i < node.actuals.length; i++) {
@@ -306,8 +320,7 @@ function makeCallTable(node, type) {
         }
 
         //Arrow
-        var arrow = element("td")
-        arrow.html("&rarr;")
+        var arrow = element("td").html("&rarr;")
         arrow.newAddClass(["arrow", "cell"])
         row.append(arrow)
 
@@ -315,6 +328,7 @@ function makeCallTable(node, type) {
         var resultTD = makeCell(node.resultShort,node.result,"result")
         row.append(resultTD)
         resultTD.data({idx: node.idx, span: node.span})
+        //If have info about the call site, make the result clickable
         if(!(node.idx == 0 && node.span == 0))
             resultTD.newAddClass("hasSource")
     }
@@ -328,7 +342,7 @@ function makeCallTable(node, type) {
 function makeCall(traceNode, parent, type) {
     parent = $(parent)
 
-    var call = element("div")
+    var call = element("div").newAddClass("call")
     if (parent.hasClass("background1"))
         call.newAddClass("background2")
     else
@@ -345,34 +359,30 @@ function makeCall(traceNode, parent, type) {
     else if (type == "big-bang")
         call.newAddClass("big-bang")
 
-    call.newAddClass("call")
-
-    var expand = false;
+    var expand = false
     if(traceNode.result.type == "error") {
         call.newAddClass("error")
         expand = true
     }
     
     var callTable = makeCallTable(traceNode, type)
-    var hidable 
     
-    var lowerDiv = element("div")
-    var childTable = element("table").newAddClass("childTable")
+    var lowerDiv = element("div") //need this div to make animation of calls smooth
+    var childTable = element("table")
     var lowerRow = element("tr")
     childTable.append(lowerRow)
     lowerDiv.append(childTable)
-
-    hidable = lowerDiv
-    hidable.hide()
+    lowerDiv.hide() //Hide the children initially
+    
     call.append(callTable)
-
     call.append(lowerDiv)
     call.data({expanded: false,
-            hidable: hidable,
+            hidable: lowerDiv, 
             button: callTable.find(".childrenButton"),
             node: traceNode,
             childrenCreated: false,
             childRow: lowerRow})
+   //If it's a check-expect or big-bang, want it to start out expanded 
     if (type == "check-expect" || type == "big-bang")
         toggleCall(call)
     return call
@@ -383,9 +393,11 @@ function makeCall(traceNode, parent, type) {
 //-----------------------------------------------------------------------------
 
 //toggles whether a call is expanded
-//And adds the children if this was called from the ec button callback 
+//And adds the children if this was called from the childrenButton callback 
 function toggleCall(html) {
     html.data("expanded",!html.data("expanded"))
+    //If the children haven't bene created yet, and you want to expand the node
+    //create the children
     if(html.data("expanded") && !html.data("childrenCreated")) {
         var traceNode = html.data("node")
         var childRow = html.data("childRow")
@@ -402,6 +414,7 @@ function toggleCall(html) {
     var hidable = html.data("hidable")
     var buttonImg = html.data("button").children("img")
 
+    //hide or show the children, and swap the arrow/childrenButton
     if(expanded) {
         hidable.show("fast")
         buttonImg.attr("src", downImageSrc)
@@ -412,18 +425,23 @@ function toggleCall(html) {
     }
 }
 
+//Before a tab change stores the scroll position of the trace
 function storePageState(tabLi) {
     if(tabLi.length != 0) {
         if(tabLi.data("secondTabBarUL"))
             tabLi = tabLi.data("secondTabBarUL").find("li.picked") 
-        tabLi.data("scroll", traceWrapper.scrollLeft())
-        tabLi.data({"codePaneExpanded": codePaneWidth == expandedCodePaneWidth,
-                    "codePaneX": codePane.scrollLeft(),
-                    "codePaneY": codePane.scrollTop()})
-        tabLi.data("lastHighlighted", $(".lastHighlighted"))
-        }
+        tabLi.data({"scrollX": traceWrapper.scrollLeft(),
+                "scrollY": traceWrapper.scrollTop(),
+                "codePaneExpanded": codePaneWidth == expandedCodePaneWidth,
+                "codePaneX": codePane.scrollLeft(),
+                "codePaneY": codePane.scrollTop(),
+                "lastHighlighted": $(".lastHighlighted")})
+    }
 }
 
+//When loading a new tab, restore the prior state of that tab
+//trace scroll x and y, code pane scroll x and y, highlights, what
+//was picked in the second tab bar
 function restorePageState(tabLi) {
     if(tabLi.length != 0) {
         if(tabLi.data("secondTabBar"))
@@ -432,6 +450,8 @@ function restorePageState(tabLi) {
             var toHighlight = tabLi.data("lastHighlighted")
             highlightSpan(codePane, toHighlight)
         }
+        //Expand or collapse the codePane, and onComplete, restore the scrolled position
+        //Otherwise the scrolling doesn't occur
         if(tabLi.data("codePaneExpanded")) 
             expandCodePane(function(){
                     codePane.scrollLeft(tabLi.data("codePaneX"))
@@ -443,10 +463,12 @@ function restorePageState(tabLi) {
                     codePane.scrollTop(tabLi.data("codePaneY"))
                 })
         
-        traceWrapper.scrollLeft(tabLi.data("scroll"))
+        traceWrapper.scrollLeft(tabLi.data("scrollX"))
+        traceWrapper.scrollTop(tabLi.data("scrollY"))
     }
 }
 
+//Switch from one tab to another and restore the state of the prior tab
 function switchTo(tab) {
     $(".toplevel").hide()
     tab.data("child").show()
@@ -492,6 +514,7 @@ function refocusScreen()
         })
 }
 
+//Adds images to buttons that link to the source
 function addImages(container, src, srcSel ) {
     var image = element("img")
     image.attr("src", src)
@@ -499,6 +522,8 @@ function addImages(container, src, srcSel ) {
     container.append(image)
 }
 
+//Swaps the image for a button that links to the source
+//Highlighted vs. not highlighted
 function swapImage(img)
 {
     var src = img.attr("src")
@@ -511,6 +536,7 @@ function swapImage(img)
 //                              CALLBACKS 
 //-----------------------------------------------------------------------------
 
+//Allows the user to click and drag to move the trace
 function dragHandler(event) {
     var oldX=event.pageX
     var oldY=event.pageY
@@ -540,10 +566,6 @@ function dragHandler(event) {
         $(".dragging").newRemoveClass("dragging")
         return false
     }
-    trace.unbind("mousedown",dragHandler)
-    target.mousedown()
-    target.mouseup()
-    trace.mousedown(dragHandler)
     body.mousemove(moveHandler)
     body.mouseup(endHandler)
     body.mouseleave(endHandler)
@@ -566,16 +588,17 @@ function hasSourceCallback() {
 function childrenButtonCallback() {
     var thisCall = $(this).parents(".call").first()
     toggleCall(thisCall)
-    return false;
+    return false
 }
 
 //makes the expandables expand/collapse appropriately
 //and highlight on hover
-function expandableCallback() {
+function expandButtonCallback() {
     toggleExpandable($($(this).parent()))
-    return false;
+    return false
 }
 
+//For when li in the second tabbar are clicked
 function secondTabBarCallback() {
     return function() {
         var target = $(this)
@@ -591,6 +614,7 @@ function secondTabBarCallback() {
     }
 }
 
+//Hides or shows the appropriate content of a secondTabBar, and the secondTabBar itself
 function handleSecondTabBars(oldPickedLi, targetLi) {
 
     if(oldPickedLi.data("secondTabBarUL") != targetLi.data("secondTabBarUL")) {
@@ -615,8 +639,7 @@ function handleSecondTabBars(oldPickedLi, targetLi) {
 
 //makes the tabs switch what is displayed and
 //highlight on hover
-function tabbarCallback() {//switch display
-
+function tabbarCallback() {
     var target = $(this)
     if(!target.hasClass("picked")) {
         var oldPicked = $("ul.tabbar li.picked")
@@ -634,12 +657,17 @@ function tabbarCallback() {//switch display
     }
 }
 
+//Adjusts the width of the wrapper (trace and codePane) based on the size of the window
+//And then sets the width of the codePane relative to that
+//useful for window resize
 function setContentWidth() {
     wrapper.width($(window).width()-parseInt(wrapper.css("padding-left"))
         -2*parseInt($(document.body).css("margin-left")))
     setCodePaneWidth()
 }
 
+//Adjusts the width and height of the content based on the size of the window
+//See comment for setContentWidth()
 function setContentSize() {
     setContentWidth() 
 
@@ -650,12 +678,16 @@ function setContentSize() {
         +codePane.height()-codePane.outerHeight(true))
 }
 
+//Callbacks that correspond with classes, used to bind callbacks when elements
+//are added dynamically that need callbacks
 var callbacks = {
     "hasSource" : hasSourceCallback,
     "childrenButton" : childrenButtonCallback,
-    "expandable" : expandableCallback
-};
+    "expandButton" : expandButtonCallback
+}; //don't delete me, i'm an important semicolon
 
+//overwrite addClass and removeClass to bind or unbind callbacks as well, see callbacks
+//classes is either a string, or an array of strings
 (function($) {
         $.fn.newAddClass = function(classes) {
             if(typeof(classes) == "string")
@@ -695,6 +727,7 @@ $(document).ready(function () {
     }
 
     //Initialize global variables
+    //See GLOBAL VARIABLES for description
     tabbar = $("#tabbar").newAddClass("tabsDiv")
     secondTabBar = $("#secondTabBar").newAddClass("tabsDiv")
     messagebar = $("#messagebar")
@@ -705,7 +738,7 @@ $(document).ready(function () {
     codePaneWrapper = $("#codePaneWrapper")
     codePaneButton = $("#codePaneButton")
 
-    initializeCodePane()
+    initializeCodePane() //add the code to the codePane
     
     //Top Level tabbar
     var tabsList = createTabsList("tabbar", tabbar)
@@ -728,9 +761,6 @@ $(document).ready(function () {
         var topBigBangTabLi = addSpecialTopTab("big-bang-top-level", "big-bang", tabsList)
         var bigBangList =  topBigBangTabLi.data("secondTabBarUL")       
 
-        //Will eventually need to repeat this for multiple children, not just bigBangTrace.children[0]
-        //To support multiple big-bangs in the same file
-        
         for(var k = 0; k < bigBangTrace.children[l].children.length; k++) {
             var bigBangTabLi = createNewTab("big-bang", bigBangTrace.children[l].children[k], bigBangList, secondTabBar)
 
@@ -744,6 +774,8 @@ $(document).ready(function () {
                 bigBangTabLi.newAddClass("other")
         }
         if (!first) {first = topBigBangTabLi}
+        //One of the children needs to be picked. If there was an error, one already is
+        //If not, make the first one picked
         if(!errorInBigBang)
             bigBangList.children().first().newRemoveClass("other").newAddClass("picked")
         
@@ -787,13 +819,15 @@ $(document).ready(function () {
         else
             expandCodePane(function(){})
     })
-    codePane.mousedown(false)
-    
+    codePane.mousedown(false) //can't highlight text on the codepane
+   
+    //on single click expand/collapse the code pane
     codePane.click(function () {
         codePaneButton.click()
-        return false;
+        return false
     })
-    
+   
+    //when the messagebar is clicked, open to where the error is
     messagebar.bind("click", function() {
             first.trigger("click")
             if(errorInBigBang)
@@ -801,17 +835,22 @@ $(document).ready(function () {
             else if(errorInCE)
                 errorInCE.trigger("click")
         })
-  
+ 
+    //Initially the second tabbar is hidden
     secondTabBar.css({"height": "0px", "border-bottom-style":"none"})
     secondTabBar.find("li").bind("click", secondTabBarCallback())
+    //Callbacks for the li in the top level tab bar
     $("ul.tabbar li").bind("click", tabbarCallback) 
        
+    //Click on what the first element should be. In order of importance
+    //A caught error, failed check-expects, the first element
     first.trigger("click")
 
     setContentSize()
 
+    //Bind handlers for window resize, scroll in the tracer, and click and drag in the trace
     $(window).resize(setContentSize)
     traceWrapper.scroll(refocusScreen)
-    trace.mousedown(dragHandler)
+    traceWrapper.mousedown(dragHandler)
 })
 

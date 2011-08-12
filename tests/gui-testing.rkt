@@ -1,5 +1,7 @@
 #lang planet tracer/tracer
 
+(trace-all)
+
 #|
 Included
 - Many varied arguments at top level and on page

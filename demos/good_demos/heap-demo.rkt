@@ -1,5 +1,7 @@
 #lang planet tracer/tracer
 
+(trace-all)
+
 (define-struct heap-node (value left right))
 
 (define (insert x h)

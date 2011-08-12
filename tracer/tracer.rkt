@@ -263,7 +263,6 @@
    (when (node? (current-app-call))
      (set-node-used?! (current-app-call) #t))
    (set-node-result! n result)))
-
 ;generates the interior of an annotated function definition
 ;takes a syntax object of a list of arguments, a syntax object for the body,
 ;a syntax object that is the display name of the function, the original syntax object
@@ -635,9 +634,13 @@
          (if (and (procedure? x) (object-name x))
              (display (object-name x) p)            
              (pretty-write (print-convert x) p)))
+       (define output (get-output-string p))
        ;return what was printed
        (hasheq 'type "value"
-               'value (get-output-string p)))]))
+               'value (if (and depth
+                               (< 7 (length (regexp-match* "\n" output))))
+                          (string-append (first (regexp-split #px"\\s+" output)) "...)")
+                          output)))]))
 
 ;converts a single node to a jsexpr
 (define (node->json t)
