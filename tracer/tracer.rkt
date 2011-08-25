@@ -448,7 +448,7 @@
                (quasisyntax/loc e
                  (begin 
                    (define parent-node;the top node for the check-expect
-                     (create-node '#,func-stx #f empty idx span 0 0))
+                     (create-node '#,func-stx #f empty idx span idx span))
                    (set-node-prefix! parent-node
                                      (format "~s" 'original-name))
                    (original-name
@@ -458,8 +458,8 @@
                                                      empty
                                                      #,(syntax-position #'actual-stx)
                                                      #,(syntax-span #'actual-stx)
-                                                     0
-                                                     0)])
+                                                     #,(syntax-position #'actual-stx)
+                                                     #,(syntax-span #'actual-stx))])
                       (let-values ([(func args);we must evaluate the func and the args within a parameterize, but we need
                                     ;to evaluate them and store them separately so we can add the call to ce-hash
                                     ;we also need to check if there the actual is an application - if not, don't do anything here
@@ -522,8 +522,9 @@
                                                      #,(syntax-position
                                                         expected-stx)
                                                      #,(syntax-span expected-stx)
-                                                     0
-                                                     0)]
+                                                     #,(syntax-position
+                                                        expected-stx)
+                                                     #,(syntax-span expected-stx))]
                                        ;calculate its result (no need to worry about function/arguments, since we don't use them individually)
                                        [result (parameterize ([current-call expected-node])
                                                  (with-handlers ([identity exn-wrapper])
