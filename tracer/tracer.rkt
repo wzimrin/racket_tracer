@@ -385,7 +385,11 @@
     (tracer-body
      ([node (create-node name #f args
                          idx span 0 0)]
-      [result (apply fun args)])
+      [result (begin (displayln (current-call))
+                     (apply fun args))
+              [current-fun #f]
+              [current-app-call #f]
+              [current-call node]])
      (set-node-result! node result)
      (when title?
        (add-title node result))
