@@ -1,6 +1,20 @@
 #lang scribble/manual
-@(require scribble/eval)
-@(require "screenshots.rkt")
+@(require scribble/eval
+          racket/list
+          racket/runtime-path)
+
+@;;; The following is a workaround the Scribble/snip bug in Racket 5.1.3.
+@(define-runtime-path screenshots.scm "screenshots.scm")
+@(define screenshots (call-with-input-file screenshots.scm 
+                       (lambda (ip)
+                         (define pairs 
+                           (parameterize ([read-accept-reader #t])
+                             (read ip)))
+                         (define ht (make-hash))
+                         (for ([k+v pairs])
+                           (hash-set! ht (first k+v) (second k+v)))
+                         ht)))
+
 @(require (for-label racket))
 
 @title{Tracer}
@@ -46,35 +60,35 @@ Running the following code:
 
 would initially load the trace shown below.
 
-@initTracer
+@(hash-ref screenshots 'initTracer)
 
 To view the trace of @racket[(fib-iterative 5)] instead of the trace of @racket[(fib 5)], click on fib-iterative in the tab bar along the top.
 
-@clickIterative
+@(hash-ref screenshots 'clickIterative)
 
 The tab bar along the top will display each of the top level function calls, whereas the body of the page shows the trace for a single top level function call. To see more detail about a function, including the subcalls that it made, click on the arrowhead to the left of the function name. 
 
-@clickChildrenButton
+@(hash-ref screenshots 'clickChildrenButton)
 
 Each box in the tracer corresponds to a call of a user-defined function. A call is a child of another call if the child call appeared within the body of the parent function. The top portion of a call shows its function name and the arguments passed to it.  Clicking on the function name will highlight the definition of that function in the code.
 
-@clickIter
+@(hash-ref screenshots 'clickIter)
 
 Clicking the function name again will close the code pane.
 
-@clickIterAgain
+@(hash-ref screenshots 'clickIterAgain)
 
 If you want to see where a function was called, rather than it's definition, click on the result. 
 
-@clickResult
+@(hash-ref screenshots 'clickResult)
 
 You can also close the code pane by double clicking on it, or by clicking on the button along the top of the code pane.
 
-@clickCodePaneButton
+@(hash-ref screenshots 'clickCodePaneButton)
 
 Once the trace is too large to display on the screen, you can move the trace by clicking and dragging, or by using the scroll bars. 
 
-@movingTrace
+@(hash-ref screenshots 'movingTrace)
 
 @(subsection "Check Expects" #:tag "check-expect")
 
@@ -82,21 +96,21 @@ Note: this section shows traces of various pieces of code, not only the code exp
 
 If a call in the trace corresponds to a @racket[check-expect], the call is colored red if it failed. If the call is colored green if it passed. 
 
-@passedCE
+@(hash-ref screenshots 'passedCE)
 
 The checkbox button appears as well, which will highlight the check-expect that corresponds to the call.
 
-@passedCESource
+@(hash-ref screenshots 'passedCESource)
 
 If there are any failed check-expects, a new check-expect tab appears in the tab bar.  Clicking on the check-expect tab shows a second tab bar with the failed check-expects.  The trace of the check-expect shows how the tested value and the expected value were computed.
 
-@failedCE
+@(hash-ref screenshots 'failedCE)
 
 @section{Big Bangs}
 
 Tracing a @racket[big-bang] will add a second tab bar with a timeline of all of the calls from the @racket[big-bang].
 
-@bigBang
+@(hash-ref screenshots 'bigBang)
 
 If the @racket[big-bang] includes a @racket[to-draw] function, the result of @racket[to-draw] will replace its name in the second tab bar.
 
@@ -104,7 +118,7 @@ If the @racket[big-bang] includes a @racket[to-draw] function, the result of @ra
 
 If the traced code throws an error, the trace up to that point will load. Clicking on the red bar along the top will bring you back to the call where the error occurred. 
 
-@error
+@(hash-ref screenshots 'error)
 
 @section{Compatibility}
 Suggested browsers: Firefox, Chrome, or Safari.  Other browsers may work, but we don't test them. @litchar{#lang planet tracer/tracer} currently supports images generated in the code or embedded in the code.

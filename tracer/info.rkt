@@ -6,5 +6,6 @@
 (define primary-file "tracer.rkt")
 (define categories '(devtools))
 (define scribblings '(("docs/tracer.scrbl")))
-(define release-notes '((p "GUI Tweaks")))
+(define release-notes '((p "Some planet-related bugs fixed")))
+(define compile-omit-paths (list "docs"))
 

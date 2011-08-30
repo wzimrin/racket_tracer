@@ -1,6 +1,6 @@
 #lang planet tracer/tracer
 
-(trace-explicit)
+(trace-all)
 
 (require [only-in racket curry])
 #|
@@ -53,3 +53,5 @@
                             (curry map
                                    make-circle))
                    200 200])
+(check-expect (make-circle 20)
+              (circle 10 "outline" "black"))
