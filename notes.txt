@@ -1,5 +1,9 @@
 ***** Actually Important issues *****
 
+* Syntax position of check-expects
+- Trace clickable before too large for window
+- Ability to select text in trace
+
 * CS19 language
 ^ Test on CS19 programs
 ^ Test on other people
