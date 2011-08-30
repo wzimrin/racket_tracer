@@ -385,7 +385,11 @@
     (tracer-body
      ([node (create-node name #f args
                          idx span 0 0)]
-      [result (apply fun args)])
+      [result (begin (displayln (current-call))
+                     (apply fun args))
+              [current-fun #f]
+              [current-app-call #f]
+              [current-call node]])
      (set-node-result! node result)
      (when title?
        (add-title node result))
@@ -448,7 +452,7 @@
                (quasisyntax/loc e
                  (begin 
                    (define parent-node;the top node for the check-expect
-                     (create-node '#,func-stx #f empty idx span 0 0))
+                     (create-node '#,func-stx #f empty idx span idx span))
                    (set-node-prefix! parent-node
                                      (format "~s" 'original-name))
                    #,(quasisyntax/loc #'actual-stx
