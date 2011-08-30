@@ -244,6 +244,7 @@ function makeCell(formShort, formFull, cssClass) {
         var el = element("img")
         el.attr("src",formFull.src)
         div.append(el)
+        cell.newAddClass("imageCell")
     }
     else if (formFull.type == "error") 
         div.text(formFull.message)
