@@ -368,8 +368,8 @@ span.symbol {
 /* -------------------------------------------------------------------*/
 
 .lastHighlighted {
-    background: #ffff61; 
-    border-color: #ffff61;
+    background: #ffff61 !important; 
+    border-color: #ffff61 !important;
     color: fireBrick !important;
 }
 
