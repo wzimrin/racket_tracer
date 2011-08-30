@@ -1,5 +1,5 @@
 #lang planet tracer/tracer
-
+(trace-all)
 (define (fib x)
   (cond
     [(= x 0) (rest x)]
@@ -7,7 +7,8 @@
     [#t (+ (fib (- x 1))
            (fib (- x 2)))]))
 
-(check-expect (fib 2) 1)
+(fib 2)
+;(check-expect (fib 2) 1)
 
 #|
 (check-within (fib 1) 0 1)

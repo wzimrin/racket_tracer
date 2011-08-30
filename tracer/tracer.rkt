@@ -455,95 +455,95 @@
                      (create-node '#,func-stx #f empty idx span idx span))
                    (set-node-prefix! parent-node
                                      (format "~s" 'original-name))
-                   (original-name
-                    ;the actual value that the check expect expects is evaluated last, so put cleanup code here
-                    (let* ([actual-node (create-node '#,(first node-names);the node for the actual value
-                                                     #f
-                                                     empty
-                                                     #,(syntax-position #'actual-stx)
-                                                     #,(syntax-span #'actual-stx)
-                                                     #,(syntax-position #'actual-stx)
-                                                     #,(syntax-span #'actual-stx))])
-                      (let-values ([(func args);we must evaluate the func and the args within a parameterize, but we need
-                                    ;to evaluate them and store them separately so we can add the call to ce-hash
-                                    ;we also need to check if there the actual is an application - if not, don't do anything here
-                                    #,(if (pair? datum)
-                                          #`(parameterize ([current-call actual-node])
-                                              (with-handlers ([identity
-                                                               ;on error, we can just store a wrapped exception in func
-                                                               (lambda (exn)
-                                                                 (values
-                                                                  (exn-wrapper exn)
-                                                                  #f))])
-                                                (values #,func-stx (list . #,args-stx))))
-                                          #'(values #f #f))])
-                        ;calculate the result for the actual node
-                        ;if we calculated a func and args above, apply them with apply-recorder
-                        ;otherwise, just evaluate actual-stx
-                        (set-node-result! actual-node
-                                          (parameterize ([current-call actual-node])
-                                            (with-handlers ([identity exn-wrapper])
-                                              #,(if (pair? datum)
-                                                    #`(if (exn-wrapper? func)
-                                                          func
-                                                          (apply-recorder
-                                                           func args 
-                                                           actual-stx #,func-stx))
-                                                    func-stx))))
-                        ;decide if the check-* passed, using the provided function
-                        (let ([ce-correct? (apply passed?
-                                                  (cons (node-result actual-node)
-                                                        (reverse
-                                                         (map node-result
-                                                              (node-kids parent-node)))))])
-                          ;add the actual node to the end of the parent-nodes kids (ie, where it would have gone if it had been evaluated first)
-                          (set-node-kids! parent-node (append (node-kids parent-node) 
-                                                              (list actual-node)))
-                          ;add the check to ce-hash
-                          #,(when (pair? datum)
-                              #`(add-to-ce-hash (list func args)
-                                                idx
-                                                span
-                                                ce-correct?))
-                          ;if we failed the check, add the ce to the top node
-                          (when (not ce-correct?)
-                            (set-node-result! parent-node #f)
-                            (add-kid top-ce-node parent-node))))
-                      ;if actual-node threw an exception, re-throw it here
-                      ;if not, return the result to the actual check-*
-                      (if (exn-wrapper? (node-result actual-node))
-                          (error "Error")
-                          (node-result actual-node)))
-                    ;create the code for the expected values
-                    ;there can be an arbitrary number of values
-                    ;we use a map instead of ... because we need to map over the expected values
-                    ;and the correct name at the same time
-                    #,@(map (lambda (expected-stx name)
-                              #`(let* ([expected-node;create a node for this expected value
-                                        (create-node '#,name
-                                                     #f
-                                                     empty
-                                                     #,(syntax-position
-                                                        expected-stx)
-                                                     #,(syntax-span expected-stx)
-                                                     #,(syntax-position
-                                                        expected-stx)
-                                                     #,(syntax-span expected-stx))]
-                                       ;calculate its result (no need to worry about function/arguments, since we don't use them individually)
-                                       [result (parameterize ([current-call expected-node])
-                                                 (with-handlers ([identity exn-wrapper])
-                                                   #,expected-stx))])
-                                  (add-kid parent-node expected-node)
-                                  (set-node-result! expected-node result)
-                                  (if (exn-wrapper? result)
-                                      (begin;on error, the underlying check-* will abort, but so we need to finish up node creation/addition here
-                                        (set-node-result! parent-node #f)
-                                        (add-kid top-ce-node parent-node)
-                                        (error "Error"))
-                                      result)))
-                            expected-datums
-                            (fix-names (length expected-datums)
-                                       (cdr node-names)))))))
+                   #,(quasisyntax/loc #'actual-stx
+                       (original-name
+                        ;the actual value that the check expect expects is evaluated last, so put cleanup code here
+                        (let* ([actual-node (create-node '#,(first node-names);the node for the actual value
+                                                         #f
+                                                         empty
+                                                         #,(syntax-position #'actual-stx)
+                                                         #,(syntax-span #'actual-stx)
+                                                         0
+                                                         0)])
+                          (let-values ([(func args);we must evaluate the func and the args within a parameterize, but we need
+                                        ;to evaluate them and store them separately so we can add the call to ce-hash
+                                        ;we also need to check if there the actual is an application - if not, don't do anything here
+                                        #,(if (pair? datum)
+                                              #`(parameterize ([current-call actual-node])
+                                                  (with-handlers ([identity
+                                                                   ;on error, we can just store a wrapped exception in func
+                                                                   (lambda (exn)
+                                                                     (values
+                                                                      (exn-wrapper exn)
+                                                                      #f))])
+                                                    (values #,func-stx (list . #,args-stx))))
+                                              #'(values #f #f))])
+                            ;calculate the result for the actual node
+                            ;if we calculated a func and args above, apply them with apply-recorder
+                            ;otherwise, just evaluate actual-stx
+                            (set-node-result! actual-node
+                                              (parameterize ([current-call actual-node])
+                                                (with-handlers ([identity exn-wrapper])
+                                                  #,(if (pair? datum)
+                                                        #`(if (exn-wrapper? func)
+                                                              func
+                                                              (apply-recorder
+                                                               func args 
+                                                               actual-stx #,func-stx))
+                                                        func-stx))))
+                            ;decide if the check-* passed, using the provided function
+                            (let ([ce-correct? (apply passed?
+                                                      (cons (node-result actual-node)
+                                                            (reverse
+                                                             (map node-result
+                                                                  (node-kids parent-node)))))])
+                              ;add the actual node to the end of the parent-nodes kids (ie, where it would have gone if it had been evaluated first)
+                              (set-node-kids! parent-node (append (node-kids parent-node) 
+                                                                  (list actual-node)))
+                              ;add the check to ce-hash
+                              #,(when (pair? datum)
+                                  #`(add-to-ce-hash (list func args)
+                                                    idx
+                                                    span
+                                                    ce-correct?))
+                              ;if we failed the check, add the ce to the top node
+                              (when (not ce-correct?)
+                                (set-node-result! parent-node #f)
+                                (add-kid top-ce-node parent-node))))
+                          ;if actual-node threw an exception, re-throw it here
+                          ;if not, return the result to the actual check-*
+                          (if (exn-wrapper? (node-result actual-node))
+                              (error "Error")
+                              (node-result actual-node)))
+                        ;create the code for the expected values
+                        ;there can be an arbitrary number of values
+                        ;we use a map instead of ... because we need to map over the expected values
+                        ;and the correct name at the same time
+                        #,@(map (lambda (expected-stx name)
+                                  #`(let* ([expected-node;create a node for this expected value
+                                            (create-node '#,name
+                                                         #f
+                                                         empty
+                                                         #,(syntax-position
+                                                            expected-stx)
+                                                         #,(syntax-span expected-stx)
+                                                         0
+                                                         0)]
+                                           ;calculate its result (no need to worry about function/arguments, since we don't use them individually)
+                                           [result (parameterize ([current-call expected-node])
+                                                     (with-handlers ([identity exn-wrapper])
+                                                       #,expected-stx))])
+                                      (add-kid parent-node expected-node)
+                                      (set-node-result! expected-node result)
+                                      (if (exn-wrapper? result)
+                                          (begin;on error, the underlying check-* will abort, but so we need to finish up node creation/addition here
+                                            (set-node-result! parent-node #f)
+                                            (add-kid top-ce-node parent-node)
+                                            (error "Error"))
+                                          result)))
+                                expected-datums
+                                (fix-names (length expected-datums)
+                                           (cdr node-names))))))))
              (syntax/loc e
                (original-name actual-stx . expected-stxs)))]))))
 
@@ -829,7 +829,8 @@
                       (send-url/contents (page name offset errored source))))
                 ;Set exception handler to allow tracing of functions that error out
                 (uncaught-exception-handler (lambda (x)
-                                              (displayln (exn-message x))
+                                              (when (not (string=? "Error" (exn-message x)))
+                                                  (displayln (exn-message x)))
                                               (final #t)
                                               ((error-escape-handler))))
                 #,@(datum->syntax #f (cdr bodies-list))
