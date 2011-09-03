@@ -418,11 +418,11 @@ function toggleCall(html) {
 
     //hide or show the children, and swap the arrow/childrenButton
     if(expanded) {
-        hidable.show("fast")
+        hidable.show("fast", setCursorTrace)
         buttonImg.attr("src", downImageSrc)
     }
     else {
-        hidable.hide("fast")
+        hidable.hide("fast", setCursorTrace)
         buttonImg.attr("src", sideImageSrc)
     }
 }
@@ -678,6 +678,16 @@ function setContentSize() {
         -2*parseInt($(document.body).css("margin-top")))
     codePane.height(codePaneWrapper.height()-codePaneButton.outerHeight(true)
         +codePane.height()-codePane.outerHeight(true))
+
+    setCursorTrace()
+}
+
+function setCursorTrace() {
+    if(traceWrapper.outerHeight() < trace.outerHeight() 
+            || traceWrapper.outerWidth() < trace.outerWidth()) {
+            trace.newAddClass("moveable") }
+    else {
+        trace.newRemoveClass("moveable") }
 }
 
 //Callbacks that correspond with classes, used to bind callbacks when elements

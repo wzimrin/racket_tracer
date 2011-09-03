@@ -58,8 +58,13 @@ div#traceWrapper {
 
 div#trace {
     white-space: nowrap;
-    cursor: pointer;
+    cursor: default;
 }
+
+.moveable {
+    cursor: pointer !important;
+}
+
 div.call {
     margin: 1px;
     vertical-align: top;
