@@ -64,6 +64,7 @@
          [all-from-out lang/htdp-advanced
                        2htdp/image
                        2htdp/universe]
+         show-sharing
          trace
          trace-all
          trace-failed-checks
@@ -796,6 +797,7 @@
              (when (equal? first-expression '(trace-explicit))
                (set-box! trace-macro-on? #t))
              #`(#%plain-module-begin
+                (show-sharing #f)
                 (current-call
                  #,(cond
                      [(equal? first-expression '(trace-all))

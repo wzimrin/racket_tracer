@@ -58,8 +58,13 @@ div#traceWrapper {
 
 div#trace {
     white-space: nowrap;
-    cursor: pointer;
+    cursor: default;
 }
+
+.moveable {
+    cursor: pointer !important;
+}
+
 div.call {
     margin: 1px;
     vertical-align: top;
@@ -171,6 +176,15 @@ div.error > table > tbody > tr > td.result {
 .cell {
     white-space: pre;
     font-size: 14px;
+}
+
+.imageCell {
+    padding:4px;
+}
+
+.imageCell:hover {
+    padding: 2px;
+    border: 2px solid black;
 }
 
 .arg > div {
@@ -368,11 +382,19 @@ span.symbol {
 /* -------------------------------------------------------------------*/
 
 .lastHighlighted {
-    background: #ffff61; 
-    border-color: #ffff61;
+    background: #ffff61 !important; 
+    border-color: #ffff61 !important;
     color: fireBrick !important;
 }
 
+.lastHighlighted.imageCell {
+    border: 2px solid #ffff61;
+    padding: 2px;    
+}
+
+.lastHighlighted.imageCell:hover {
+    border: 2px solid black !important;
+}
 
 .to-src-button.lastHighlighted:hover {
     border-color: #ffffdb !important;

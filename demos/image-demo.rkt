@@ -1,5 +1,5 @@
 #lang planet tracer/tracer
-
+(trace-all)
 (require 2htdp/image)
 
 (check-expect (sq 2) 4)
