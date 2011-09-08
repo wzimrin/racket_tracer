@@ -6,6 +6,6 @@
 (define primary-file "tracer.rkt")
 (define categories '(devtools))
 (define scribblings '(("docs/tracer.scrbl")))
-(define release-notes '((p "Some planet-related bugs fixed")))
+(define release-notes '((p "Support for CS0190 contracts and signatures added. Some GUI bugs fixed. Changes in default printing settings.")))
 (define compile-omit-paths (list "docs"))
 
