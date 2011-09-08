@@ -1,5 +1,7 @@
 #lang planet tracer/tracer
 
+(trace-all)
+
 (define (fib x)
   (cond
     [(= x 0) (rest x)]
