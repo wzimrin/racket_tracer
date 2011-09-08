@@ -120,6 +120,10 @@ If the traced code throws an error, the trace up to that point will load. Clicki
 
 @(hash-ref screenshots 'error)
 
+@section{Printing}
+
+By default, the tracer will not show sharing in values. To show sharing in values add @racket[(show-sharing #t)] anywhere in the file.
+
 @section{Compatibility}
 Suggested browsers: Firefox, Chrome, or Safari.  Other browsers may work, but we don't test them. @litchar{#lang planet tracer/tracer} currently supports images generated in the code or embedded in the code.
 
