@@ -78,7 +78,7 @@ Clicking the function name again will close the code pane.
 
 @(hash-ref screenshots 'clickIterAgain)
 
-If you want to see where a function was called, rather than it's definition, click on the result. 
+If you want to see where a function was called, rather than its definition, click on the result. 
 
 @(hash-ref screenshots 'clickResult)
 
