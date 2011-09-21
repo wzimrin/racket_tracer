@@ -1,7 +1,5 @@
 ***** Actually Important issues *****
 
-* Syntax position of check-expects
-- Trace clickable before too large for window
 - Ability to select text in trace
 
 * CS19 language
@@ -14,7 +12,6 @@
 ^ urgent, important, easy
 
 - Integration with Dr. Racket (guillaume)
-- Trace compression
 
 ***** CURRENT ISSUES*****
 - Bugs from emails
@@ -62,6 +59,8 @@
 - ... not necessarily clear - additional complexity
 
 ***** FIXED ISSUES *****
+- Trace clickable before too large for window
+* Syntax position of check-expects (8)
 - Let error (8/12)
 - Compression of expressions in function position (8/12)
 - Better documentation online / tutorials (?) (8/12)
