@@ -78,7 +78,7 @@ Clicking the function name again will close the code pane.
 
 @(hash-ref screenshots 'clickIterAgain)
 
-If you want to see where a function was called, rather than it's definition, click on the result. 
+If you want to see where a function was called, rather than its definition, click on the result. 
 
 @(hash-ref screenshots 'clickResult)
 
@@ -119,6 +119,10 @@ If the @racket[big-bang] includes a @racket[to-draw] function, the result of @ra
 If the traced code throws an error, the trace up to that point will load. Clicking on the red bar along the top will bring you back to the call where the error occurred. 
 
 @(hash-ref screenshots 'error)
+
+@section{Printing}
+
+By default, the tracer will not show sharing in values. To show sharing in values add @racket[(show-sharing #t)] anywhere in the file.
 
 @section{Compatibility}
 Suggested browsers: Firefox, Chrome, or Safari.  Other browsers may work, but we don't test them. @litchar{#lang planet tracer/tracer} currently supports images generated in the code or embedded in the code.

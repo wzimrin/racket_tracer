@@ -46,6 +46,9 @@
                      (check-range-recorder check-range)
                      (check-member-of-recorder check-member-of)
                      (custom-define define)
+                     (cs019:define: define:)
+                     (cs019:lambda: lambda:)
+                     (cs019:define-struct: define-struct:)
                      (custom-lambda lambda)
                      (custom-lambda λ)
                      (big-bang-recorder big-bang)
@@ -57,6 +60,7 @@
                      (asl:when when)
                      (asl:begin begin)
                      
+                     (cs019:Sig: Sig:)
                      (cs019:local local)
                      (cs019:let* let*)
                      (cs019:letrec letrec)
@@ -219,6 +223,46 @@
 ;adds the the check-expect to the hash
 (define (add-to-ce-hash key idx span success)
   (hash-set! ce-hash key (list idx span success))) 
+
+;Given a list of id-signature pair (from the cs019 contracts), pulls out the ids
+(define-for-syntax (get-var-ids id-sig-pairs)
+    (define (get-var-id id-sig-pair)
+      (syntax-case id-sig-pair (:)
+      [[id : sig] #'id]))
+  (map get-var-id id-sig-pairs))
+
+;Need to support Sig: but doesn't actually do anything...
+(define (cs019:Sig: x)
+  "Easter egg!")
+
+;Macro for cs019's define with signatures. Will not apply signatures, so rewrites to a form
+;the tracer recognizes
+(define-syntax (cs019:define: e)  
+  (syntax-case e (cs019:define: : ->)
+    [(cs019:define: (func var-with-sigs ...) -> result-sig body)
+       (with-syntax ([(vars ...) (get-var-ids (syntax->list #'(var-with-sigs ...)))])
+           (syntax/loc e
+            (custom-define (func vars ...) body)))]
+    [(define: var : sig expr)
+     #`(custom-define var expr)]))
+
+;Macro for cs019's lambda with signatures. Rewrites to a form the tracer recognizes
+(define-syntax (cs019:lambda: e)
+  (syntax-case e (cs019:lambda: ->)
+    [(cs019:lambda: (args-with-sigs ...) -> result-sig body)
+     (with-syntax ([(args ...) (get-var-ids (syntax->list #'(args-with-sigs ...)))])
+       (syntax/loc e
+         (custom-lambda (args ...) body)))]))
+
+;Macro for cs019's define-struct. Won't trace a define-struct, but don't want
+;tracer to fail on define structs with signatures
+(define-syntax (cs019:define-struct: e)
+  (syntax-case e (cs019:define-struct:)
+    [(cs019:define-struct: struct-name (struct-fields-with-sigs ...))
+     (with-syntax ([(struct-fields ...) (get-var-ids (syntax->list #'(struct-fields-with-sigs ...)))])
+       (syntax/loc e
+         (define-struct struct-name (struct-fields ...))))]))
+
 
 (define-syntax (tracer-body e)
   (syntax-case e ()
