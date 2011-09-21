@@ -60,6 +60,7 @@
                      (asl:when when)
                      (asl:begin begin)
                      
+                     (cs019:Sig: Sig:)
                      (cs019:local local)
                      (cs019:let* let*)
                      (cs019:letrec letrec)
@@ -229,6 +230,10 @@
       (syntax-case id-sig-pair (:)
       [[id : sig] #'id]))
   (map get-var-id id-sig-pairs))
+
+;Need to support Sig: but doesn't actually do anything...
+(define (cs019:Sig: x)
+  "Easter egg!")
 
 ;Macro for cs019's define with signatures. Will not apply signatures, so rewrites to a form
 ;the tracer recognizes
